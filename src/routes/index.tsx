@@ -58,11 +58,16 @@ function Hero() {
   const { t } = useTranslation();
   return (
     <section className="relative h-screen min-h-[640px] w-full overflow-hidden bg-navy">
-      {/* Placeholder background until hero media is uploaded */}
-      <div className="absolute inset-0 bg-gradient-to-br from-navy via-navy/95 to-[#2a2a3e]" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(184,151,106,0.18),transparent_55%)]" />
-      <div className="absolute inset-0 bg-[linear-gradient(135deg,transparent_46%,rgba(245,241,236,0.04)_47%,rgba(245,241,236,0.04)_53%,transparent_54%)] bg-[length:32px_32px]" />
-      <div className="absolute inset-0 bg-gradient-to-b from-navy/30 via-transparent to-navy/70" />
+      <video
+        className="absolute inset-0 h-full w-full object-cover"
+        src="/media/hero.mp4"
+        autoPlay
+        muted
+        loop
+        playsInline
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-navy/40 via-navy/20 to-navy/80" />
+
       <div className="relative z-10 flex h-full flex-col items-center justify-center px-4 text-center text-cream">
         <p className="mb-6 text-[11px] tracking-widest-plus uppercase text-cream/80">
           {t("hero.eyebrow")}
