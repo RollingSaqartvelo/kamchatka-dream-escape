@@ -5,6 +5,7 @@ import { SiteLayout } from "@/components/layout/SiteLayout";
 import { PageHero } from "@/components/sections/PageHero";
 import essovskieImg from "@/assets/springs/essovskie.webp";
 import hodutkinskieImg from "@/assets/springs/hodutkinskie.webp";
+import malkinskieImg from "@/assets/springs/malkinskie.webp";
 
 export const Route = createFileRoute("/wellness")({
   component: WellnessPage,
