@@ -4,7 +4,7 @@ import { SiteLayout } from "@/components/layout/SiteLayout";
 import { ROOMS } from "@/data/rooms";
 import { RoomCard } from "@/components/rooms/RoomCard";
 import { RoomFilterBar } from "@/components/rooms/RoomFilterBar";
-import heroImg from "@/assets/about-building.webp";
+
 
 export const Route = createFileRoute("/rooms")({
   component: RoomsPage,
