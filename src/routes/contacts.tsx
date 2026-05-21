@@ -24,6 +24,7 @@ function ContactsPage() {
           {[
             { Icon: MapPin, label: "Адрес", value: t("header.address") },
             { Icon: Phone, label: "Телефон", value: t("header.phone"), href: "tel:+79149945757" },
+            { Icon: MessageCircle, label: "WhatsApp", value: "+7 914 994-57-57", href: "https://wa.me/79149945757", external: true },
             { Icon: Mail, label: "Email", value: "poluostrovkam@mail.ru", href: "mailto:poluostrovkam@mail.ru" },
           ].map(({ Icon, label, value, href }) => (
             <div key={label} className="border border-border bg-cream/40 p-8 text-center">
