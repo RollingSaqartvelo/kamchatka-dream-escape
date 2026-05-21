@@ -18,7 +18,7 @@ function ContactsPage() {
   const { t } = useTranslation();
   return (
     <SiteLayout>
-      <PageHero eyebrow="Contact" title={t("nav.contacts")} />
+      <PageHero eyebrow="Contact" title={t("nav.contacts")} videoSrc="/media/about.mp4" />
       <section className="bg-background py-20">
         <div className="mx-auto grid max-w-4xl gap-8 px-4 sm:grid-cols-3 sm:px-6 lg:px-8">
           {[
