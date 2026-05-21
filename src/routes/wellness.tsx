@@ -7,6 +7,7 @@ import essovskieImg from "@/assets/springs/essovskie.webp";
 import hodutkinskieImg from "@/assets/springs/hodutkinskie.webp";
 import malkinskieImg from "@/assets/springs/malkinskie.webp";
 import nalychevoImg from "@/assets/springs/nalychevo.webp";
+import zelenovskieImg from "@/assets/springs/zelenovskie.webp";
 
 export const Route = createFileRoute("/wellness")({
   component: WellnessPage,
@@ -47,6 +48,7 @@ const springs: Spring[] = [
     temp: "горячие и прохладные купели",
     description:
       "Высокое содержание сероводорода и радона. Контрастное купание тонизирует сосуды и придаёт лёгкость телу.",
+    image: zelenovskieImg,
   },
   {
     name: "Налычевская долина",
