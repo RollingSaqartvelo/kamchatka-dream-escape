@@ -12,11 +12,15 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-4">
           <div className="md:col-span-2">
-            <div className="mb-4 font-serif text-2xl text-cream">ПОЛУОСТРОВ</div>
+            <div className="mb-4 flex items-center gap-4">
+              <img src={logoLight} alt="Полуостров" className="h-12 w-auto" />
+              <div className="font-serif text-2xl text-cream">ПОЛУОСТРОВ</div>
+            </div>
             <p className="max-w-md text-sm leading-relaxed text-cream/60">
               {t("footer.about")}
             </p>
           </div>
+
 
           <div>
             <h4 className="mb-5 text-[11px] tracking-widest-plus uppercase text-gold">
