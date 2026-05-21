@@ -80,10 +80,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Бутик-отель «Полуостров» в Петропавловске-Камчатском. Виды на океан и вулканы, ресторан, оздоровление, трансфер.",
       },
       { name: "author", content: "Poluostrov Hotel" },
-      { property: "og:title", content: "Отель «Полуостров» — Камчатка" },
-      { property: "og:description", content: "Бутик-отель на берегу Авачинской бухты" },
+      { property: "og:title", content: "Отель «Полуостров» — бутик-отель на Камчатке" },
+      { property: "og:description", content: "Kamchatka Gateway is a hotel booking website with a unified messenger inbox for guest communication." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Отель «Полуостров» — бутик-отель на Камчатке" },
+      { name: "description", content: "Kamchatka Gateway is a hotel booking website with a unified messenger inbox for guest communication." },
+      { name: "twitter:description", content: "Kamchatka Gateway is a hotel booking website with a unified messenger inbox for guest communication." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d11e947a-45d2-4498-a669-a42a75dd039d/id-preview-4bc057ec--71600866-7fac-4bc1-9c55-f37838f5f144.lovable.app-1779353685269.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d11e947a-45d2-4498-a669-a42a75dd039d/id-preview-4bc057ec--71600866-7fac-4bc1-9c55-f37838f5f144.lovable.app-1779353685269.png" },
     ],
     links: [
       {
