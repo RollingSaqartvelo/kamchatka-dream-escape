@@ -19,7 +19,7 @@ export function PageHero({
         loop
         playsInline
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-navy/50 via-navy/30 to-navy/80" />
+      <div className="absolute inset-0 bg-gradient-to-b from-navy/10 via-transparent to-navy/60" />
       <div className="relative z-10 flex h-full items-end pb-16 sm:pb-20">
         <div className="mx-auto w-full max-w-4xl px-4 text-center sm:px-6 lg:px-8">
           {eyebrow && (
