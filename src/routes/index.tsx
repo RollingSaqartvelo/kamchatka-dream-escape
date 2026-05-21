@@ -31,7 +31,7 @@ function Home() {
       <AboutShowcase />
       <RoomsBlock />
       <WellnessBlock />
-      <RestaurantBlock />
+      {/* RestaurantBlock убран по запросу */}
       <ServicesBlock />
     </SiteLayout>
   );
@@ -269,18 +269,6 @@ function WellnessBlock() {
   );
 }
 
-function RestaurantBlock() {
-  const { t } = useTranslation();
-  return (
-    <FeatureBlock
-      eyebrow="03 — Dine"
-      title={t("sections.restaurantTitle")}
-      subtitle={t("sections.restaurantSub")}
-      placeholderLabel="Фото ресторана"
-      href="/services"
-    />
-  );
-}
 
 function ServicesBlock() {
   const { t } = useTranslation();
