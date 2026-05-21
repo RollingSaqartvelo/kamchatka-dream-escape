@@ -4,6 +4,7 @@ import { ArrowRight, ImageIcon } from "lucide-react";
 import { SiteLayout } from "@/components/layout/SiteLayout";
 import introBuilding from "@/assets/intro-building.webp";
 import aboutBuilding from "@/assets/about-building.webp";
+import { ReviewsBlock } from "@/components/sections/ReviewsBlock";
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -33,6 +34,7 @@ function Home() {
       <WellnessBlock />
       {/* RestaurantBlock убран по запросу */}
       <ServicesBlock />
+      <ReviewsBlock />
     </SiteLayout>
   );
 }
