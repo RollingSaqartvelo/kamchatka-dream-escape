@@ -6,6 +6,7 @@ import { PageHero } from "@/components/sections/PageHero";
 import essovskieImg from "@/assets/springs/essovskie.webp";
 import hodutkinskieImg from "@/assets/springs/hodutkinskie.webp";
 import malkinskieImg from "@/assets/springs/malkinskie.webp";
+import nalychevoImg from "@/assets/springs/nalychevo.webp";
 
 export const Route = createFileRoute("/wellness")({
   component: WellnessPage,
@@ -53,6 +54,7 @@ const springs: Spring[] = [
     temp: "от 14 до 75 °C",
     description:
       "Около 50 выходов термальных вод с уникальным минеральным составом. Благотворно влияет на сердечно-сосудистую, нервную и мышечную системы.",
+    image: nalychevoImg,
   },
   {
     name: "Малкинские источники",
