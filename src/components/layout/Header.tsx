@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Phone, MapPin, Menu, User } from "lucide-react";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import logoImg from "@/assets/logo-poluostrov.webp";
 
 export function Header() {
   const { t } = useTranslation();
@@ -69,16 +70,13 @@ export function Header() {
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3">
-            <span
-              className={`grid h-10 w-10 place-items-center border transition-colors ${
-                scrolled
-                  ? "border-navy/20 text-navy"
-                  : "border-cream/40 text-cream"
+            <img
+              src={logoImg}
+              alt="Полуостров"
+              className={`h-12 w-auto transition-all ${
+                scrolled ? "" : "brightness-0 invert"
               }`}
-              style={{ borderRadius: "2px" }}
-            >
-              <span className="font-serif text-xl italic">П</span>
-            </span>
+            />
             <span
               className={`font-serif text-lg tracking-wide transition-colors ${
                 scrolled ? "text-navy" : "text-cream"
@@ -87,6 +85,7 @@ export function Header() {
               ПОЛУОСТРОВ
             </span>
           </Link>
+
 
           {/* Desktop nav */}
           <nav className="hidden items-center gap-9 lg:flex">
