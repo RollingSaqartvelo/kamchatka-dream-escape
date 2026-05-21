@@ -233,28 +233,89 @@ function FeatureBlock({
 function RoomsBlock() {
   const { t } = useTranslation();
   return (
-    <section className="bg-background py-20 sm:py-28">
-      <div className="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
+    <section className="bg-cream py-20 sm:py-28">
+      <div className="mx-auto max-w-[720px] px-4 text-center sm:px-6 lg:px-8">
         <p className="mb-5 text-[11px] tracking-widest-plus uppercase text-gold">
           01 — Stay
         </p>
         <h2 className="font-serif text-4xl text-navy sm:text-5xl">
           {t("sections.roomsTitle")}
         </h2>
-        <p className="mt-6 text-base leading-relaxed text-muted-foreground">
-          {t("sections.roomsSub")}
+        <p className="mt-6 font-serif text-xl italic text-navy/80 sm:text-2xl">
+          Виды на океан и вулканы из каждого окна
         </p>
+        <p
+          className="mt-8 text-center"
+          style={{
+            fontFamily: "Inter, sans-serif",
+            fontSize: "17px",
+            color: "#444",
+            lineHeight: 1.9,
+          }}
+        >
+          21 номер для тех, кто ценит настоящий отдых на краю земли.
+          От уютных стандартных номеров до просторных семейных — каждый
+          оснащён всем необходимым: удобными кроватями, телевизором,
+          холодильником, феном, Wi-Fi и тёплыми полами. Из окон ряда
+          номеров открывается вид на Авачинский залив и силуэты камчатских
+          вулканов — панорама, которую невозможно забыть.
+        </p>
+
+        <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-3 sm:gap-0">
+          {[
+            { icon: "🛏", title: "21 номер", caption: "от 1 200 ₽/ночь" },
+            { icon: "🌊", title: "Вид на залив", caption: "и вулканы" },
+            { icon: "✓", title: "Все удобства", caption: "включены" },
+          ].map((item, i) => (
+            <div
+              key={item.title}
+              className={`flex flex-col items-center px-4 ${
+                i > 0 ? "sm:border-l sm:border-[#e0e0e0]" : ""
+              }`}
+            >
+              <div className="mb-3 text-2xl text-gold">{item.icon}</div>
+              <div
+                style={{
+                  fontFamily: "'Cormorant Garamond', serif",
+                  fontSize: "22px",
+                  color: "#1a1a1a",
+                }}
+              >
+                {item.title}
+              </div>
+              <div
+                className="mt-1"
+                style={{
+                  fontFamily: "Inter, sans-serif",
+                  fontSize: "12px",
+                  color: "#888",
+                }}
+              >
+                {item.caption}
+              </div>
+            </div>
+          ))}
+        </div>
+
         <Link
           to="/rooms"
-          className="mt-8 inline-flex h-11 items-center bg-navy px-7 text-[11px] tracking-widest-plus uppercase text-cream transition-colors hover:bg-gold hover:text-navy"
-          style={{ borderRadius: "2px" }}
+          className="mt-12 inline-flex items-center justify-center text-white transition-colors hover:bg-gold"
+          style={{
+            background: "#1a1a1a",
+            padding: "16px 48px",
+            letterSpacing: "2px",
+            fontSize: "11px",
+            textTransform: "uppercase",
+            borderRadius: "2px",
+          }}
         >
-          {t("sections.discover")}
+          Посмотреть номера
         </Link>
       </div>
     </section>
   );
 }
+
 
 function WellnessBlock() {
   const { t } = useTranslation();
