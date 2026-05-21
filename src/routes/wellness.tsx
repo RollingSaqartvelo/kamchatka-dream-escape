@@ -112,16 +112,25 @@ function WellnessPage() {
                 className="grid items-center gap-10 lg:grid-cols-2"
               >
                 <div
-                  className={`flex aspect-[4/3] w-full items-center justify-center border border-gold/30 bg-beige/40 ${
+                  className={`flex aspect-[4/3] w-full items-center justify-center overflow-hidden border border-gold/30 bg-beige/40 ${
                     reversed ? "lg:order-2" : ""
                   }`}
                 >
-                  <div className="flex flex-col items-center gap-3 text-gold/70">
-                    <ImageIcon className="h-12 w-12" strokeWidth={1} />
-                    <span className="text-[10px] tracking-widest-plus uppercase">
-                      Фото скоро
-                    </span>
-                  </div>
+                  {spring.image ? (
+                    <img
+                      src={spring.image}
+                      alt={spring.name}
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center gap-3 text-gold/70">
+                      <ImageIcon className="h-12 w-12" strokeWidth={1} />
+                      <span className="text-[10px] tracking-widest-plus uppercase">
+                        Фото скоро
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className={reversed ? "lg:order-1" : ""}>
