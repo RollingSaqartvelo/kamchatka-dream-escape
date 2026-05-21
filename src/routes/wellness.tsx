@@ -20,6 +20,7 @@ type Spring = {
   distance: string;
   temp: string;
   description: string;
+  image?: string;
 };
 
 const springs: Spring[] = [
