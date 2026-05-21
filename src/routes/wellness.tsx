@@ -5,6 +5,7 @@ import { SiteLayout } from "@/components/layout/SiteLayout";
 import { PageHero } from "@/components/sections/PageHero";
 import essovskieImg from "@/assets/springs/essovskie.webp";
 import hodutkinskieImg from "@/assets/springs/hodutkinskie.webp";
+import malkinskieImg from "@/assets/springs/malkinskie.webp";
 
 export const Route = createFileRoute("/wellness")({
   component: WellnessPage,
@@ -59,6 +60,7 @@ const springs: Spring[] = [
     temp: "35–45 °C",
     description:
       "Слабоминерализованная вода в окружении первозданной природы помогает по-настоящему расслабиться и восстановить силы.",
+    image: malkinskieImg,
   },
   {
     name: "Ходуткинские источники",
