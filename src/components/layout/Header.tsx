@@ -26,24 +26,25 @@ export function Header() {
   return (
     <header className="fixed inset-x-0 top-0 z-50">
       {/* Top dark navy bar — contact strip */}
-      <div className="bg-navy text-cream/90">
+      <div className="bg-navy text-gold">
         <div className="mx-auto flex h-9 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="hidden items-center gap-6 text-[11px] tracking-widest-plus uppercase md:flex">
-            <a href="tel:+79149945757" className="inline-flex items-center gap-2 hover:text-gold">
+            <a href="tel:+79149945757" className="inline-flex items-center gap-2 text-gold hover:text-cream">
               <Phone className="h-3 w-3" />
               {t("header.phone")}
             </a>
-            <span className="inline-flex items-center gap-2 text-cream/60">
+            <span className="inline-flex items-center gap-2 text-gold/80">
               <MapPin className="h-3 w-3" />
               {t("header.address")}
             </span>
           </div>
           <a
             href="tel:+79149945757"
-            className="text-[11px] tracking-widest-plus uppercase md:hidden"
+            className="text-[11px] tracking-widest-plus uppercase text-gold md:hidden"
           >
             {t("header.phone")}
           </a>
+
           <div className="flex items-center gap-4">
             <LanguageSwitcher light />
             <Link
