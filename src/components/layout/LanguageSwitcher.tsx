@@ -35,8 +35,8 @@ export function LanguageSwitcher({ light = false }: { light?: boolean }) {
             onClick={() => i18n.changeLanguage(l.code)}
             className="cursor-pointer gap-2 text-sm"
           >
-            <span className="text-base leading-none">{l.flag}</span>
             {l.label}
+
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
