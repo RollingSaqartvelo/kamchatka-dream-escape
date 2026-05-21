@@ -16,6 +16,7 @@ export type Room = {
   quick_amenities: { icon: string; label: string }[];
   description_ru: string;
   amenities_categories: AmenityCategory[];
+  badge?: string;
   photos: string[]; // urls, may be empty
 };
 
