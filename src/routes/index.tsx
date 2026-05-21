@@ -4,6 +4,7 @@ import { ArrowRight, ImageIcon } from "lucide-react";
 import { SiteLayout } from "@/components/layout/SiteLayout";
 import introBuilding from "@/assets/intro-building.webp";
 import aboutBuilding from "@/assets/about-building.webp";
+import wellnessHome from "@/assets/wellness-home.webp";
 import { ReviewsBlock } from "@/components/sections/ReviewsBlock";
 
 export const Route = createFileRoute("/")({
@@ -264,6 +265,7 @@ function WellnessBlock() {
         title={t("sections.wellnessTitle")}
         subtitle={t("sections.wellnessSub")}
         placeholderLabel="Фото SPA / wellness"
+        imageSrc={wellnessHome}
         href="/wellness"
         reverse
       />
