@@ -4,6 +4,7 @@ import { ImageIcon, Thermometer, MapPin } from "lucide-react";
 import { SiteLayout } from "@/components/layout/SiteLayout";
 import { PageHero } from "@/components/sections/PageHero";
 import essovskieImg from "@/assets/springs/essovskie.webp";
+import hodutkinskieImg from "@/assets/springs/hodutkinskie.webp";
 
 export const Route = createFileRoute("/wellness")({
   component: WellnessPage,
@@ -65,6 +66,7 @@ const springs: Spring[] = [
     temp: "38–40 °C",
     description:
       "Уникальное место, где горячая вода формирует целую реку. Купание среди вулканических пейзажей — опыт, который остаётся с вами навсегда.",
+    image: hodutkinskieImg,
   },
   {
     name: "Эссовские источники",
