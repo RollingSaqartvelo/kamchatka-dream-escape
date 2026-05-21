@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Phone, Mail, MapPin } from "lucide-react";
+import logoLight from "@/assets/logo-poluostrov-light.png";
+
 
 export function Footer() {
   const { t } = useTranslation();
