@@ -230,14 +230,26 @@ function FeatureBlock({
 function RoomsBlock() {
   const { t } = useTranslation();
   return (
-    <FeatureBlock
-      eyebrow="01 — Stay"
-      title={t("sections.roomsTitle")}
-      subtitle={t("sections.roomsSub")}
-      placeholderLabel="Ресторан «Артишок»"
-      imageSrc={introBuilding}
-      href="/rooms"
-    />
+    <section className="bg-background py-20 sm:py-28">
+      <div className="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
+        <p className="mb-5 text-[11px] tracking-widest-plus uppercase text-gold">
+          01 — Stay
+        </p>
+        <h2 className="font-serif text-4xl text-navy sm:text-5xl">
+          {t("sections.roomsTitle")}
+        </h2>
+        <p className="mt-6 text-base leading-relaxed text-muted-foreground">
+          {t("sections.roomsSub")}
+        </p>
+        <Link
+          to="/rooms"
+          className="mt-8 inline-flex h-11 items-center bg-navy px-7 text-[11px] tracking-widest-plus uppercase text-cream transition-colors hover:bg-gold hover:text-navy"
+          style={{ borderRadius: "2px" }}
+        >
+          {t("sections.discover")}
+        </Link>
+      </div>
+    </section>
   );
 }
 
