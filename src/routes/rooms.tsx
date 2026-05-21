@@ -40,11 +40,16 @@ function RoomsPage() {
     <SiteLayout>
       {/* Hero */}
       <section className="relative h-[60vh] min-h-[420px] w-full overflow-hidden bg-navy">
-        <img
-          src={heroImg}
-          alt="Номера отеля «Полуостров»"
+        <video
+          src="/media/rooms-hero.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
           className="absolute inset-0 h-full w-full object-cover"
         />
+
         <div className="absolute inset-0 bg-navy/40" />
         <div className="relative z-10 flex h-full items-center justify-center px-4 text-center">
           <div>
