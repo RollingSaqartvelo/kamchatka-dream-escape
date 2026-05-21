@@ -14,7 +14,108 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          adults: number
+          booking_number: string
+          breakfast_total: number
+          check_in: string
+          check_out: string
+          children: number
+          city: string | null
+          country: string | null
+          created_at: string
+          custom_request: string | null
+          email: string
+          first_name: string
+          id: string
+          id_consent: boolean
+          last_name: string
+          meal_plan: string
+          messenger_type: string | null
+          messenger_username: string | null
+          nights: number
+          payment_method: string | null
+          payment_status: string
+          phone: string
+          promo_code: string | null
+          room_id: string
+          room_name: string
+          room_price_total: number
+          salutation: string | null
+          special_requests: Json
+          terms_consent: boolean
+          total_price: number
+          updated_at: string
+        }
+        Insert: {
+          adults?: number
+          booking_number?: string
+          breakfast_total?: number
+          check_in: string
+          check_out: string
+          children?: number
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          custom_request?: string | null
+          email: string
+          first_name: string
+          id?: string
+          id_consent?: boolean
+          last_name: string
+          meal_plan?: string
+          messenger_type?: string | null
+          messenger_username?: string | null
+          nights: number
+          payment_method?: string | null
+          payment_status?: string
+          phone: string
+          promo_code?: string | null
+          room_id: string
+          room_name: string
+          room_price_total?: number
+          salutation?: string | null
+          special_requests?: Json
+          terms_consent?: boolean
+          total_price?: number
+          updated_at?: string
+        }
+        Update: {
+          adults?: number
+          booking_number?: string
+          breakfast_total?: number
+          check_in?: string
+          check_out?: string
+          children?: number
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          custom_request?: string | null
+          email?: string
+          first_name?: string
+          id?: string
+          id_consent?: boolean
+          last_name?: string
+          meal_plan?: string
+          messenger_type?: string | null
+          messenger_username?: string | null
+          nights?: number
+          payment_method?: string | null
+          payment_status?: string
+          phone?: string
+          promo_code?: string | null
+          room_id?: string
+          room_name?: string
+          room_price_total?: number
+          salutation?: string | null
+          special_requests?: Json
+          terms_consent?: boolean
+          total_price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
