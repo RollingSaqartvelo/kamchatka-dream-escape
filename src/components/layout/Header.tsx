@@ -3,7 +3,8 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Phone, MapPin, Menu, User } from "lucide-react";
 import { LanguageSwitcher } from "./LanguageSwitcher";
-import logoImg from "@/assets/logo-poluostrov.webp";
+import logoDark from "@/assets/logo-poluostrov-dark.png";
+import logoLight from "@/assets/logo-poluostrov-light.png";
 
 export function Header() {
   const { t } = useTranslation();
@@ -74,11 +75,9 @@ export function Header() {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3">
             <img
-              src={logoImg}
+              src={scrolled ? logoDark : logoLight}
               alt="Полуостров"
-              className={`h-12 w-auto transition-all ${
-                scrolled ? "" : "brightness-0 invert"
-              }`}
+              className="h-12 w-auto transition-opacity"
             />
             <span
               className={`font-serif text-lg tracking-wide transition-colors ${
