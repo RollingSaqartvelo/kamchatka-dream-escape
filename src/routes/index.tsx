@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, ImageIcon } from "lucide-react";
 import { SiteLayout } from "@/components/layout/SiteLayout";
+import introBuilding from "@/assets/intro-building.webp";
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -132,6 +133,7 @@ function FeatureBlock({
   title,
   subtitle,
   placeholderLabel,
+  imageSrc,
   href,
   reverse = false,
 }: {
@@ -139,6 +141,7 @@ function FeatureBlock({
   title: string;
   subtitle: string;
   placeholderLabel: string;
+  imageSrc?: string;
   href: string;
   reverse?: boolean;
 }) {
@@ -147,7 +150,16 @@ function FeatureBlock({
     <section className="bg-background py-20 sm:py-28">
       <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 sm:px-6 md:grid-cols-2 lg:gap-20 lg:px-8">
         <div className={reverse ? "md:order-2" : ""}>
-          <MediaPlaceholder label={placeholderLabel} />
+          {imageSrc ? (
+            <img
+              src={imageSrc}
+              alt={placeholderLabel}
+              className="aspect-[4/3] w-full object-cover"
+              style={{ borderRadius: "2px" }}
+            />
+          ) : (
+            <MediaPlaceholder label={placeholderLabel} />
+          )}
         </div>
         <div className={reverse ? "md:order-1" : ""}>
           <p className="mb-5 text-[11px] tracking-widest-plus uppercase text-gold">
@@ -177,7 +189,8 @@ function RoomsBlock() {
       eyebrow="01 — Stay"
       title={t("sections.roomsTitle")}
       subtitle={t("sections.roomsSub")}
-      placeholderLabel="Фото номера"
+      placeholderLabel="Ресторан «Артишок»"
+      imageSrc={introBuilding}
       href="/rooms"
     />
   );
