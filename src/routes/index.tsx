@@ -40,31 +40,35 @@ function Home() {
 function AboutShowcase() {
   const { t } = useTranslation();
   return (
-    <section
-      className="relative h-screen min-h-[560px] w-full overflow-hidden bg-navy"
-      aria-label="Отель «Полуостров»"
-    >
-      <img
-        src={aboutBuilding}
-        alt="Здание отеля «Полуостров» и ресторана «Артишок»"
-        className="absolute inset-0 h-full w-full object-cover"
-        loading="lazy"
-      />
-      <div className="absolute inset-0 bg-gradient-to-b from-navy/10 via-transparent to-navy/70" />
-      <div className="relative z-10 flex h-full flex-col items-center justify-end px-4 pb-20 text-center text-cream sm:pb-28">
-        <p className="mb-5 text-[11px] tracking-widest-plus uppercase text-cream/80">
-          {t("sections.aboutTitle")}
-        </p>
-        <h2 className="max-w-3xl font-serif text-4xl leading-tight sm:text-5xl md:text-6xl">
-          {t("sections.aboutTitle")}
-        </h2>
-        <Link
-          to="/about"
-          className="mt-8 inline-flex h-12 items-center justify-center bg-cream px-9 text-[11px] tracking-widest-plus uppercase text-navy transition-colors hover:bg-gold hover:text-navy"
-          style={{ borderRadius: "2px" }}
-        >
-          {t("sections.discover")}
-        </Link>
+    <section className="bg-cream py-20 sm:py-28" aria-label="Отель «Полуостров»">
+      <div className="mx-auto grid max-w-7xl grid-cols-1 items-stretch gap-10 px-4 sm:px-6 md:grid-cols-10 lg:gap-14 lg:px-8">
+        <div className="md:col-span-7">
+          <img
+            src={aboutBuilding}
+            alt="Здание отеля «Полуостров» и ресторана «Артишок»"
+            className="h-[60vh] min-h-[420px] w-full object-cover md:h-[70vh]"
+            style={{ borderRadius: "2px" }}
+            loading="lazy"
+          />
+        </div>
+        <div className="flex flex-col justify-center md:col-span-3">
+          <p className="mb-5 text-[11px] tracking-widest-plus uppercase text-gold">
+            {t("sections.aboutTitle")}
+          </p>
+          <h2 className="font-serif text-4xl leading-tight text-navy sm:text-5xl">
+            {t("sections.aboutTitle")}
+          </h2>
+          <p className="mt-6 text-base leading-relaxed text-muted-foreground">
+            {t("sections.aboutText")}
+          </p>
+          <Link
+            to="/about"
+            className="mt-8 inline-flex h-12 w-fit items-center justify-center bg-navy px-9 text-[11px] tracking-widest-plus uppercase text-cream transition-colors hover:bg-gold hover:text-navy"
+            style={{ borderRadius: "2px" }}
+          >
+            {t("sections.discover")}
+          </Link>
+        </div>
       </div>
     </section>
   );
