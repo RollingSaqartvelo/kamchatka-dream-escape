@@ -8,6 +8,7 @@ import hodutkinskieImg from "@/assets/springs/hodutkinskie.webp";
 import malkinskieImg from "@/assets/springs/malkinskie.webp";
 import nalychevoImg from "@/assets/springs/nalychevo.webp";
 import zelenovskieImg from "@/assets/springs/zelenovskie.webp";
+import karymshinskieImg from "@/assets/springs/karymshinskie.webp";
 
 export const Route = createFileRoute("/wellness")({
   component: WellnessPage,
