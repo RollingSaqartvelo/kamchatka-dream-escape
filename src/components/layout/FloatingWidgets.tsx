@@ -1,14 +1,81 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { MessageCircle, Phone, X } from "lucide-react";
+import { MessageCircle, Phone, Send, X } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { auroraChat } from "@/lib/aurora.functions";
+
+type Msg = { role: "user" | "assistant"; content: string };
+
+const GREETING: Msg = {
+  role: "assistant",
+  content:
+    "Здравствуйте! 👋 Я Аврора — AI-консьерж отеля «Полуостров». Помогу подобрать номер, рассказать об услугах и Камчатке. Чем могу быть полезна?",
+};
 
 export function FloatingWidgets() {
   const { t } = useTranslation();
   const [chatOpen, setChatOpen] = useState(false);
+  const [messages, setMessages] = useState<Msg[]>([GREETING]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const callChat = useServerFn(auroraChat);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({
+      top: scrollRef.current.scrollHeight,
+      behavior: "smooth",
+    });
+  }, [messages, loading]);
+
+  useEffect(() => {
+    if (chatOpen) inputRef.current?.focus();
+  }, [chatOpen]);
+
+  const send = async () => {
+    const text = input.trim();
+    if (!text || loading) return;
+    const next: Msg[] = [...messages, { role: "user", content: text }];
+    setMessages([...next, { role: "assistant", content: "" }]);
+    setInput("");
+    setLoading(true);
+
+    try {
+      const stream = await callChat({
+        data: {
+          messages: next.map((m) => ({ role: m.role, content: m.content })),
+        },
+      });
+      for await (const chunk of stream as AsyncIterable<{ delta: string }>) {
+        if (!chunk?.delta) continue;
+        setMessages((prev) => {
+          const copy = [...prev];
+          const last = copy[copy.length - 1];
+          copy[copy.length - 1] = {
+            ...last,
+            content: last.content + chunk.delta,
+          };
+          return copy;
+        });
+      }
+    } catch {
+      setMessages((prev) => {
+        const copy = [...prev];
+        copy[copy.length - 1] = {
+          role: "assistant",
+          content:
+            "Не удалось связаться с сервисом. Позвоните, пожалуйста, на +7 (914) 994-57-57.",
+        };
+        return copy;
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
-      {/* Floating buttons (bottom-right stack) */}
       <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3">
         <a
           href="tel:+79149945757"
@@ -28,11 +95,10 @@ export function FloatingWidgets() {
         </button>
       </div>
 
-      {/* Chat panel (Aurora placeholder — wired up in Этап 10) */}
       {chatOpen && (
         <div
-          className="fixed bottom-28 right-6 z-40 flex w-[360px] max-w-[calc(100vw-3rem)] flex-col overflow-hidden border border-border bg-background shadow-2xl"
-          style={{ borderRadius: "2px", maxHeight: "70vh" }}
+          className="fixed bottom-28 right-6 z-40 flex w-[380px] max-w-[calc(100vw-3rem)] flex-col overflow-hidden border border-border bg-background shadow-2xl"
+          style={{ borderRadius: "2px", maxHeight: "75vh", height: "560px" }}
         >
           <div className="flex items-center gap-3 bg-navy px-5 py-4 text-cream">
             <div
@@ -44,28 +110,67 @@ export function FloatingWidgets() {
             <div>
               <div className="font-serif text-base">Аврора</div>
               <div className="text-[10px] tracking-widest-plus uppercase text-cream/60">
-                AI-консьерж
+                AI-консьерж · онлайн
               </div>
             </div>
           </div>
-          <div className="flex-1 space-y-3 overflow-y-auto bg-light-gray p-5 text-sm">
-            <div className="rounded-sm bg-background px-4 py-3 shadow-sm">
-              Здравствуйте! 👋 Я Аврора — ИИ-помощник отеля «Полуостров».
-              <br />
-              <span className="text-muted-foreground">
-                Чат подключим на следующем этапе.
-              </span>
-            </div>
+
+          <div
+            ref={scrollRef}
+            className="flex-1 space-y-3 overflow-y-auto bg-light-gray p-5 text-sm"
+          >
+            {messages.map((m, i) => (
+              <div
+                key={i}
+                className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+              >
+                <div
+                  className={`max-w-[85%] whitespace-pre-wrap px-4 py-2.5 shadow-sm ${
+                    m.role === "user"
+                      ? "bg-navy text-cream"
+                      : "bg-background text-foreground"
+                  }`}
+                  style={{ borderRadius: "2px" }}
+                >
+                  {m.content || (
+                    <span className="inline-flex gap-1">
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/60 [animation-delay:-0.3s]" />
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/60 [animation-delay:-0.15s]" />
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/60" />
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
-          <div className="border-t border-border bg-background p-3">
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              send();
+            }}
+            className="flex items-center gap-2 border-t border-border bg-background p-3"
+          >
             <input
+              ref={inputRef}
               type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
               placeholder="Сообщение..."
-              disabled
-              className="w-full bg-light-gray px-3 py-2 text-sm outline-none placeholder:text-muted-foreground/60"
+              disabled={loading}
+              className="flex-1 bg-light-gray px-3 py-2 text-sm outline-none placeholder:text-muted-foreground/60 disabled:opacity-60"
               style={{ borderRadius: "2px" }}
             />
-          </div>
+            <button
+              type="submit"
+              disabled={loading || !input.trim()}
+              className="grid h-9 w-9 place-items-center bg-navy text-cream transition-opacity hover:opacity-90 disabled:opacity-40"
+              style={{ borderRadius: "2px" }}
+              aria-label="Отправить"
+            >
+              <Send className="h-4 w-4" />
+            </button>
+          </form>
         </div>
       )}
     </>
