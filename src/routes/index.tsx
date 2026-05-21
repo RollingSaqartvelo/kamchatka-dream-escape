@@ -16,6 +16,10 @@ export const Route = createFileRoute("/")({
           "Бутик-отель «Полуостров» в Петропавловске-Камчатском. Виды на океан и вулканы, ресторан, оздоровление, трансфер. Бронирование онлайн.",
       },
     ],
+    links: [
+      { rel: "preload", as: "image", href: "/media/hero-poster.jpg", fetchpriority: "high" },
+      { rel: "preload", as: "video", href: "/media/hero.mp4", type: "video/mp4" },
+    ],
   }),
 });
 
@@ -97,6 +101,8 @@ function Hero() {
       <video
         className="absolute inset-0 h-full w-full object-cover"
         src="/media/hero.mp4"
+        poster="/media/hero-poster.jpg"
+        preload="auto"
         autoPlay
         muted
         loop
