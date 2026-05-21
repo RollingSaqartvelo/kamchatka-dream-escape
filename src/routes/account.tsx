@@ -14,7 +14,7 @@ function AccountPage() {
   const { t } = useTranslation();
   return (
     <SiteLayout>
-      <PageHero eyebrow="Account" title={t("nav.account")} />
+      <PageHero eyebrow="Account" title={t("nav.account")} videoSrc="/media/wellness.mp4" />
       <section className="bg-background py-24">
         <div className="mx-auto max-w-3xl px-4 text-center text-muted-foreground sm:px-6 lg:px-8">
           <p className="font-serif text-2xl text-navy">{t("pages.soonTitle")}</p>

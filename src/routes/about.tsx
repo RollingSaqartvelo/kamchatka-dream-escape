@@ -21,6 +21,7 @@ function AboutPage() {
         eyebrow="About"
         title={t("sections.aboutTitle")}
         subtitle={t("sections.aboutText")}
+        videoSrc="/media/about.mp4"
       />
       <section className="bg-background py-24">
         <div className="mx-auto max-w-3xl px-4 text-center text-muted-foreground sm:px-6 lg:px-8">

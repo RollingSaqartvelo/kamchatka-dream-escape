@@ -21,6 +21,7 @@ function ServicesPage() {
         eyebrow="04 — Services"
         title={t("sections.servicesTitle")}
         subtitle={t("sections.servicesSub")}
+        videoSrc="/media/services.mp4"
       />
       <section className="bg-background py-24">
         <div className="mx-auto max-w-3xl px-4 text-center text-muted-foreground sm:px-6 lg:px-8">

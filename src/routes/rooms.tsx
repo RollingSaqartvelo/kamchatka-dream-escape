@@ -21,6 +21,7 @@ function RoomsPage() {
         eyebrow="01 — Stay"
         title={t("sections.roomsTitle")}
         subtitle={t("sections.roomsSub")}
+        videoSrc="/media/rooms.mp4"
       />
       <section className="bg-background py-24">
         <div className="mx-auto max-w-3xl px-4 text-center text-muted-foreground sm:px-6 lg:px-8">
