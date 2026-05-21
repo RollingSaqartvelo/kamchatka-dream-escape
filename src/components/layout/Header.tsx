@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Phone, MapPin, Menu, User } from "lucide-react";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -7,7 +7,10 @@ import logoImg from "@/assets/logo-poluostrov.webp";
 
 export function Header() {
   const { t } = useTranslation();
-  const [scrolled, setScrolled] = useState(false);
+  const location = useLocation();
+  const isHome = location.pathname === "/";
+  const [scrolledRaw, setScrolled] = useState(false);
+  const scrolled = !isHome || scrolledRaw;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
