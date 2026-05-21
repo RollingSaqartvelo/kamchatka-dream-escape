@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { Phone, Mail, MapPin } from "lucide-react";
+import { Phone, Mail, MapPin, MessageCircle } from "lucide-react";
 import { SiteLayout } from "@/components/layout/SiteLayout";
 import { PageHero } from "@/components/sections/PageHero";
 
@@ -20,19 +20,24 @@ function ContactsPage() {
     <SiteLayout>
       <PageHero eyebrow="Contact" title={t("nav.contacts")} videoSrc="/media/contacts.mp4" />
       <section className="bg-background py-20">
-        <div className="mx-auto grid max-w-4xl gap-8 px-4 sm:grid-cols-3 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-5xl gap-8 px-4 sm:grid-cols-2 lg:grid-cols-4 sm:px-6 lg:px-8">
           {[
             { Icon: MapPin, label: "Адрес", value: t("header.address") },
             { Icon: Phone, label: "Телефон", value: t("header.phone"), href: "tel:+79149945757" },
+            { Icon: MessageCircle, label: "WhatsApp", value: "+7 914 994-57-57", href: "https://wa.me/79149945757", external: true },
             { Icon: Mail, label: "Email", value: "poluostrovkam@mail.ru", href: "mailto:poluostrovkam@mail.ru" },
-          ].map(({ Icon, label, value, href }) => (
+          ].map(({ Icon, label, value, href, external }) => (
             <div key={label} className="border border-border bg-cream/40 p-8 text-center">
               <Icon className="mx-auto h-6 w-6 text-gold" />
               <p className="mt-5 text-[10px] tracking-widest-plus uppercase text-muted-foreground">
                 {label}
               </p>
               {href ? (
-                <a href={href} className="mt-2 block font-serif text-lg text-navy hover:text-gold">
+                <a
+                  href={href}
+                  {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                  className="mt-2 block font-serif text-lg text-navy hover:text-gold"
+                >
                   {value}
                 </a>
               ) : (
