@@ -130,7 +130,7 @@ export function Step1Dates({
             <Calendar
               mode="range"
               numberOfMonths={2}
-              selected={dates as { from?: Date; to?: Date }}
+              selected={dates.from ? { from: dates.from, to: dates.to } : undefined}
               onSelect={(range) =>
                 onDatesChange({ from: range?.from, to: range?.to })
               }
