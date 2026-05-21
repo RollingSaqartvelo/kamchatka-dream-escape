@@ -47,6 +47,87 @@ function ContactsPage() {
           ))}
         </div>
       </section>
+
+      <section className="bg-[#f9f7f4] py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-14 text-center">
+            <h2 className="font-serif text-4xl text-navy">Как до нас добраться</h2>
+            <div className="mx-auto mt-5 h-px w-16 bg-gold" />
+          </div>
+
+          <div className="grid gap-10 lg:grid-cols-5">
+            <div className="space-y-8 lg:col-span-2">
+              {[
+                {
+                  Icon: MapPin,
+                  title: "Адрес",
+                  body: <>г. Петропавловск-Камчатский,<br />ул. Абеля, 41</>,
+                },
+                {
+                  Icon: Car,
+                  title: "На автомобиле",
+                  body: <>С центра города по ул. Ленинская в сторону набережной, повернуть на ул. Абеля. Бесплатная парковка на территории.</>,
+                },
+                {
+                  Icon: Plane,
+                  title: "Из аэропорта",
+                  body: <>Аэропорт Петропавловск-Камчатский (PKC) — ~30 минут на такси. Рекомендуем Яндекс Такси или трансфер от отеля (закажите заранее при бронировании).</>,
+                },
+                {
+                  Icon: Bus,
+                  title: "На общественном транспорте",
+                  body: <>Автобусные маршруты до остановки «Абеля».</>,
+                },
+                {
+                  Icon: Phone,
+                  title: "Нужен трансфер?",
+                  body: (
+                    <>
+                      Позвоните нам:{" "}
+                      <a href="tel:+79149945757" className="font-medium text-navy hover:text-gold">
+                        +7 (914) 994-57-57
+                      </a>
+                      . Организуем трансфер из аэропорта.
+                    </>
+                  ),
+                },
+              ].map(({ Icon, title, body }) => (
+                <div key={title} className="flex gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-gold/40 text-gold">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-serif text-lg text-navy">{title}</h3>
+                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="lg:col-span-3">
+              <div className="overflow-hidden rounded-lg shadow-lg">
+                <iframe
+                  title="Яндекс Карта — Гостиница Полуостров"
+                  src="https://yandex.ru/map-widget/v1/?ll=158.603533%2C53.063398&z=16&pt=158.603533%2C53.063398,pm2rdm"
+                  className="h-[300px] w-full border-0 md:h-[450px]"
+                  allowFullScreen
+                  loading="lazy"
+                />
+              </div>
+              <a
+                href="https://yandex.ru/maps/?pt=158.603533,53.063398&z=16&l=map"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-6 inline-flex items-center gap-2 border border-navy px-6 py-3 text-[11px] tracking-widest-plus uppercase text-navy transition-colors hover:bg-navy hover:text-cream"
+                style={{ borderRadius: "2px" }}
+              >
+                Открыть в Яндекс Картах
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
     </SiteLayout>
   );
 }
