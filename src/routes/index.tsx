@@ -24,11 +24,45 @@ function Home() {
     <SiteLayout>
       <Hero />
       <Intro />
+      <AboutShowcase />
       <RoomsBlock />
       <WellnessBlock />
       <RestaurantBlock />
       <ServicesBlock />
     </SiteLayout>
+  );
+}
+
+function AboutShowcase() {
+  const { t } = useTranslation();
+  return (
+    <section
+      className="relative h-screen min-h-[560px] w-full overflow-hidden bg-navy"
+      aria-label="Отель «Полуостров»"
+    >
+      <img
+        src={aboutBuilding}
+        alt="Здание отеля «Полуостров» и ресторана «Артишок»"
+        className="absolute inset-0 h-full w-full object-cover"
+        loading="lazy"
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-navy/10 via-transparent to-navy/70" />
+      <div className="relative z-10 flex h-full flex-col items-center justify-end px-4 pb-20 text-center text-cream sm:pb-28">
+        <p className="mb-5 text-[11px] tracking-widest-plus uppercase text-cream/80">
+          {t("sections.aboutTitle")}
+        </p>
+        <h2 className="max-w-3xl font-serif text-4xl leading-tight sm:text-5xl md:text-6xl">
+          {t("sections.aboutTitle")}
+        </h2>
+        <Link
+          to="/about"
+          className="mt-8 inline-flex h-12 items-center justify-center bg-cream px-9 text-[11px] tracking-widest-plus uppercase text-navy transition-colors hover:bg-gold hover:text-navy"
+          style={{ borderRadius: "2px" }}
+        >
+          {t("sections.discover")}
+        </Link>
+      </div>
+    </section>
   );
 }
 
