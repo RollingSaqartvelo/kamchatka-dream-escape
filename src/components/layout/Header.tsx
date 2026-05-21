@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Phone, MapPin, Menu, User } from "lucide-react";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import logoImg from "@/assets/logo-poluostrov.webp";
 
 export function Header() {
   const { t } = useTranslation();
