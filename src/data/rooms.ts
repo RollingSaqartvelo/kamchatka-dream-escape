@@ -50,6 +50,17 @@ export const ROOMS: Room[] = [
       { label: "🌐 Интернет", items: ["Wi-Fi бесплатный"] },
       { label: "🍳 Кухонная зона", items: ["Холодильник", "Чайник"] },
     ],
-    photos: [],
+    photos: [
+      "/rooms/comfort-3-shower/01.jpg",
+      "/rooms/comfort-3-shower/02.jpg",
+      "/rooms/comfort-3-shower/03.jpg",
+      "/rooms/comfort-3-shower/04.jpg",
+      "/rooms/comfort-3-shower/05.jpg",
+      "/rooms/comfort-3-shower/06.jpg",
+      "/rooms/comfort-3-shower/07.jpg",
+      "/rooms/comfort-3-shower/08.jpg",
+      "/rooms/comfort-3-shower/09.jpg",
+      "/rooms/comfort-3-shower/10.jpg",
+    ],
   },
 ];
