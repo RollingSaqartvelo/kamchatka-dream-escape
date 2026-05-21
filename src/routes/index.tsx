@@ -1,11 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ImageIcon } from "lucide-react";
 import { SiteLayout } from "@/components/layout/SiteLayout";
-import heroImg from "@/assets/hero-hotel.jpg";
-import roomImg from "@/assets/room-preview.jpg";
-import wellnessImg from "@/assets/wellness.jpg";
-import restaurantImg from "@/assets/restaurant.jpg";
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -34,18 +30,39 @@ function Home() {
   );
 }
 
+/** Empty image placeholder — waiting for user-supplied media. */
+function MediaPlaceholder({
+  label,
+  className = "",
+  ratio = "aspect-[4/3]",
+}: {
+  label: string;
+  className?: string;
+  ratio?: string;
+}) {
+  return (
+    <div
+      className={`relative flex items-center justify-center overflow-hidden bg-beige/60 ${ratio} ${className}`}
+      style={{ borderRadius: "2px" }}
+    >
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,transparent_46%,rgba(184,151,106,0.18)_47%,rgba(184,151,106,0.18)_53%,transparent_54%)] bg-[length:18px_18px]" />
+      <div className="relative flex flex-col items-center gap-3 text-navy/40">
+        <ImageIcon className="h-8 w-8" strokeWidth={1} />
+        <span className="text-[10px] tracking-widest-plus uppercase">{label}</span>
+      </div>
+    </div>
+  );
+}
+
 function Hero() {
   const { t } = useTranslation();
   return (
-    <section className="relative h-screen min-h-[640px] w-full overflow-hidden">
-      <img
-        src={heroImg}
-        alt=""
-        className="absolute inset-0 h-full w-full object-cover"
-        width={1920}
-        height={1080}
-      />
-      <div className="absolute inset-0 bg-gradient-to-b from-navy/40 via-navy/20 to-navy/70" />
+    <section className="relative h-screen min-h-[640px] w-full overflow-hidden bg-navy">
+      {/* Placeholder background until hero media is uploaded */}
+      <div className="absolute inset-0 bg-gradient-to-br from-navy via-navy/95 to-[#2a2a3e]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(184,151,106,0.18),transparent_55%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,transparent_46%,rgba(245,241,236,0.04)_47%,rgba(245,241,236,0.04)_53%,transparent_54%)] bg-[length:32px_32px]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-navy/30 via-transparent to-navy/70" />
       <div className="relative z-10 flex h-full flex-col items-center justify-center px-4 text-center text-cream">
         <p className="mb-6 text-[11px] tracking-widest-plus uppercase text-cream/80">
           {t("hero.eyebrow")}
@@ -109,14 +126,14 @@ function FeatureBlock({
   eyebrow,
   title,
   subtitle,
-  image,
+  placeholderLabel,
   href,
   reverse = false,
 }: {
   eyebrow: string;
   title: string;
   subtitle: string;
-  image: string;
+  placeholderLabel: string;
   href: string;
   reverse?: boolean;
 }) {
@@ -125,15 +142,7 @@ function FeatureBlock({
     <section className="bg-background py-20 sm:py-28">
       <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 sm:px-6 md:grid-cols-2 lg:gap-20 lg:px-8">
         <div className={reverse ? "md:order-2" : ""}>
-          <img
-            src={image}
-            alt={title}
-            loading="lazy"
-            width={1280}
-            height={960}
-            className="aspect-[4/3] w-full object-cover"
-            style={{ borderRadius: "2px" }}
-          />
+          <MediaPlaceholder label={placeholderLabel} />
         </div>
         <div className={reverse ? "md:order-1" : ""}>
           <p className="mb-5 text-[11px] tracking-widest-plus uppercase text-gold">
@@ -163,7 +172,7 @@ function RoomsBlock() {
       eyebrow="01 — Stay"
       title={t("sections.roomsTitle")}
       subtitle={t("sections.roomsSub")}
-      image={roomImg}
+      placeholderLabel="Фото номера"
       href="/rooms"
     />
   );
@@ -177,7 +186,7 @@ function WellnessBlock() {
         eyebrow="02 — Wellness"
         title={t("sections.wellnessTitle")}
         subtitle={t("sections.wellnessSub")}
-        image={wellnessImg}
+        placeholderLabel="Фото SPA / wellness"
         href="/wellness"
         reverse
       />
@@ -192,7 +201,7 @@ function RestaurantBlock() {
       eyebrow="03 — Dine"
       title={t("sections.restaurantTitle")}
       subtitle={t("sections.restaurantSub")}
-      image={restaurantImg}
+      placeholderLabel="Фото ресторана"
       href="/services"
     />
   );
