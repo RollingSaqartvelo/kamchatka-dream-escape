@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ArrowRight, ImageIcon } from "lucide-react";
 import { SiteLayout } from "@/components/layout/SiteLayout";
 import introBuilding from "@/assets/intro-building.webp";
+import aboutBuilding from "@/assets/about-building.webp";
 
 export const Route = createFileRoute("/")({
   component: Home,
