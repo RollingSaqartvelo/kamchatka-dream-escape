@@ -97,6 +97,8 @@ function Hero() {
       <video
         className="absolute inset-0 h-full w-full object-cover"
         src="/media/hero.mp4"
+        poster="/media/hero-poster.jpg"
+        preload="auto"
         autoPlay
         muted
         loop
