@@ -67,7 +67,7 @@ function Hero() {
         loop
         playsInline
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-navy/40 via-navy/20 to-navy/80" />
+      <div className="absolute inset-0 bg-gradient-to-b from-navy/10 via-transparent to-navy/60" />
 
       <div className="relative z-10 flex h-full flex-col items-center justify-center px-4 text-center text-cream">
         <p className="mb-6 text-[11px] tracking-widest-plus uppercase text-cream/80">
