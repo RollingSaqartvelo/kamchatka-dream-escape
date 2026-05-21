@@ -265,6 +265,7 @@ function WellnessBlock() {
         title={t("sections.wellnessTitle")}
         subtitle={t("sections.wellnessSub")}
         placeholderLabel="Фото SPA / wellness"
+        imageSrc={wellnessHome}
         href="/wellness"
         reverse
       />
