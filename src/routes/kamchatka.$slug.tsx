@@ -368,8 +368,7 @@ const articles: Record<string, Article> = {
       "Что попробовать обязательно — от свежего камчатского краба и икры пятиминутки до медвежатины и юколы по рецептам ительменов.",
     author: "Редакция «Полуострова»",
     readingTime: "5 мин чтения",
-    cover:
-      "https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=2000&q=80",
+    cover: "/media/cuisine.jpg",
     sections: [
       {
         type: "p",
