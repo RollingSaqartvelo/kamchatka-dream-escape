@@ -33,12 +33,12 @@ type Article = {
 
 const articles: Article[] = [
   {
-    slug: "volcanoes",
-    category: "Природа",
-    title: "Домашние вулканы Петропавловска",
+    slug: "wild-nature",
+    category: "О крае",
+    title: "Камчатка: край дикой природы, вулканов и суровых нравов",
     excerpt:
-      "Авачинский, Корякский и Козельский — три исполина, формирующих силуэт города. Как подняться, что увидеть и когда лучше идти.",
-    readingTime: "8 мин чтения",
+      "Полуостров длиной 1200 км — от Ключевской сопки и Авачинской бухты до коряков, ительменов и Долины гейзеров. Большой гид по краю.",
+    readingTime: "20 мин чтения",
     image:
       "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1600&q=80",
   },
@@ -132,7 +132,8 @@ function KamchatkaPage() {
                 {featured.excerpt}
               </p>
               <Link
-                to="/kamchatka"
+                to="/kamchatka/$slug"
+                params={{ slug: featured.slug }}
                 className="mt-8 inline-flex items-center gap-3 text-[11px] tracking-widest-plus uppercase text-navy hover:text-gold"
               >
                 Читать статью
@@ -162,7 +163,12 @@ function KamchatkaPage() {
 
           <div className="grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
             {rest.map((a) => (
-              <article key={a.slug} className="group cursor-pointer">
+              <Link
+                key={a.slug}
+                to="/kamchatka/$slug"
+                params={{ slug: a.slug }}
+                className="group block"
+              >
                 <div
                   className="aspect-[4/5] overflow-hidden bg-beige"
                   style={{ borderRadius: "2px" }}
@@ -183,7 +189,7 @@ function KamchatkaPage() {
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                   {a.excerpt}
                 </p>
-              </article>
+              </Link>
             ))}
           </div>
         </div>
