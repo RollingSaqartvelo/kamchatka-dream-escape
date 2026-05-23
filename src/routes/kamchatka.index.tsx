@@ -67,8 +67,7 @@ const articles: Article[] = [
     excerpt:
       "Что попробовать обязательно — от свежего камчатского краба и икры пятой минуты до медвежатины и юколы по рецептам ительменов.",
     readingTime: "5 мин чтения",
-    image:
-      "https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=1600&q=80",
+    image: "/media/cuisine.jpg",
   },
   {
     slug: "indigenous",
