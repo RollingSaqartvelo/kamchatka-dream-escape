@@ -210,6 +210,11 @@ const articles: Record<string, Article> = {
       },
       {
         type: "figure",
+        src: "/media/reindeer.jpg",
+        caption: "Северный олень, Кроноцкий район",
+      },
+      {
+        type: "figure",
         src: "/media/sable.jpg",
         caption: "Камчатский соболь",
       },
