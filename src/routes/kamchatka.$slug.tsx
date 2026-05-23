@@ -283,8 +283,7 @@ const articles: Record<string, Article> = {
       "Паратунка, Малки, Налычево — где найти горячую воду под открытым небом и какие источники доступны круглый год.",
     author: "Редакция «Полуострова»",
     readingTime: "6 мин чтения",
-    cover:
-      "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?auto=format&fit=crop&w=2000&q=80",
+    cover: "/media/thermal-springs.webp",
     sections: [
       {
         type: "p",

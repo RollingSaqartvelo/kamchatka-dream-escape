@@ -49,8 +49,7 @@ const articles: Article[] = [
     excerpt:
       "Паратунка, Малки, Налычево — где найти воду температурой 40°C под открытым небом и какие источники доступны круглый год.",
     readingTime: "6 мин чтения",
-    image:
-      "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?auto=format&fit=crop&w=1600&q=80",
+    image: "/media/thermal-springs.webp",
   },
   {
     slug: "ocean",
