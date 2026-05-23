@@ -226,6 +226,7 @@ function RateOption({
   hint,
   total,
   nights,
+  isLive,
   isSelected,
   onPick,
 }: {
@@ -233,6 +234,7 @@ function RateOption({
   hint?: string;
   total: number;
   nights: number;
+  isLive?: boolean;
   isSelected: boolean;
   onPick: () => void;
 }) {
@@ -250,7 +252,7 @@ function RateOption({
       <div className="flex items-end justify-between">
         <div>
           <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-            Итого за {nights} ноч.
+            Итого за {nights} ноч.{isLive ? " · live" : ""}
           </p>
           <p className="font-serif text-xl text-navy">{fmtRub(total)}</p>
         </div>
