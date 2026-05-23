@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           admin_notes: string | null
           adults: number
+          alfa_order_id: string | null
           booking_number: string
           breakfast_total: number
           check_in: string
@@ -36,10 +37,14 @@ export type Database = {
           messenger_type: string | null
           messenger_username: string | null
           nights: number
+          paid_at: string | null
           payment_method: string | null
+          payment_provider_method: string | null
           payment_status: string
           phone: string
+          prepayment_amount: number
           promo_code: string | null
+          remaining_amount: number
           room_id: string
           room_name: string
           room_price_total: number
@@ -52,6 +57,7 @@ export type Database = {
         Insert: {
           admin_notes?: string | null
           adults?: number
+          alfa_order_id?: string | null
           booking_number?: string
           breakfast_total?: number
           check_in: string
@@ -70,10 +76,14 @@ export type Database = {
           messenger_type?: string | null
           messenger_username?: string | null
           nights: number
+          paid_at?: string | null
           payment_method?: string | null
+          payment_provider_method?: string | null
           payment_status?: string
           phone: string
+          prepayment_amount?: number
           promo_code?: string | null
+          remaining_amount?: number
           room_id: string
           room_name: string
           room_price_total?: number
@@ -86,6 +96,7 @@ export type Database = {
         Update: {
           admin_notes?: string | null
           adults?: number
+          alfa_order_id?: string | null
           booking_number?: string
           breakfast_total?: number
           check_in?: string
@@ -104,10 +115,14 @@ export type Database = {
           messenger_type?: string | null
           messenger_username?: string | null
           nights?: number
+          paid_at?: string | null
           payment_method?: string | null
+          payment_provider_method?: string | null
           payment_status?: string
           phone?: string
+          prepayment_amount?: number
           promo_code?: string | null
+          remaining_amount?: number
           room_id?: string
           room_name?: string
           room_price_total?: number
