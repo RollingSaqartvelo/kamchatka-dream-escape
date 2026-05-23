@@ -11,6 +11,7 @@ export function Header() {
   const location = useLocation();
   const isHome = location.pathname === "/";
   const [scrolledRaw, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const scrolled = !isHome || scrolledRaw;
 
   useEffect(() => {
@@ -19,6 +20,19 @@ export function Header() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
+
+  // Lock body scroll when menu open
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
 
   const navItems = [
     { to: "/rooms", label: t("nav.rooms") },
