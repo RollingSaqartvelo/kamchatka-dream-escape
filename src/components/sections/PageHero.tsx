@@ -1,3 +1,5 @@
+import { useRef, useState } from "react";
+
 export function PageHero({
   eyebrow,
   title,
@@ -9,9 +11,24 @@ export function PageHero({
   subtitle?: string;
   videoSrc?: string;
 }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [muted, setMuted] = useState(true);
+
+  const toggleSound = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    const next = !muted;
+    v.muted = next;
+    if (!next) {
+      v.play().catch(() => {});
+    }
+    setMuted(next);
+  };
+
   return (
     <section className="relative h-[70vh] min-h-[460px] w-full overflow-hidden bg-navy">
       <video
+        ref={videoRef}
         className="absolute inset-0 h-full w-full object-cover"
         src={videoSrc}
         autoPlay
@@ -19,7 +36,21 @@ export function PageHero({
         loop
         playsInline
       />
-      
+
+      <button
+        type="button"
+        onClick={toggleSound}
+        aria-label={muted ? "Включить звук" : "Выключить звук"}
+        aria-pressed={!muted}
+        className="absolute right-5 top-5 z-20 inline-flex items-center gap-2 bg-navy/60 px-4 py-2 text-[10px] tracking-widest-plus uppercase text-cream backdrop-blur-sm transition hover:bg-navy/80"
+        style={{ borderRadius: "2px" }}
+      >
+        <span aria-hidden className="text-base leading-none">
+          {muted ? "🔇" : "🔊"}
+        </span>
+        <span>Динамика</span>
+      </button>
+
       <div className="relative z-10 flex h-full items-end pb-16 sm:pb-20">
         <div className="mx-auto w-full max-w-4xl px-4 text-center sm:px-6 lg:px-8">
           {eyebrow && (
