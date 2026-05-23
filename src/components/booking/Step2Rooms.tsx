@@ -78,19 +78,52 @@ function RoomBookingCard({
   room,
   nights,
   guests,
+  adults,
+  children,
+  checkIn,
+  checkOut,
   selected,
   onPick,
 }: {
   room: ReturnType<typeof Object> & (typeof ROOMS)[number];
   nights: number;
   guests: number;
+  adults: number;
+  children: number;
+  checkIn: string;
+  checkOut: string;
   selected: MealPlan | null;
   onPick: (mealPlan: MealPlan) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const searchTL = useServerFn(searchTravellineAvailability);
+  const hasMapping = Boolean(ROOM_ID_TO_TL[room.id]);
 
-  const roomOnly = room.price_from_rub * nights;
-  const withBreakfast = roomOnly + BREAKFAST_PER_PERSON * guests * nights;
+  const tlRoomOnly = useQuery({
+    queryKey: ["tl-price", room.id, checkIn, checkOut, adults, children, "room_only"],
+    queryFn: () =>
+      searchTL({
+        data: { roomId: room.id, checkIn, checkOut, adults, children, mealPlan: "room_only" },
+      }),
+    enabled: open && hasMapping,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const tlBreakfast = useQuery({
+    queryKey: ["tl-price", room.id, checkIn, checkOut, adults, children, "breakfast"],
+    queryFn: () =>
+      searchTL({
+        data: { roomId: room.id, checkIn, checkOut, adults, children, mealPlan: "breakfast" },
+      }),
+    enabled: open && hasMapping,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const fallbackRoomOnly = room.price_from_rub * nights;
+  const fallbackBreakfast = fallbackRoomOnly + BREAKFAST_PER_PERSON * guests * nights;
+
+  const roomOnly = tlRoomOnly.data?.totalPrice ?? fallbackRoomOnly;
+  const withBreakfast = tlBreakfast.data?.totalPrice ?? fallbackBreakfast;
 
   const cover = room.photos[0];
 
@@ -153,22 +186,31 @@ function RoomBookingCard({
 
       {open && (
         <div className="border-t border-border bg-cream/40 p-6">
-          <p className="text-[11px] uppercase tracking-widest text-navy">
-            Стандартный тариф
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-[11px] uppercase tracking-widest text-navy">
+              Тарифы Travelline
+            </p>
+            {(tlRoomOnly.isFetching || tlBreakfast.isFetching) && (
+              <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
+                <Loader2 className="h-3 w-3 animate-spin" /> загрузка цен
+              </span>
+            )}
+          </div>
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             <RateOption
               label="Только проживание"
               total={roomOnly}
               nights={nights}
+              isLive={!!tlRoomOnly.data?.totalPrice}
               isSelected={selected === "room_only"}
               onPick={() => onPick("room_only")}
             />
             <RateOption
               label="Проживание + завтрак"
-              hint={`+ ${BREAKFAST_PER_PERSON} ₽ / чел / день`}
+              hint={tlBreakfast.data?.totalPrice ? undefined : `+ ${BREAKFAST_PER_PERSON} ₽ / чел / день`}
               total={withBreakfast}
               nights={nights}
+              isLive={!!tlBreakfast.data?.totalPrice}
               isSelected={selected === "breakfast"}
               onPick={() => onPick("breakfast")}
             />
