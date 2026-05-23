@@ -19,6 +19,7 @@ import { Route as BookingRouteImport } from './routes/booking'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as KamchatkaSlugRouteImport } from './routes/kamchatka.$slug'
 import { Route as BookingSuccessRouteImport } from './routes/booking.success'
 import { Route as AdminBookingsRouteImport } from './routes/admin.bookings'
 import { Route as BookingPayIdRouteImport } from './routes/booking.pay.$id'
@@ -74,6 +75,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KamchatkaSlugRoute = KamchatkaSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => KamchatkaRoute,
+} as any)
 const BookingSuccessRoute = BookingSuccessRouteImport.update({
   id: '/success',
   path: '/success',
@@ -101,13 +107,14 @@ export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/booking': typeof BookingRouteWithChildren
   '/contacts': typeof ContactsRoute
-  '/kamchatka': typeof KamchatkaRoute
+  '/kamchatka': typeof KamchatkaRouteWithChildren
   '/login': typeof LoginRoute
   '/rooms': typeof RoomsRoute
   '/services': typeof ServicesRoute
   '/wellness': typeof WellnessRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/booking/success': typeof BookingSuccessRoute
+  '/kamchatka/$slug': typeof KamchatkaSlugRoute
   '/api/public/alfa-callback': typeof ApiPublicAlfaCallbackRoute
   '/booking/pay/$id': typeof BookingPayIdRoute
 }
@@ -117,13 +124,14 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/booking': typeof BookingRouteWithChildren
   '/contacts': typeof ContactsRoute
-  '/kamchatka': typeof KamchatkaRoute
+  '/kamchatka': typeof KamchatkaRouteWithChildren
   '/login': typeof LoginRoute
   '/rooms': typeof RoomsRoute
   '/services': typeof ServicesRoute
   '/wellness': typeof WellnessRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/booking/success': typeof BookingSuccessRoute
+  '/kamchatka/$slug': typeof KamchatkaSlugRoute
   '/api/public/alfa-callback': typeof ApiPublicAlfaCallbackRoute
   '/booking/pay/$id': typeof BookingPayIdRoute
 }
@@ -134,13 +142,14 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/booking': typeof BookingRouteWithChildren
   '/contacts': typeof ContactsRoute
-  '/kamchatka': typeof KamchatkaRoute
+  '/kamchatka': typeof KamchatkaRouteWithChildren
   '/login': typeof LoginRoute
   '/rooms': typeof RoomsRoute
   '/services': typeof ServicesRoute
   '/wellness': typeof WellnessRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/booking/success': typeof BookingSuccessRoute
+  '/kamchatka/$slug': typeof KamchatkaSlugRoute
   '/api/public/alfa-callback': typeof ApiPublicAlfaCallbackRoute
   '/booking/pay/$id': typeof BookingPayIdRoute
 }
@@ -159,6 +168,7 @@ export interface FileRouteTypes {
     | '/wellness'
     | '/admin/bookings'
     | '/booking/success'
+    | '/kamchatka/$slug'
     | '/api/public/alfa-callback'
     | '/booking/pay/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -175,6 +185,7 @@ export interface FileRouteTypes {
     | '/wellness'
     | '/admin/bookings'
     | '/booking/success'
+    | '/kamchatka/$slug'
     | '/api/public/alfa-callback'
     | '/booking/pay/$id'
   id:
@@ -191,6 +202,7 @@ export interface FileRouteTypes {
     | '/wellness'
     | '/admin/bookings'
     | '/booking/success'
+    | '/kamchatka/$slug'
     | '/api/public/alfa-callback'
     | '/booking/pay/$id'
   fileRoutesById: FileRoutesById
@@ -201,7 +213,7 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   BookingRoute: typeof BookingRouteWithChildren
   ContactsRoute: typeof ContactsRoute
-  KamchatkaRoute: typeof KamchatkaRoute
+  KamchatkaRoute: typeof KamchatkaRouteWithChildren
   LoginRoute: typeof LoginRoute
   RoomsRoute: typeof RoomsRoute
   ServicesRoute: typeof ServicesRoute
@@ -282,6 +294,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/kamchatka/$slug': {
+      id: '/kamchatka/$slug'
+      path: '/$slug'
+      fullPath: '/kamchatka/$slug'
+      preLoaderRoute: typeof KamchatkaSlugRouteImport
+      parentRoute: typeof KamchatkaRoute
+    }
     '/booking/success': {
       id: '/booking/success'
       path: '/success'
@@ -326,13 +345,25 @@ const BookingRouteChildren: BookingRouteChildren = {
 const BookingRouteWithChildren =
   BookingRoute._addFileChildren(BookingRouteChildren)
 
+interface KamchatkaRouteChildren {
+  KamchatkaSlugRoute: typeof KamchatkaSlugRoute
+}
+
+const KamchatkaRouteChildren: KamchatkaRouteChildren = {
+  KamchatkaSlugRoute: KamchatkaSlugRoute,
+}
+
+const KamchatkaRouteWithChildren = KamchatkaRoute._addFileChildren(
+  KamchatkaRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AccountRoute: AccountRoute,
   BookingRoute: BookingRouteWithChildren,
   ContactsRoute: ContactsRoute,
-  KamchatkaRoute: KamchatkaRoute,
+  KamchatkaRoute: KamchatkaRouteWithChildren,
   LoginRoute: LoginRoute,
   RoomsRoute: RoomsRoute,
   ServicesRoute: ServicesRoute,
@@ -343,3 +374,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
