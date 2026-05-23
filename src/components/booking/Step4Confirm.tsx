@@ -3,12 +3,11 @@ import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { format } from "date-fns";
-import { CreditCard, FileText } from "lucide-react";
 import type { BookingState } from "./types";
-import { calcTotals } from "./types";
+import { calcTotals, fmtRub } from "./types";
 import { StaySummary } from "./StaySummary";
 import { cn } from "@/lib/utils";
-import { createBooking } from "@/lib/booking.functions";
+import { createBooking, calcPrepayment } from "@/lib/booking.functions";
 
 type Props = {
   state: BookingState;
@@ -22,14 +21,16 @@ export function Step4Confirm({ state, patch, onEditStep, onBack }: Props) {
   const submit = useServerFn(createBooking);
   const [submitting, setSubmitting] = useState(false);
 
-  const { guest, messenger, paymentMethod, idConsent, termsConsent, selected, dates } = state;
+  const { guest, messenger, idConsent, termsConsent, selected, dates } = state;
+  const totals = calcTotals(state);
+  const prepayment = calcPrepayment(totals.total, totals.nights);
+  const remaining = Math.max(0, totals.total - prepayment);
 
   const valid =
     guest.firstName.trim() &&
     guest.lastName.trim() &&
     guest.phone.trim().length >= 5 &&
     /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(guest.email.trim()) &&
-    paymentMethod &&
     idConsent &&
     termsConsent &&
     selected &&
@@ -39,9 +40,8 @@ export function Step4Confirm({ state, patch, onEditStep, onBack }: Props) {
   const onSubmit = async () => {
     if (!valid || !selected || !dates.from || !dates.to) return;
     setSubmitting(true);
-    const totals = calcTotals(state);
     try {
-      const { booking_number } = await submit({
+      const { id, booking_number } = await submit({
         data: {
           salutation: guest.salutation,
           first_name: guest.firstName.trim(),
@@ -69,12 +69,18 @@ export function Step4Confirm({ state, patch, onEditStep, onBack }: Props) {
           room_price_total: totals.roomTotal,
           breakfast_total: totals.breakfastTotal,
           total_price: totals.total,
-          payment_method: paymentMethod,
+          prepayment_amount: prepayment,
+          remaining_amount: remaining,
           id_consent: true,
           terms_consent: true,
         },
       });
-      navigate({ to: "/booking/success", search: { n: booking_number, e: guest.email } });
+      void booking_number;
+      navigate({
+        to: "/booking/pay/$id",
+        params: { id },
+        search: { e: guest.email.trim() },
+      });
     } catch (err) {
       console.error(err);
       toast.error("Не удалось отправить заявку. Попробуйте ещё раз.");
@@ -163,29 +169,24 @@ export function Step4Confirm({ state, patch, onEditStep, onBack }: Props) {
           )}
         </div>
 
-        {/* Payment */}
+        {/* Prepayment block */}
         <div className="mt-8 border-t border-border pt-8">
           <p className="text-[11px] uppercase tracking-widest text-navy">
-            Способ оплаты
+            Оплата
           </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            После отправки заявки наш менеджер свяжется с вами в течение часа для подтверждения и оплаты.
-          </p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <PaymentCard
-              icon={<CreditCard className="h-5 w-5 text-[#C9A96E]" strokeWidth={1.5} />}
-              title="Банковская карта"
-              subtitle="Visa / МИР / Mastercard · СБП · SberPay"
-              selected={paymentMethod === "card"}
-              onClick={() => patch({ paymentMethod: "card" })}
-            />
-            <PaymentCard
-              icon={<FileText className="h-5 w-5 text-[#C9A96E]" strokeWidth={1.5} />}
-              title="Оплата по счёту"
-              subtitle="Для юр. лиц и ИП. Реквизиты отправим на email"
-              selected={paymentMethod === "invoice"}
-              onClick={() => patch({ paymentMethod: "invoice" })}
-            />
+          <div className="mt-4 border border-[#C9A96E]/40 bg-[#C9A96E]/5 p-5">
+            <div className="flex items-baseline justify-between">
+              <span className="text-sm text-navy">Предоплата сейчас</span>
+              <span className="font-serif text-2xl text-navy">{fmtRub(prepayment)}</span>
+            </div>
+            <div className="mt-2 flex items-baseline justify-between text-sm text-muted-foreground">
+              <span>К доплате при заезде</span>
+              <span>{fmtRub(remaining)}</span>
+            </div>
+            <p className="mt-4 text-xs text-muted-foreground">
+              Карта · СБП · SberPay · оплата по счёту — выберете на следующем шаге.
+              Предоплата = бо́льшее из 30% стоимости и цены одной ночи.
+            </p>
           </div>
         </div>
 
@@ -221,7 +222,7 @@ export function Step4Confirm({ state, patch, onEditStep, onBack }: Props) {
               (!valid || submitting) && "cursor-not-allowed opacity-40 hover:bg-[#1a1a1a]",
             )}
           >
-            {submitting ? "Отправляем…" : "Завершить бронирование"}
+            {submitting ? "Создаём бронь…" : "Перейти к оплате"}
           </button>
         </div>
       </div>
@@ -263,35 +264,6 @@ function Field({
         />
       </div>
     </label>
-  );
-}
-
-function PaymentCard({
-  icon,
-  title,
-  subtitle,
-  selected,
-  onClick,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  subtitle: string;
-  selected: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "flex flex-col items-start gap-2 border bg-card p-5 text-left transition-colors",
-        selected ? "border-[#C9A96E] ring-1 ring-[#C9A96E]" : "border-border hover:border-[#C9A96E]",
-      )}
-    >
-      {icon}
-      <p className="text-sm text-navy">{title}</p>
-      <p className="text-xs text-muted-foreground">{subtitle}</p>
-    </button>
   );
 }
 
