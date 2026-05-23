@@ -103,7 +103,7 @@ function KamchatkaPage() {
         eyebrow="Гид по краю"
         title="О Камчатке"
         subtitle="Истории о земле вулканов, океана и тишины — от наших консьержей и проводников."
-        videoSrc="/media/about.mp4"
+        videoSrc="/media/kamchatka-hero.mp4"
       />
 
       {/* Featured */}
