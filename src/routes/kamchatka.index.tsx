@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/layout/SiteLayout";
 import { PageHero } from "@/components/sections/PageHero";
 
-export const Route = createFileRoute("/kamchatka")({
+export const Route = createFileRoute("/kamchatka/")({
   component: KamchatkaPage,
   head: () => ({
     meta: [
