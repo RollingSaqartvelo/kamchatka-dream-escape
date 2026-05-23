@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { Phone, MapPin, Menu, User } from "lucide-react";
+import { Phone, MapPin, Menu, User, X } from "lucide-react";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import logoDark from "@/assets/logo-poluostrov-dark.png";
 import logoLight from "@/assets/logo-poluostrov-light.png";
@@ -11,6 +11,7 @@ export function Header() {
   const location = useLocation();
   const isHome = location.pathname === "/";
   const [scrolledRaw, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const scrolled = !isHome || scrolledRaw;
 
   useEffect(() => {
@@ -19,6 +20,19 @@ export function Header() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
+
+  // Lock body scroll when menu open
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
 
   const navItems = [
     { to: "/rooms", label: t("nav.rooms") },
@@ -121,13 +135,51 @@ export function Header() {
               {t("nav.book")}
             </Link>
             <button
+              type="button"
+              onClick={() => setMobileOpen((v) => !v)}
               className={`lg:hidden ${scrolled ? "text-navy" : "text-cream"}`}
               aria-label="Menu"
+              aria-expanded={mobileOpen}
             >
-              <Menu className="h-6 w-6" />
+              {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Mobile menu drawer */}
+      <div
+        className={`lg:hidden fixed inset-x-0 top-[calc(2.25rem+5rem)] bottom-0 z-40 bg-cream transition-all duration-300 ${
+          mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+      >
+        <nav className="flex h-full flex-col overflow-y-auto px-6 py-8">
+          {navItems.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              onClick={() => setMobileOpen(false)}
+              className="border-b border-navy/10 py-5 font-serif text-2xl text-navy hover:text-gold"
+            >
+              {item.label}
+            </Link>
+          ))}
+          <Link
+            to="/booking"
+            onClick={() => setMobileOpen(false)}
+            className="mt-8 inline-flex h-12 items-center justify-center bg-navy px-6 text-[11px] tracking-widest-plus uppercase text-cream"
+            style={{ borderRadius: "2px" }}
+          >
+            {t("nav.book")}
+          </Link>
+          <a
+            href="tel:+79149945757"
+            className="mt-6 inline-flex items-center justify-center gap-2 text-[11px] tracking-widest-plus uppercase text-navy/70"
+          >
+            <Phone className="h-3 w-3" />
+            {t("header.phone")}
+          </a>
+        </nav>
       </div>
     </header>
   );
