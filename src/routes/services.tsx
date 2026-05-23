@@ -21,17 +21,23 @@ const breakfastPhotos = [
   "/media/breakfast-4.webp",
 ];
 
-function BreakfastGallery() {
+const dinnerPhotos = [
+  "/media/dinner-1.webp",
+  "/media/dinner-2.webp",
+  "/media/dinner-3.webp",
+];
+
+function PhotoGallery({ photos, alt }: { photos: string[]; alt: string }) {
   const [index, setIndex] = useState(0);
-  const total = breakfastPhotos.length;
+  const total = photos.length;
   const prev = () => setIndex((i) => (i - 1 + total) % total);
   const next = () => setIndex((i) => (i + 1) % total);
 
   return (
     <div className="relative aspect-[4/3] overflow-hidden bg-beige" style={{ borderRadius: "2px" }}>
       <img
-        src={breakfastPhotos[index]}
-        alt={`Завтрак в отеле «Полуостров» — фото ${index + 1}`}
+        src={photos[index]}
+        alt={`${alt} — фото ${index + 1}`}
         className="h-full w-full object-cover transition-opacity duration-500"
         key={index}
       />
@@ -60,6 +66,10 @@ function BreakfastGallery() {
   );
 }
 
+
+
+
+
 function ServicesPage() {
   const { t } = useTranslation();
   return (
@@ -74,7 +84,7 @@ function ServicesPage() {
       <section className="bg-cream py-24 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
-            <BreakfastGallery />
+            <PhotoGallery photos={breakfastPhotos} alt="Завтрак в отеле «Полуостров»" />
             <div>
               <p className="text-[11px] tracking-widest-plus uppercase text-gold">
                 Гастрономия
@@ -100,6 +110,39 @@ function ServicesPage() {
           </div>
         </div>
       </section>
+
+      <section className="bg-background py-24 sm:py-28">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+            <div className="lg:order-2">
+              <PhotoGallery photos={dinnerPhotos} alt="Ужин в отеле «Полуостров»" />
+            </div>
+            <div className="lg:order-1">
+              <p className="text-[11px] tracking-widest-plus uppercase text-gold">
+                Гастрономия
+              </p>
+              <h2 className="mt-5 font-serif text-4xl text-navy sm:text-5xl">
+                Ужин
+              </h2>
+              <p className="mt-6 text-base leading-relaxed text-muted-foreground">
+                Комплексный ужин по предварительному заказу — салат, горячее блюдо,
+                гарнир и домашний напиток.
+              </p>
+              <div className="mt-8 flex items-baseline gap-3 border-t border-beige pt-6">
+                <span className="text-[11px] tracking-widest-plus uppercase text-gold">
+                  Стоимость
+                </span>
+                <span className="font-serif text-3xl text-navy">800 ₽</span>
+                <span className="text-sm text-muted-foreground">/ персона</span>
+              </div>
+              <p className="mt-6 text-xs tracking-widest-plus uppercase text-muted-foreground">
+                Заказ принимается до 14:00 в день подачи
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
 
       <section className="bg-background py-24">
         <div className="mx-auto max-w-3xl px-4 text-center text-muted-foreground sm:px-6 lg:px-8">
