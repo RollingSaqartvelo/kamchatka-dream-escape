@@ -20,7 +20,9 @@ type Props = {
 };
 
 export function Step2Rooms({ state, onSelect, onEditStep, onContinue }: Props) {
-  const nights = nightsBetween(state.dates.from, state.dates.to);
+  const from = state.dates.from ?? new Date();
+  const to = state.dates.to ?? new Date();
+  const nights = nightsBetween(from, to);
   const guests = state.party.adults + state.party.children;
 
   const available = useMemo(
