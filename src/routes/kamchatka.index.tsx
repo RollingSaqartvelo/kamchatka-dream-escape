@@ -59,8 +59,7 @@ const articles: Article[] = [
     excerpt:
       "Морские прогулки к острову Старичков, наблюдение за касатками и сивучами, рыбалка на палтуса — что попробовать на воде.",
     readingTime: "7 мин чтения",
-    image:
-      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80",
+    image: "/media/starichkov-island.jpg",
   },
   {
     slug: "cuisine",

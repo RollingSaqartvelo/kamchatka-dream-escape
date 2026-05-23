@@ -60,9 +60,9 @@ const articles: Record<string, Article> = {
       },
       {
         type: "figure",
-        src: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1600&q=80",
-        caption: "Вулкан Горелый",
-        credit: "Д. Купрацевич / Russiadiscovery.ru",
+        src: "/media/starichkov-island.jpg",
+        caption: "Остров Старичков в Авачинском заливе",
+        credit: "Д. Чуданова",
       },
       {
         type: "p",
