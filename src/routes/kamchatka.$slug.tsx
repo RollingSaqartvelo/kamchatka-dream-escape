@@ -300,7 +300,7 @@ function ArticlePage() {
       {/* Body */}
       <article className="bg-background py-20 sm:py-24">
         <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
-          {article.sections.map((s, i) => {
+          {(article.sections as Section[]).map((s, i) => {
             if (s.type === "h2") {
               return (
                 <h2
