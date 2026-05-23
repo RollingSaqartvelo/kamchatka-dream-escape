@@ -30,14 +30,24 @@ const bookingSchema = z.object({
   room_price_total: z.number().int().min(0).max(10000000),
   breakfast_total: z.number().int().min(0).max(10000000),
   total_price: z.number().int().min(0).max(10000000),
-
-  payment_method: z.enum(["card", "invoice"]).nullable().optional(),
+  prepayment_amount: z.number().int().min(0).max(10000000),
+  remaining_amount: z.number().int().min(0).max(10000000),
 
   id_consent: z.literal(true),
   terms_consent: z.literal(true),
 });
 
 export type BookingInput = z.infer<typeof bookingSchema>;
+
+/**
+ * Считает сумму предоплаты: max(30% от total, стоимость 1 ночи).
+ */
+export function calcPrepayment(totalPrice: number, nights: number): number {
+  if (!totalPrice || !nights) return 0;
+  const oneNight = Math.round(totalPrice / nights);
+  const thirty = Math.round(totalPrice * 0.3);
+  return Math.max(oneNight, thirty);
+}
 
 export const createBooking = createServerFn({ method: "POST" })
   .inputValidator((input) => bookingSchema.parse(input))
@@ -73,12 +83,13 @@ export const createBooking = createServerFn({ method: "POST" })
         room_price_total: data.room_price_total,
         breakfast_total: data.breakfast_total,
         total_price: data.total_price,
-        payment_method: data.payment_method ?? null,
+        prepayment_amount: data.prepayment_amount,
+        remaining_amount: data.remaining_amount,
         payment_status: "pending",
         id_consent: data.id_consent,
         terms_consent: data.terms_consent,
       })
-      .select("booking_number")
+      .select("id, booking_number")
       .single();
 
     if (error) {
@@ -86,5 +97,8 @@ export const createBooking = createServerFn({ method: "POST" })
       throw new Error(error.message);
     }
 
-    return { booking_number: row.booking_number as string };
+    return {
+      id: row.id as string,
+      booking_number: row.booking_number as string,
+    };
   });

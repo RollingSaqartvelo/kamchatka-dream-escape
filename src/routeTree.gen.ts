@@ -20,6 +20,8 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BookingSuccessRouteImport } from './routes/booking.success'
 import { Route as AdminBookingsRouteImport } from './routes/admin.bookings'
+import { Route as BookingPayIdRouteImport } from './routes/booking.pay.$id'
+import { Route as ApiPublicAlfaCallbackRouteImport } from './routes/api/public/alfa-callback'
 
 const WellnessRoute = WellnessRouteImport.update({
   id: '/wellness',
@@ -76,6 +78,16 @@ const AdminBookingsRoute = AdminBookingsRouteImport.update({
   path: '/admin/bookings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BookingPayIdRoute = BookingPayIdRouteImport.update({
+  id: '/pay/$id',
+  path: '/pay/$id',
+  getParentRoute: () => BookingRoute,
+} as any)
+const ApiPublicAlfaCallbackRoute = ApiPublicAlfaCallbackRouteImport.update({
+  id: '/api/public/alfa-callback',
+  path: '/api/public/alfa-callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -89,6 +101,8 @@ export interface FileRoutesByFullPath {
   '/wellness': typeof WellnessRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/booking/success': typeof BookingSuccessRoute
+  '/api/public/alfa-callback': typeof ApiPublicAlfaCallbackRoute
+  '/booking/pay/$id': typeof BookingPayIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -102,6 +116,8 @@ export interface FileRoutesByTo {
   '/wellness': typeof WellnessRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/booking/success': typeof BookingSuccessRoute
+  '/api/public/alfa-callback': typeof ApiPublicAlfaCallbackRoute
+  '/booking/pay/$id': typeof BookingPayIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -116,6 +132,8 @@ export interface FileRoutesById {
   '/wellness': typeof WellnessRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/booking/success': typeof BookingSuccessRoute
+  '/api/public/alfa-callback': typeof ApiPublicAlfaCallbackRoute
+  '/booking/pay/$id': typeof BookingPayIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -131,6 +149,8 @@ export interface FileRouteTypes {
     | '/wellness'
     | '/admin/bookings'
     | '/booking/success'
+    | '/api/public/alfa-callback'
+    | '/booking/pay/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -144,6 +164,8 @@ export interface FileRouteTypes {
     | '/wellness'
     | '/admin/bookings'
     | '/booking/success'
+    | '/api/public/alfa-callback'
+    | '/booking/pay/$id'
   id:
     | '__root__'
     | '/'
@@ -157,6 +179,8 @@ export interface FileRouteTypes {
     | '/wellness'
     | '/admin/bookings'
     | '/booking/success'
+    | '/api/public/alfa-callback'
+    | '/booking/pay/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -170,6 +194,7 @@ export interface RootRouteChildren {
   ServicesRoute: typeof ServicesRoute
   WellnessRoute: typeof WellnessRoute
   AdminBookingsRoute: typeof AdminBookingsRoute
+  ApiPublicAlfaCallbackRoute: typeof ApiPublicAlfaCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -251,15 +276,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminBookingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/booking/pay/$id': {
+      id: '/booking/pay/$id'
+      path: '/pay/$id'
+      fullPath: '/booking/pay/$id'
+      preLoaderRoute: typeof BookingPayIdRouteImport
+      parentRoute: typeof BookingRoute
+    }
+    '/api/public/alfa-callback': {
+      id: '/api/public/alfa-callback'
+      path: '/api/public/alfa-callback'
+      fullPath: '/api/public/alfa-callback'
+      preLoaderRoute: typeof ApiPublicAlfaCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface BookingRouteChildren {
   BookingSuccessRoute: typeof BookingSuccessRoute
+  BookingPayIdRoute: typeof BookingPayIdRoute
 }
 
 const BookingRouteChildren: BookingRouteChildren = {
   BookingSuccessRoute: BookingSuccessRoute,
+  BookingPayIdRoute: BookingPayIdRoute,
 }
 
 const BookingRouteWithChildren =
@@ -276,7 +317,18 @@ const rootRouteChildren: RootRouteChildren = {
   ServicesRoute: ServicesRoute,
   WellnessRoute: WellnessRoute,
   AdminBookingsRoute: AdminBookingsRoute,
+  ApiPublicAlfaCallbackRoute: ApiPublicAlfaCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
