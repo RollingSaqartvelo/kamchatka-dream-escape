@@ -163,7 +163,12 @@ function KamchatkaPage() {
 
           <div className="grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
             {rest.map((a) => (
-              <article key={a.slug} className="group cursor-pointer">
+              <Link
+                key={a.slug}
+                to="/kamchatka/$slug"
+                params={{ slug: a.slug }}
+                className="group block"
+              >
                 <div
                   className="aspect-[4/5] overflow-hidden bg-beige"
                   style={{ borderRadius: "2px" }}
@@ -184,7 +189,7 @@ function KamchatkaPage() {
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                   {a.excerpt}
                 </p>
-              </article>
+              </Link>
             ))}
           </div>
         </div>
