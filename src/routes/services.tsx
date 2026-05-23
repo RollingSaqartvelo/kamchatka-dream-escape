@@ -68,44 +68,7 @@ function PhotoGallery({ photos, alt }: { photos: string[]; alt: string }) {
 
 
 
-function BreakfastGallery() {
-  const [index, setIndex] = useState(0);
-  const total = breakfastPhotos.length;
-  const prev = () => setIndex((i) => (i - 1 + total) % total);
-  const next = () => setIndex((i) => (i + 1) % total);
 
-  return (
-    <div className="relative aspect-[4/3] overflow-hidden bg-beige" style={{ borderRadius: "2px" }}>
-      <img
-        src={breakfastPhotos[index]}
-        alt={`Завтрак в отеле «Полуостров» — фото ${index + 1}`}
-        className="h-full w-full object-cover transition-opacity duration-500"
-        key={index}
-      />
-      <button
-        type="button"
-        onClick={prev}
-        aria-label="Предыдущее фото"
-        className="absolute left-4 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center bg-cream/90 text-navy backdrop-blur-sm transition hover:bg-cream"
-        style={{ borderRadius: "2px" }}
-      >
-        <span aria-hidden className="text-lg">←</span>
-      </button>
-      <button
-        type="button"
-        onClick={next}
-        aria-label="Следующее фото"
-        className="absolute right-4 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center bg-cream/90 text-navy backdrop-blur-sm transition hover:bg-cream"
-        style={{ borderRadius: "2px" }}
-      >
-        <span aria-hidden className="text-lg">→</span>
-      </button>
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-navy/70 px-3 py-1 text-[10px] tracking-widest-plus uppercase text-cream" style={{ borderRadius: "2px" }}>
-        {index + 1} / {total}
-      </div>
-    </div>
-  );
-}
 
 function ServicesPage() {
   const { t } = useTranslation();
