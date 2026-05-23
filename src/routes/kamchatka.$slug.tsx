@@ -410,8 +410,7 @@ const articles: Record<string, Article> = {
       "Ительмены, коряки, эвены, алеуты — четыре культуры, сохранившие древние традиции охоты, шаманизма и танца Алхалалалай.",
     author: "Редакция «Полуострова»",
     readingTime: "9 мин чтения",
-    cover:
-      "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=2000&q=80",
+    cover: "/media/indigenous.jpg",
     sections: [
       {
         type: "p",
