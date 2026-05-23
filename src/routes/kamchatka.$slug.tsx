@@ -208,6 +208,11 @@ const articles: Record<string, Article> = {
         src: "/media/snow-sheep.jpg",
         caption: "Снежный баран Камчатки",
       },
+      {
+        type: "figure",
+        src: "/media/sable.jpg",
+        caption: "Камчатский соболь",
+      },
 
       { type: "h3", text: "Птицы и морская жизнь" },
       {
