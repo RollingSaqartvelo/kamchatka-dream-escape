@@ -24,6 +24,7 @@ export function Header() {
     { to: "/rooms", label: t("nav.rooms") },
     { to: "/services", label: t("nav.services") },
     { to: "/wellness", label: t("nav.wellness") },
+    { to: "/kamchatka", label: "О Камчатке" },
     { to: "/about", label: t("nav.about") },
     { to: "/contacts", label: t("nav.contacts") },
   ];

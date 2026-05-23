@@ -13,6 +13,7 @@ import { Route as WellnessRouteImport } from './routes/wellness'
 import { Route as ServicesRouteImport } from './routes/services'
 import { Route as RoomsRouteImport } from './routes/rooms'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as KamchatkaRouteImport } from './routes/kamchatka'
 import { Route as ContactsRouteImport } from './routes/contacts'
 import { Route as BookingRouteImport } from './routes/booking'
 import { Route as AccountRouteImport } from './routes/account'
@@ -41,6 +42,11 @@ const RoomsRoute = RoomsRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KamchatkaRoute = KamchatkaRouteImport.update({
+  id: '/kamchatka',
+  path: '/kamchatka',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactsRoute = ContactsRouteImport.update({
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/booking': typeof BookingRouteWithChildren
   '/contacts': typeof ContactsRoute
+  '/kamchatka': typeof KamchatkaRoute
   '/login': typeof LoginRoute
   '/rooms': typeof RoomsRoute
   '/services': typeof ServicesRoute
@@ -110,6 +117,7 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/booking': typeof BookingRouteWithChildren
   '/contacts': typeof ContactsRoute
+  '/kamchatka': typeof KamchatkaRoute
   '/login': typeof LoginRoute
   '/rooms': typeof RoomsRoute
   '/services': typeof ServicesRoute
@@ -126,6 +134,7 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/booking': typeof BookingRouteWithChildren
   '/contacts': typeof ContactsRoute
+  '/kamchatka': typeof KamchatkaRoute
   '/login': typeof LoginRoute
   '/rooms': typeof RoomsRoute
   '/services': typeof ServicesRoute
@@ -143,6 +152,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/booking'
     | '/contacts'
+    | '/kamchatka'
     | '/login'
     | '/rooms'
     | '/services'
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/booking'
     | '/contacts'
+    | '/kamchatka'
     | '/login'
     | '/rooms'
     | '/services'
@@ -173,6 +184,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/booking'
     | '/contacts'
+    | '/kamchatka'
     | '/login'
     | '/rooms'
     | '/services'
@@ -189,6 +201,7 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   BookingRoute: typeof BookingRouteWithChildren
   ContactsRoute: typeof ContactsRoute
+  KamchatkaRoute: typeof KamchatkaRoute
   LoginRoute: typeof LoginRoute
   RoomsRoute: typeof RoomsRoute
   ServicesRoute: typeof ServicesRoute
@@ -225,6 +238,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kamchatka': {
+      id: '/kamchatka'
+      path: '/kamchatka'
+      fullPath: '/kamchatka'
+      preLoaderRoute: typeof KamchatkaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contacts': {
@@ -312,6 +332,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRoute,
   BookingRoute: BookingRouteWithChildren,
   ContactsRoute: ContactsRoute,
+  KamchatkaRoute: KamchatkaRoute,
   LoginRoute: LoginRoute,
   RoomsRoute: RoomsRoute,
   ServicesRoute: ServicesRoute,
