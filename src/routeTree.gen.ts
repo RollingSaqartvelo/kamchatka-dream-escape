@@ -23,6 +23,7 @@ import { Route as KamchatkaSlugRouteImport } from './routes/kamchatka.$slug'
 import { Route as BookingSuccessRouteImport } from './routes/booking.success'
 import { Route as AdminBookingsRouteImport } from './routes/admin.bookings'
 import { Route as BookingPayIdRouteImport } from './routes/booking.pay.$id'
+import { Route as ApiPublicTravellineTestRouteImport } from './routes/api/public/travelline-test'
 import { Route as ApiPublicAlfaCallbackRouteImport } from './routes/api/public/alfa-callback'
 
 const WellnessRoute = WellnessRouteImport.update({
@@ -95,6 +96,11 @@ const BookingPayIdRoute = BookingPayIdRouteImport.update({
   path: '/pay/$id',
   getParentRoute: () => BookingRoute,
 } as any)
+const ApiPublicTravellineTestRoute = ApiPublicTravellineTestRouteImport.update({
+  id: '/api/public/travelline-test',
+  path: '/api/public/travelline-test',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicAlfaCallbackRoute = ApiPublicAlfaCallbackRouteImport.update({
   id: '/api/public/alfa-callback',
   path: '/api/public/alfa-callback',
@@ -116,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/kamchatka/$slug': typeof KamchatkaSlugRoute
   '/kamchatka/': typeof KamchatkaIndexRoute
   '/api/public/alfa-callback': typeof ApiPublicAlfaCallbackRoute
+  '/api/public/travelline-test': typeof ApiPublicTravellineTestRoute
   '/booking/pay/$id': typeof BookingPayIdRoute
 }
 export interface FileRoutesByTo {
@@ -133,6 +140,7 @@ export interface FileRoutesByTo {
   '/kamchatka/$slug': typeof KamchatkaSlugRoute
   '/kamchatka': typeof KamchatkaIndexRoute
   '/api/public/alfa-callback': typeof ApiPublicAlfaCallbackRoute
+  '/api/public/travelline-test': typeof ApiPublicTravellineTestRoute
   '/booking/pay/$id': typeof BookingPayIdRoute
 }
 export interface FileRoutesById {
@@ -151,6 +159,7 @@ export interface FileRoutesById {
   '/kamchatka/$slug': typeof KamchatkaSlugRoute
   '/kamchatka/': typeof KamchatkaIndexRoute
   '/api/public/alfa-callback': typeof ApiPublicAlfaCallbackRoute
+  '/api/public/travelline-test': typeof ApiPublicTravellineTestRoute
   '/booking/pay/$id': typeof BookingPayIdRoute
 }
 export interface FileRouteTypes {
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
     | '/kamchatka/$slug'
     | '/kamchatka/'
     | '/api/public/alfa-callback'
+    | '/api/public/travelline-test'
     | '/booking/pay/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -187,6 +197,7 @@ export interface FileRouteTypes {
     | '/kamchatka/$slug'
     | '/kamchatka'
     | '/api/public/alfa-callback'
+    | '/api/public/travelline-test'
     | '/booking/pay/$id'
   id:
     | '__root__'
@@ -204,6 +215,7 @@ export interface FileRouteTypes {
     | '/kamchatka/$slug'
     | '/kamchatka/'
     | '/api/public/alfa-callback'
+    | '/api/public/travelline-test'
     | '/booking/pay/$id'
   fileRoutesById: FileRoutesById
 }
@@ -221,6 +233,7 @@ export interface RootRouteChildren {
   KamchatkaSlugRoute: typeof KamchatkaSlugRoute
   KamchatkaIndexRoute: typeof KamchatkaIndexRoute
   ApiPublicAlfaCallbackRoute: typeof ApiPublicAlfaCallbackRoute
+  ApiPublicTravellineTestRoute: typeof ApiPublicTravellineTestRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -323,6 +336,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BookingPayIdRouteImport
       parentRoute: typeof BookingRoute
     }
+    '/api/public/travelline-test': {
+      id: '/api/public/travelline-test'
+      path: '/api/public/travelline-test'
+      fullPath: '/api/public/travelline-test'
+      preLoaderRoute: typeof ApiPublicTravellineTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/alfa-callback': {
       id: '/api/public/alfa-callback'
       path: '/api/public/alfa-callback'
@@ -360,7 +380,18 @@ const rootRouteChildren: RootRouteChildren = {
   KamchatkaSlugRoute: KamchatkaSlugRoute,
   KamchatkaIndexRoute: KamchatkaIndexRoute,
   ApiPublicAlfaCallbackRoute: ApiPublicAlfaCallbackRoute,
+  ApiPublicTravellineTestRoute: ApiPublicTravellineTestRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
