@@ -12,12 +12,14 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WellnessRouteImport } from './routes/wellness'
 import { Route as ServicesRouteImport } from './routes/services'
 import { Route as RoomsRouteImport } from './routes/rooms'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as ContactsRouteImport } from './routes/contacts'
 import { Route as BookingRouteImport } from './routes/booking'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BookingSuccessRouteImport } from './routes/booking.success'
+import { Route as AdminBookingsRouteImport } from './routes/admin.bookings'
 
 const WellnessRoute = WellnessRouteImport.update({
   id: '/wellness',
@@ -32,6 +34,11 @@ const ServicesRoute = ServicesRouteImport.update({
 const RoomsRoute = RoomsRouteImport.update({
   id: '/rooms',
   path: '/rooms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactsRoute = ContactsRouteImport.update({
@@ -64,6 +71,11 @@ const BookingSuccessRoute = BookingSuccessRouteImport.update({
   path: '/success',
   getParentRoute: () => BookingRoute,
 } as any)
+const AdminBookingsRoute = AdminBookingsRouteImport.update({
+  id: '/admin/bookings',
+  path: '/admin/bookings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -71,9 +83,11 @@ export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/booking': typeof BookingRouteWithChildren
   '/contacts': typeof ContactsRoute
+  '/login': typeof LoginRoute
   '/rooms': typeof RoomsRoute
   '/services': typeof ServicesRoute
   '/wellness': typeof WellnessRoute
+  '/admin/bookings': typeof AdminBookingsRoute
   '/booking/success': typeof BookingSuccessRoute
 }
 export interface FileRoutesByTo {
@@ -82,9 +96,11 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/booking': typeof BookingRouteWithChildren
   '/contacts': typeof ContactsRoute
+  '/login': typeof LoginRoute
   '/rooms': typeof RoomsRoute
   '/services': typeof ServicesRoute
   '/wellness': typeof WellnessRoute
+  '/admin/bookings': typeof AdminBookingsRoute
   '/booking/success': typeof BookingSuccessRoute
 }
 export interface FileRoutesById {
@@ -94,9 +110,11 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/booking': typeof BookingRouteWithChildren
   '/contacts': typeof ContactsRoute
+  '/login': typeof LoginRoute
   '/rooms': typeof RoomsRoute
   '/services': typeof ServicesRoute
   '/wellness': typeof WellnessRoute
+  '/admin/bookings': typeof AdminBookingsRoute
   '/booking/success': typeof BookingSuccessRoute
 }
 export interface FileRouteTypes {
@@ -107,9 +125,11 @@ export interface FileRouteTypes {
     | '/account'
     | '/booking'
     | '/contacts'
+    | '/login'
     | '/rooms'
     | '/services'
     | '/wellness'
+    | '/admin/bookings'
     | '/booking/success'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -118,9 +138,11 @@ export interface FileRouteTypes {
     | '/account'
     | '/booking'
     | '/contacts'
+    | '/login'
     | '/rooms'
     | '/services'
     | '/wellness'
+    | '/admin/bookings'
     | '/booking/success'
   id:
     | '__root__'
@@ -129,9 +151,11 @@ export interface FileRouteTypes {
     | '/account'
     | '/booking'
     | '/contacts'
+    | '/login'
     | '/rooms'
     | '/services'
     | '/wellness'
+    | '/admin/bookings'
     | '/booking/success'
   fileRoutesById: FileRoutesById
 }
@@ -141,9 +165,11 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   BookingRoute: typeof BookingRouteWithChildren
   ContactsRoute: typeof ContactsRoute
+  LoginRoute: typeof LoginRoute
   RoomsRoute: typeof RoomsRoute
   ServicesRoute: typeof ServicesRoute
   WellnessRoute: typeof WellnessRoute
+  AdminBookingsRoute: typeof AdminBookingsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -167,6 +193,13 @@ declare module '@tanstack/react-router' {
       path: '/rooms'
       fullPath: '/rooms'
       preLoaderRoute: typeof RoomsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contacts': {
@@ -211,6 +244,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BookingSuccessRouteImport
       parentRoute: typeof BookingRoute
     }
+    '/admin/bookings': {
+      id: '/admin/bookings'
+      path: '/admin/bookings'
+      fullPath: '/admin/bookings'
+      preLoaderRoute: typeof AdminBookingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -231,10 +271,22 @@ const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRoute,
   BookingRoute: BookingRouteWithChildren,
   ContactsRoute: ContactsRoute,
+  LoginRoute: LoginRoute,
   RoomsRoute: RoomsRoute,
   ServicesRoute: ServicesRoute,
   WellnessRoute: WellnessRoute,
+  AdminBookingsRoute: AdminBookingsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
