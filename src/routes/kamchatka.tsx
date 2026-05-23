@@ -132,7 +132,8 @@ function KamchatkaPage() {
                 {featured.excerpt}
               </p>
               <Link
-                to="/kamchatka"
+                to="/kamchatka/$slug"
+                params={{ slug: featured.slug }}
                 className="mt-8 inline-flex items-center gap-3 text-[11px] tracking-widest-plus uppercase text-navy hover:text-gold"
               >
                 Читать статью
