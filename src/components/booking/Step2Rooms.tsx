@@ -51,6 +51,10 @@ export function Step2Rooms({ state, onSelect, onEditStep, onContinue }: Props) {
               room={room}
               nights={nights}
               guests={guests}
+              adults={state.party.adults}
+              children={state.party.children}
+              checkIn={fmtDate(state.dates.from)}
+              checkOut={fmtDate(state.dates.to)}
               selected={
                 state.selected?.room.id === room.id ? state.selected.mealPlan : null
               }
