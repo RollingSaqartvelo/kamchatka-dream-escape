@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { Phone, MapPin, Menu, User } from "lucide-react";
+import { Phone, MapPin, Menu, User, X } from "lucide-react";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import logoDark from "@/assets/logo-poluostrov-dark.png";
 import logoLight from "@/assets/logo-poluostrov-light.png";
