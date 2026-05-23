@@ -1,10 +1,16 @@
 import { useMemo, useState } from "react";
-import { ChevronDown, Users, Ruler } from "lucide-react";
+import { ChevronDown, Users, Ruler, Loader2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { ROOMS } from "@/data/rooms";
 import type { BookingState, MealPlan, SelectedRate } from "./types";
 import { BREAKFAST_PER_PERSON, calcTotals, fmtRub, nightsBetween } from "./types";
 import { StaySummary } from "./StaySummary";
+import { searchTravellineAvailability, ROOM_ID_TO_TL } from "@/lib/travelline.functions";
 import { cn } from "@/lib/utils";
+
+const fmtDate = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 type Props = {
   state: BookingState;
