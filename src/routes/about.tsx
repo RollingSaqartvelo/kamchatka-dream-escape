@@ -175,6 +175,65 @@ function AboutPage() {
           </p>
         </div>
       </section>
+
+      <section className="bg-navy py-24 text-cream">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+          <p className="text-center text-[11px] uppercase tracking-[4px] text-gold">
+            Тихая гавань
+          </p>
+          <h2 className="mt-4 text-center font-serif text-3xl text-cream sm:text-4xl">
+            Ищете спокойное место для отдыха на Камчатке?
+          </h2>
+
+          <p className="mt-8 text-center text-cream/80">
+            «Полуостров» — небольшой отель, где всё создано для тихого и комфортного
+            проживания.
+          </p>
+
+          <ul className="mx-auto mt-10 max-w-xl space-y-4 text-cream/85">
+            <li className="flex gap-4 border-b border-cream/15 pb-4">
+              <span className="font-serif text-base text-gold">01</span>
+              <span>Чистые номера с удобными кроватями</span>
+            </li>
+            <li className="flex gap-4 border-b border-cream/15 pb-4">
+              <span className="font-serif text-base text-gold">02</span>
+              <span>Отдельные санузлы в каждом номере</span>
+            </li>
+            <li className="flex gap-4 border-b border-cream/15 pb-4">
+              <span className="font-serif text-base text-gold">03</span>
+              <span>Тишина и уютная атмосфера</span>
+            </li>
+            <li className="flex gap-4">
+              <span className="font-serif text-base text-gold">04</span>
+              <span>Выбор формата — от койко-места до двухместного номера</span>
+            </li>
+          </ul>
+
+          <p className="mx-auto mt-12 max-w-2xl text-center text-cream/75">
+            Многие гости приезжают к нам после поездок по Камчатке — чтобы отдохнуть
+            пару дней, восстановиться и набраться сил перед дорогой домой.
+          </p>
+
+          <div className="mt-14 border-t border-cream/15 pt-12 text-center">
+            <p className="text-[11px] uppercase tracking-[4px] text-gold">
+              Готовы приехать?
+            </p>
+            <p className="mx-auto mt-4 max-w-xl text-cream/80">
+              Забронируйте номер прямо на сайте — выберите даты, формат размещения и
+              подтвердите бронирование за пару минут.
+            </p>
+            <a
+              href="/booking"
+              className="mt-8 inline-block border border-gold bg-gold px-10 py-4 text-[11px] uppercase tracking-[3px] text-navy transition-colors hover:bg-transparent hover:text-gold"
+            >
+              Забронировать на сайте
+            </a>
+            <p className="mt-12 font-serif text-2xl text-cream">
+              Полуостров — место, куда хочется возвращаться
+            </p>
+          </div>
+        </div>
+      </section>
     </SiteLayout>
   );
 }
