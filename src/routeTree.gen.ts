@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WellnessRouteImport } from './routes/wellness'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ServicesRouteImport } from './routes/services'
 import { Route as RoomsRouteImport } from './routes/rooms'
 import { Route as LoginRouteImport } from './routes/login'
@@ -29,6 +30,11 @@ import { Route as ApiPublicAlfaCallbackRouteImport } from './routes/api/public/a
 const WellnessRoute = WellnessRouteImport.update({
   id: '/wellness',
   path: '/wellness',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ServicesRoute = ServicesRouteImport.update({
@@ -116,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/rooms': typeof RoomsRoute
   '/services': typeof ServicesRoute
+  '/signup': typeof SignupRoute
   '/wellness': typeof WellnessRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/booking/success': typeof BookingSuccessRoute
@@ -134,6 +141,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/rooms': typeof RoomsRoute
   '/services': typeof ServicesRoute
+  '/signup': typeof SignupRoute
   '/wellness': typeof WellnessRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/booking/success': typeof BookingSuccessRoute
@@ -153,6 +161,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/rooms': typeof RoomsRoute
   '/services': typeof ServicesRoute
+  '/signup': typeof SignupRoute
   '/wellness': typeof WellnessRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/booking/success': typeof BookingSuccessRoute
@@ -173,6 +182,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/rooms'
     | '/services'
+    | '/signup'
     | '/wellness'
     | '/admin/bookings'
     | '/booking/success'
@@ -191,6 +201,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/rooms'
     | '/services'
+    | '/signup'
     | '/wellness'
     | '/admin/bookings'
     | '/booking/success'
@@ -209,6 +220,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/rooms'
     | '/services'
+    | '/signup'
     | '/wellness'
     | '/admin/bookings'
     | '/booking/success'
@@ -228,6 +240,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   RoomsRoute: typeof RoomsRoute
   ServicesRoute: typeof ServicesRoute
+  SignupRoute: typeof SignupRoute
   WellnessRoute: typeof WellnessRoute
   AdminBookingsRoute: typeof AdminBookingsRoute
   KamchatkaSlugRoute: typeof KamchatkaSlugRoute
@@ -243,6 +256,13 @@ declare module '@tanstack/react-router' {
       path: '/wellness'
       fullPath: '/wellness'
       preLoaderRoute: typeof WellnessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/services': {
@@ -375,6 +395,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   RoomsRoute: RoomsRoute,
   ServicesRoute: ServicesRoute,
+  SignupRoute: SignupRoute,
   WellnessRoute: WellnessRoute,
   AdminBookingsRoute: AdminBookingsRoute,
   KamchatkaSlugRoute: KamchatkaSlugRoute,
@@ -385,3 +406,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
