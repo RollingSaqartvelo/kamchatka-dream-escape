@@ -91,7 +91,10 @@ function LoginPage() {
         </form>
 
         <p className="mt-8 text-xs text-muted-foreground">
-          Доступ предоставляется администратором отеля.
+          Нет аккаунта?{" "}
+          <Link to="/signup" className="text-navy underline">
+            Зарегистрироваться
+          </Link>
         </p>
       </div>
     </main>
