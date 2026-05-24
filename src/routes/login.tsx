@@ -23,13 +23,20 @@ function LoginPage() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error || !data.user) {
+      setLoading(false);
       setError("Неверный email или пароль");
       return;
     }
-    navigate({ to: "/admin/bookings" });
+    // Check if user is staff (admin/manager) — redirect to admin panel
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", data.user.id);
+    setLoading(false);
+    const isStaff = (roles ?? []).some((r) => r.role === "admin" || r.role === "manager");
+    navigate({ to: isStaff ? "/admin/bookings" : "/account" });
   }
 
   return (
@@ -39,10 +46,10 @@ function LoginPage() {
           Полуостров
         </Link>
         <p className="mt-1 text-[10px] uppercase tracking-[3px] text-muted-foreground">
-          Панель управления
+          Личный кабинет
         </p>
 
-        <h1 className="mt-10 font-serif text-3xl text-navy">Вход для сотрудников</h1>
+        <h1 className="mt-10 font-serif text-3xl text-navy">Вход</h1>
 
         <form onSubmit={onSubmit} className="mt-8 space-y-5">
           <div>
@@ -84,7 +91,10 @@ function LoginPage() {
         </form>
 
         <p className="mt-8 text-xs text-muted-foreground">
-          Доступ предоставляется администратором отеля.
+          Нет аккаунта?{" "}
+          <Link to="/signup" className="text-navy underline">
+            Зарегистрироваться
+          </Link>
         </p>
       </div>
     </main>

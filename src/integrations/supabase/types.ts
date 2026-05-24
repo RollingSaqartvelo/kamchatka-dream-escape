@@ -53,6 +53,7 @@ export type Database = {
           terms_consent: boolean
           total_price: number
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           admin_notes?: string | null
@@ -92,6 +93,7 @@ export type Database = {
           terms_consent?: boolean
           total_price?: number
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           admin_notes?: string | null
@@ -131,6 +133,55 @@ export type Database = {
           terms_consent?: boolean
           total_price?: number
           updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          city: string | null
+          country: string | null
+          created_at: string
+          email: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+          messenger_type: string | null
+          messenger_username: string | null
+          phone: string | null
+          salutation: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          messenger_type?: string | null
+          messenger_username?: string | null
+          phone?: string | null
+          salutation?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          messenger_type?: string | null
+          messenger_username?: string | null
+          phone?: string | null
+          salutation?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
