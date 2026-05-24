@@ -61,8 +61,6 @@ export const linkBookingToMe = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ bookingId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { userId } = context;
-    // Use admin client to bypass RLS for this targeted update
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("bookings")
       .update({ user_id: userId })
