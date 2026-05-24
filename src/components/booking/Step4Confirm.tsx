@@ -117,6 +117,34 @@ export function Step4Confirm({ state, patch, onEditStep, onBack }: Props) {
         },
       });
       void booking_number;
+
+      // If user is logged in: link booking + save profile data for next time
+      if (user) {
+        try {
+          await Promise.all([
+            linkBooking({ data: { bookingId: id } }),
+            saveProfile({
+              data: {
+                salutation: guest.salutation,
+                first_name: guest.firstName.trim(),
+                last_name: guest.lastName.trim(),
+                phone: guest.phone.trim(),
+                email: guest.email.trim(),
+                city: guest.city.trim() || null,
+                country: guest.country.trim() || null,
+                messenger_type: messenger.type,
+                messenger_username:
+                  messenger.type !== "none" && messenger.username.trim()
+                    ? messenger.username.trim()
+                    : null,
+              },
+            }),
+          ]);
+        } catch (e) {
+          console.warn("Profile sync failed:", e);
+        }
+      }
+
       navigate({
         to: "/booking/pay/$id",
         params: { id },
