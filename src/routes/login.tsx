@@ -23,13 +23,20 @@ function LoginPage() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error || !data.user) {
+      setLoading(false);
       setError("Неверный email или пароль");
       return;
     }
-    navigate({ to: "/admin/bookings" });
+    // Check if user is staff (admin/manager) — redirect to admin panel
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", data.user.id);
+    setLoading(false);
+    const isStaff = (roles ?? []).some((r) => r.role === "admin" || r.role === "manager");
+    navigate({ to: isStaff ? "/admin/bookings" : "/account" });
   }
 
   return (
