@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -8,6 +8,12 @@ import { calcTotals, fmtRub } from "./types";
 import { StaySummary } from "./StaySummary";
 import { cn } from "@/lib/utils";
 import { createBooking, calcPrepayment } from "@/lib/booking.functions";
+import {
+  getMyProfile,
+  upsertMyProfile,
+  linkBookingToMe,
+} from "@/lib/profile.functions";
+import { useAuth } from "@/lib/useAuth";
 
 type Props = {
   state: BookingState;
@@ -19,7 +25,42 @@ type Props = {
 export function Step4Confirm({ state, patch, onEditStep, onBack }: Props) {
   const navigate = useNavigate();
   const submit = useServerFn(createBooking);
+  const fetchProfile = useServerFn(getMyProfile);
+  const saveProfile = useServerFn(upsertMyProfile);
+  const linkBooking = useServerFn(linkBookingToMe);
+  const { user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
+  const [prefilled, setPrefilled] = useState(false);
+
+  // Prefill from profile when user is logged in
+  useEffect(() => {
+    if (!user || prefilled) return;
+    setPrefilled(true);
+    fetchProfile()
+      .then((p) => {
+        if (!p) return;
+        const g = state.guest;
+        const isEmpty = !g.firstName && !g.lastName && !g.phone && !g.email;
+        if (!isEmpty) return;
+        patch({
+          guest: {
+            salutation: (p.salutation as "mr" | "mrs" | null) ?? null,
+            firstName: p.first_name ?? "",
+            lastName: p.last_name ?? "",
+            phone: p.phone ?? "",
+            email: p.email ?? user.email ?? "",
+            city: p.city ?? "",
+            country: p.country ?? "",
+          },
+          messenger: {
+            type: (p.messenger_type as "telegram" | "vk_max" | "none") ?? "none",
+            username: p.messenger_username ?? "",
+          },
+        });
+      })
+      .catch(() => {});
+  }, [user, prefilled, fetchProfile, state.guest, patch]);
+
 
   const { guest, messenger, idConsent, termsConsent, selected, dates } = state;
   const totals = calcTotals(state);
