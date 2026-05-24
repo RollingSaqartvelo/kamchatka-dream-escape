@@ -46,10 +46,10 @@ function LoginPage() {
           Полуостров
         </Link>
         <p className="mt-1 text-[10px] uppercase tracking-[3px] text-muted-foreground">
-          Панель управления
+          Личный кабинет
         </p>
 
-        <h1 className="mt-10 font-serif text-3xl text-navy">Вход для сотрудников</h1>
+        <h1 className="mt-10 font-serif text-3xl text-navy">Вход</h1>
 
         <form onSubmit={onSubmit} className="mt-8 space-y-5">
           <div>
