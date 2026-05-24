@@ -349,6 +349,3 @@ function fmtDate(iso: string) {
     return iso;
   }
 }
-
-// keep supabase import alive for tree-shaker
-void supabase;
