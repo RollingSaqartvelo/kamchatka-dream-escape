@@ -24,6 +24,9 @@ import { Route as KamchatkaIndexRouteImport } from './routes/kamchatka.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as KamchatkaSlugRouteImport } from './routes/kamchatka.$slug'
 import { Route as BookingSuccessRouteImport } from './routes/booking.success'
+import { Route as AdminRoomsRouteImport } from './routes/admin.rooms'
+import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
+import { Route as AdminCalendarRouteImport } from './routes/admin.calendar'
 import { Route as AdminBookingsRouteImport } from './routes/admin.bookings'
 import { Route as BookingPayIdRouteImport } from './routes/booking.pay.$id'
 import { Route as ApiPublicTravellineTestRouteImport } from './routes/api/public/travelline-test'
@@ -104,6 +107,21 @@ const BookingSuccessRoute = BookingSuccessRouteImport.update({
   path: '/success',
   getParentRoute: () => BookingRoute,
 } as any)
+const AdminRoomsRoute = AdminRoomsRouteImport.update({
+  id: '/rooms',
+  path: '/rooms',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCalendarRoute = AdminCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminBookingsRoute = AdminBookingsRouteImport.update({
   id: '/bookings',
   path: '/bookings',
@@ -138,6 +156,9 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/wellness': typeof WellnessRoute
   '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/calendar': typeof AdminCalendarRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/rooms': typeof AdminRoomsRoute
   '/booking/success': typeof BookingSuccessRoute
   '/kamchatka/$slug': typeof KamchatkaSlugRoute
   '/admin/': typeof AdminIndexRoute
@@ -158,6 +179,9 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/wellness': typeof WellnessRoute
   '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/calendar': typeof AdminCalendarRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/rooms': typeof AdminRoomsRoute
   '/booking/success': typeof BookingSuccessRoute
   '/kamchatka/$slug': typeof KamchatkaSlugRoute
   '/admin': typeof AdminIndexRoute
@@ -180,6 +204,9 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/wellness': typeof WellnessRoute
   '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/calendar': typeof AdminCalendarRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/rooms': typeof AdminRoomsRoute
   '/booking/success': typeof BookingSuccessRoute
   '/kamchatka/$slug': typeof KamchatkaSlugRoute
   '/admin/': typeof AdminIndexRoute
@@ -203,6 +230,9 @@ export interface FileRouteTypes {
     | '/signup'
     | '/wellness'
     | '/admin/bookings'
+    | '/admin/calendar'
+    | '/admin/notifications'
+    | '/admin/rooms'
     | '/booking/success'
     | '/kamchatka/$slug'
     | '/admin/'
@@ -223,6 +253,9 @@ export interface FileRouteTypes {
     | '/signup'
     | '/wellness'
     | '/admin/bookings'
+    | '/admin/calendar'
+    | '/admin/notifications'
+    | '/admin/rooms'
     | '/booking/success'
     | '/kamchatka/$slug'
     | '/admin'
@@ -244,6 +277,9 @@ export interface FileRouteTypes {
     | '/signup'
     | '/wellness'
     | '/admin/bookings'
+    | '/admin/calendar'
+    | '/admin/notifications'
+    | '/admin/rooms'
     | '/booking/success'
     | '/kamchatka/$slug'
     | '/admin/'
@@ -378,6 +414,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BookingSuccessRouteImport
       parentRoute: typeof BookingRoute
     }
+    '/admin/rooms': {
+      id: '/admin/rooms'
+      path: '/rooms'
+      fullPath: '/admin/rooms'
+      preLoaderRoute: typeof AdminRoomsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notifications': {
+      id: '/admin/notifications'
+      path: '/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AdminNotificationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/calendar': {
+      id: '/admin/calendar'
+      path: '/calendar'
+      fullPath: '/admin/calendar'
+      preLoaderRoute: typeof AdminCalendarRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/bookings': {
       id: '/admin/bookings'
       path: '/bookings'
@@ -411,11 +468,17 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminBookingsRoute: typeof AdminBookingsRoute
+  AdminCalendarRoute: typeof AdminCalendarRoute
+  AdminNotificationsRoute: typeof AdminNotificationsRoute
+  AdminRoomsRoute: typeof AdminRoomsRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminBookingsRoute: AdminBookingsRoute,
+  AdminCalendarRoute: AdminCalendarRoute,
+  AdminNotificationsRoute: AdminNotificationsRoute,
+  AdminRoomsRoute: AdminRoomsRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
