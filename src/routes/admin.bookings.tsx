@@ -60,21 +60,12 @@ function statusMeta(s: string) {
 }
 
 function AdminBookingsPage() {
-  const navigate = useNavigate();
-  const { user, isStaff, loading: authLoading, signOut } = useAuth();
+  const { user, isStaff } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Booking | null>(null);
-
-  useEffect(() => {
-    if (authLoading) return;
-    if (!user) {
-      navigate({ to: "/login" });
-      return;
-    }
-  }, [authLoading, user, navigate]);
 
   useEffect(() => {
     if (!user || !isStaff) return;
@@ -178,56 +169,10 @@ function AdminBookingsPage() {
     URL.revokeObjectURL(url);
   }
 
-  if (authLoading) {
-    return <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">Загрузка…</div>;
-  }
-
-  if (!user) return null;
-
-  if (!isStaff) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#f5f2ee] px-4 text-center">
-        <h1 className="font-serif text-3xl text-navy">Доступ запрещён</h1>
-        <p className="max-w-md text-sm text-muted-foreground">
-          У вашей учётной записи ({user.email}) нет роли администратора или менеджера.
-          Обратитесь к владельцу отеля.
-        </p>
-        <button
-          onClick={() => signOut().then(() => navigate({ to: "/login" }))}
-          className="border border-navy px-6 py-3 text-[11px] uppercase tracking-widest text-navy hover:bg-navy hover:text-white"
-        >
-          Выйти
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-[#f5f2ee]">
-      {/* Top bar */}
-      <header className="border-b border-border bg-background">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
-          <div className="flex items-center gap-6">
-            <Link to="/" className="font-serif text-xl text-navy">
-              Полуостров
-            </Link>
-            <span className="text-[10px] uppercase tracking-[3px] text-muted-foreground">
-              Админ-панель
-            </span>
-          </div>
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <span>{user.email}</span>
-            <button
-              onClick={() => signOut().then(() => navigate({ to: "/login" }))}
-              className="text-[10px] uppercase tracking-widest text-navy hover:text-[#C9A96E]"
-            >
-              Выйти
-            </button>
-          </div>
-        </div>
-      </header>
-
+    <div className="min-h-screen">
       <div className="mx-auto max-w-7xl px-6 py-10">
+
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-[11px] uppercase tracking-widest text-[#C9A96E]">
