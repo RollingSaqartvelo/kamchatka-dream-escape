@@ -1,6 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
+import { ROOMS } from "@/data/rooms";
+import { ROOM_ID_TO_TL, RATE_PLAN_BY_MEAL } from "./travelline.functions";
+
+const BREAKFAST_PER_PERSON = 500;
 
 const bookingSchema = z.object({
   salutation: z.enum(["mr", "mrs"]).nullable().optional(),
@@ -27,11 +31,13 @@ const bookingSchema = z.object({
   messenger_type: z.enum(["telegram", "vk_max", "none"]).nullable().optional(),
   messenger_username: z.string().max(100).optional().nullable(),
 
-  room_price_total: z.number().int().min(0).max(10000000),
-  breakfast_total: z.number().int().min(0).max(10000000),
-  total_price: z.number().int().min(0).max(10000000),
-  prepayment_amount: z.number().int().min(0).max(10000000),
-  remaining_amount: z.number().int().min(0).max(10000000),
+  // Price fields are accepted from the client for backwards-compat but
+  // SERVER-SIDE values are authoritative. Client values are ignored.
+  room_price_total: z.number().int().min(0).max(10000000).optional(),
+  breakfast_total: z.number().int().min(0).max(10000000).optional(),
+  total_price: z.number().int().min(0).max(10000000).optional(),
+  prepayment_amount: z.number().int().min(0).max(10000000).optional(),
+  remaining_amount: z.number().int().min(0).max(10000000).optional(),
 
   id_consent: z.literal(true),
   terms_consent: z.literal(true),
@@ -49,9 +55,112 @@ export function calcPrepayment(totalPrice: number, nights: number): number {
   return Math.max(oneNight, thirty);
 }
 
+// ─── Server-side price calculation (authoritative) ───────────────────────────
+async function fetchTravellineRoomTotal(
+  roomId: string,
+  checkIn: string,
+  checkOut: string,
+  adults: number,
+  children: number,
+  mealPlan: "room_only" | "breakfast",
+): Promise<number | null> {
+  const tlRoomTypeId = ROOM_ID_TO_TL[roomId];
+  if (!tlRoomTypeId) return null;
+  const baseUrl = process.env.TRAVELLINE_API_BASE_URL;
+  const propertyId = process.env.TRAVELLINE_PROPERTY_ID;
+  const clientId = process.env.TRAVELLINE_CLIENT_ID;
+  const clientSecret = process.env.TRAVELLINE_CLIENT_SECRET;
+  if (!baseUrl || !propertyId || !clientId || !clientSecret) return null;
+
+  try {
+    const tokenRes = await fetch(`${baseUrl.replace(/\/$/, "")}/auth/token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "client_credentials",
+        client_id: clientId,
+        client_secret: clientSecret,
+      }),
+    });
+    if (!tokenRes.ok) return null;
+    const { access_token } = (await tokenRes.json()) as { access_token: string };
+
+    const ratePlanId = RATE_PLAN_BY_MEAL[mealPlan];
+    const res = await fetch(`${baseUrl.replace(/\/$/, "")}/search`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        propertyId: Number(propertyId),
+        arrival: checkIn,
+        departure: checkOut,
+        adults,
+        children,
+        roomTypeIds: [tlRoomTypeId],
+        ratePlanIds: [ratePlanId],
+      }),
+    });
+    if (!res.ok) return null;
+    const json: any = await res.json();
+    const stay = json?.roomStays?.[0] ?? json?.offers?.[0] ?? null;
+    const amount =
+      stay?.total?.amount ?? stay?.totalPrice ?? stay?.price?.amount ?? null;
+    return amount != null ? Math.round(Number(amount)) : null;
+  } catch {
+    return null;
+  }
+}
+
 export const createBooking = createServerFn({ method: "POST" })
   .inputValidator((input) => bookingSchema.parse(input))
   .handler(async ({ data }) => {
+    // ── Authoritative server-side pricing ────────────────────────────────
+    const room = ROOMS.find((r) => r.id === data.room_id);
+    if (!room) {
+      throw new Error("Unknown room");
+    }
+
+    const guests = data.adults + data.children;
+
+    // Try live Travelline price first; if unavailable, fall back to the
+    // catalogue price * nights. The client-supplied price values are
+    // never trusted.
+    let roomPriceTotal =
+      (await fetchTravellineRoomTotal(
+        data.room_id,
+        data.check_in,
+        data.check_out,
+        data.adults,
+        data.children,
+        "room_only",
+      )) ?? room.price_from_rub * data.nights;
+
+    let breakfastTotal = 0;
+    if (data.meal_plan === "breakfast") {
+      const tlWithBreakfast = await fetchTravellineRoomTotal(
+        data.room_id,
+        data.check_in,
+        data.check_out,
+        data.adults,
+        data.children,
+        "breakfast",
+      );
+      if (tlWithBreakfast != null) {
+        // Travelline gave us a "with breakfast" total — derive breakfast as the delta.
+        breakfastTotal = Math.max(0, tlWithBreakfast - roomPriceTotal);
+        // Use the live with-breakfast total as the base if it's available.
+        roomPriceTotal = tlWithBreakfast - breakfastTotal;
+      } else {
+        breakfastTotal = BREAKFAST_PER_PERSON * guests * data.nights;
+      }
+    }
+
+    const totalPrice = roomPriceTotal + breakfastTotal;
+    const prepaymentAmount = calcPrepayment(totalPrice, data.nights);
+    const remainingAmount = Math.max(0, totalPrice - prepaymentAmount);
+
     const supabase = createClient(
       process.env.SUPABASE_URL!,
       process.env.SUPABASE_PUBLISHABLE_KEY!,
@@ -68,7 +177,7 @@ export const createBooking = createServerFn({ method: "POST" })
         city: data.city ?? null,
         country: data.country ?? null,
         room_id: data.room_id,
-        room_name: data.room_name,
+        room_name: room.name_ru,
         check_in: data.check_in,
         check_out: data.check_out,
         nights: data.nights,
@@ -80,11 +189,11 @@ export const createBooking = createServerFn({ method: "POST" })
         promo_code: data.promo_code ?? null,
         messenger_type: data.messenger_type ?? null,
         messenger_username: data.messenger_username ?? null,
-        room_price_total: data.room_price_total,
-        breakfast_total: data.breakfast_total,
-        total_price: data.total_price,
-        prepayment_amount: data.prepayment_amount,
-        remaining_amount: data.remaining_amount,
+        room_price_total: roomPriceTotal,
+        breakfast_total: breakfastTotal,
+        total_price: totalPrice,
+        prepayment_amount: prepaymentAmount,
+        remaining_amount: remainingAmount,
         payment_status: "pending",
         id_consent: data.id_consent,
         terms_consent: data.terms_consent,
