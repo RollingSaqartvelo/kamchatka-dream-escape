@@ -31,9 +31,7 @@ function Home() {
       <Hero />
       <Intro />
       <AboutShowcase />
-      <RoomsBlock />
       <WellnessBlock />
-      {/* RestaurantBlock убран по запросу */}
       <ServicesBlock />
       <ReviewsBlock />
     </SiteLayout>
