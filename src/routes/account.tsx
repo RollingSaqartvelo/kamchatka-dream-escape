@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { SiteLayout } from "@/components/layout/SiteLayout";
 import { PageHero } from "@/components/sections/PageHero";
+import { BookingsCalendar } from "@/components/admin/BookingsCalendar";
 
 import { useAuth } from "@/lib/useAuth";
 import {
