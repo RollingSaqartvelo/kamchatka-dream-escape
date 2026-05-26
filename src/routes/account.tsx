@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { SiteLayout } from "@/components/layout/SiteLayout";
 import { PageHero } from "@/components/sections/PageHero";
+import { BookingsCalendar } from "@/components/admin/BookingsCalendar";
 
 import { useAuth } from "@/lib/useAuth";
 import {
@@ -25,20 +26,83 @@ export const Route = createFileRoute("/account")({
 });
 
 function AccountPage() {
-  const { user, loading: authLoading, signOut } = useAuth();
+  const { user, loading: authLoading, isStaff, signOut } = useAuth();
+
+  if (authLoading) {
+    return (
+      <SiteLayout>
+        <PageHero eyebrow="Account" title="Личный кабинет" videoSrc="/media/account.mp4" />
+        <section className="bg-background py-16">
+          <p className="text-center text-muted-foreground">Загружаем…</p>
+        </section>
+      </SiteLayout>
+    );
+  }
+
+  if (!user) {
+    return (
+      <SiteLayout>
+        <PageHero eyebrow="Account" title="Личный кабинет" videoSrc="/media/account.mp4" />
+        <section className="bg-background py-16 sm:py-24">
+          <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+            <NotLoggedIn />
+          </div>
+        </section>
+      </SiteLayout>
+    );
+  }
+
+  if (isStaff) {
+    return (
+      <SiteLayout>
+        <PageHero eyebrow="Staff" title="Кабинет администратора" videoSrc="/media/account.mp4" />
+        <section className="bg-background py-12">
+          <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-[11px] uppercase tracking-widest text-[#C9A96E]">
+                  Заполняемость
+                </p>
+                <h2 className="mt-1 font-serif text-3xl text-navy">Календарь броней</h2>
+                <p className="mt-1 text-xs text-muted-foreground">{user.email}</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  to="/admin/bookings"
+                  className="border border-navy px-4 py-2 text-[10px] uppercase tracking-widest text-navy hover:bg-navy hover:text-cream"
+                >
+                  Список броней
+                </Link>
+                <Link
+                  to="/admin/rooms"
+                  className="border border-navy px-4 py-2 text-[10px] uppercase tracking-widest text-navy hover:bg-navy hover:text-cream"
+                >
+                  Номера
+                </Link>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await signOut();
+                  }}
+                  className="border border-border px-4 py-2 text-[10px] uppercase tracking-widest text-muted-foreground hover:border-navy hover:text-navy"
+                >
+                  Выйти
+                </button>
+              </div>
+            </div>
+            <BookingsCalendar />
+          </div>
+        </section>
+      </SiteLayout>
+    );
+  }
 
   return (
     <SiteLayout>
       <PageHero eyebrow="Account" title="Личный кабинет" videoSrc="/media/account.mp4" />
       <section className="bg-background py-16 sm:py-24">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-          {authLoading ? (
-            <p className="text-center text-muted-foreground">Загружаем…</p>
-          ) : !user ? (
-            <NotLoggedIn />
-          ) : (
-            <LoggedIn email={user.email ?? ""} onSignOut={signOut} />
-          )}
+          <LoggedIn email={user.email ?? ""} onSignOut={signOut} />
         </div>
       </section>
     </SiteLayout>
