@@ -11,6 +11,8 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const timeout = window.setTimeout(() => setLoading(false), 4000);
+
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s);
       setUser(s?.user ?? null);
@@ -35,7 +37,10 @@ export function useAuth() {
       }
     });
 
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      window.clearTimeout(timeout);
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   async function loadRoles(uid: string) {
