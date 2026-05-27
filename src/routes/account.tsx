@@ -167,6 +167,18 @@ function LoggedIn({ email, onSignOut }: { email: string; onSignOut: () => void }
   const saveProfile = useServerFn(upsertMyProfile);
   const fetchBookings = useServerFn(getMyBookings);
 
+  const emptyProfile: Profile = {
+    salutation: null,
+    first_name: "",
+    last_name: "",
+    phone: "",
+    email,
+    city: "",
+    country: "",
+    messenger_type: "none",
+    messenger_username: "",
+  };
+
   const [profile, setProfile] = useState<Profile | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -175,23 +187,13 @@ function LoggedIn({ email, onSignOut }: { email: string; onSignOut: () => void }
   useEffect(() => {
     Promise.all([fetchProfile(), fetchBookings()])
       .then(([p, b]) => {
-        setProfile(
-          (p as Profile) ?? {
-            salutation: null,
-            first_name: "",
-            last_name: "",
-            phone: "",
-            email,
-            city: "",
-            country: "",
-            messenger_type: "none",
-            messenger_username: "",
-          },
-        );
+        setProfile((p as Profile) ?? emptyProfile);
         setBookings(b as Booking[]);
       })
       .catch((e) => {
         console.error(e);
+        setProfile(emptyProfile);
+        setBookings([]);
         toast.error("Не удалось загрузить данные");
       })
       .finally(() => setLoading(false));
