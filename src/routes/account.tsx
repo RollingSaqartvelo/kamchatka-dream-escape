@@ -9,19 +9,12 @@ import { PageHero } from "@/components/sections/PageHero";
 import { BookingsCalendar } from "@/components/admin/BookingsCalendar";
 
 import { useAuth } from "@/lib/useAuth";
-import {
-  getMyProfile,
-  upsertMyProfile,
-  getMyBookings,
-} from "@/lib/profile.functions";
+import { getMyProfile, upsertMyProfile, getMyBookings } from "@/lib/profile.functions";
 
 export const Route = createFileRoute("/account")({
   component: AccountPage,
   head: () => ({
-    meta: [
-      { title: "Личный кабинет — Полуостров" },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: "Личный кабинет — Полуостров" }, { name: "robots", content: "noindex" }],
   }),
 });
 
@@ -214,7 +207,8 @@ function LoggedIn({ email, onSignOut }: { email: string; onSignOut: () => void }
           email: profile.email ?? email,
           city: profile.city ?? "",
           country: profile.country ?? "",
-          messenger_type: (profile.messenger_type as "telegram" | "vk_max" | "none" | null) ?? "none",
+          messenger_type:
+            (profile.messenger_type as "telegram" | "vk_max" | "none" | null) ?? "none",
           messenger_username: profile.messenger_username ?? "",
         },
       });
@@ -272,29 +266,55 @@ function LoggedIn({ email, onSignOut }: { email: string; onSignOut: () => void }
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Имя" value={profile.first_name ?? ""}
-              onChange={(v) => setProfile({ ...profile, first_name: v })} />
-            <Field label="Фамилия" value={profile.last_name ?? ""}
-              onChange={(v) => setProfile({ ...profile, last_name: v })} />
-            <Field label="Телефон" value={profile.phone ?? ""}
-              onChange={(v) => setProfile({ ...profile, phone: v })} />
-            <Field label="Email" value={profile.email ?? ""} type="email"
-              onChange={(v) => setProfile({ ...profile, email: v })} />
-            <Field label="Город" value={profile.city ?? ""}
-              onChange={(v) => setProfile({ ...profile, city: v })} />
-            <Field label="Страна" value={profile.country ?? ""}
-              onChange={(v) => setProfile({ ...profile, country: v })} />
+            <Field
+              label="Имя"
+              value={profile.first_name ?? ""}
+              onChange={(v) => setProfile({ ...profile, first_name: v })}
+            />
+            <Field
+              label="Фамилия"
+              value={profile.last_name ?? ""}
+              onChange={(v) => setProfile({ ...profile, last_name: v })}
+            />
+            <Field
+              label="Телефон"
+              value={profile.phone ?? ""}
+              onChange={(v) => setProfile({ ...profile, phone: v })}
+            />
+            <Field
+              label="Email"
+              value={profile.email ?? ""}
+              type="email"
+              onChange={(v) => setProfile({ ...profile, email: v })}
+            />
+            <Field
+              label="Город"
+              value={profile.city ?? ""}
+              onChange={(v) => setProfile({ ...profile, city: v })}
+            />
+            <Field
+              label="Страна"
+              value={profile.country ?? ""}
+              onChange={(v) => setProfile({ ...profile, country: v })}
+            />
           </div>
 
           <div>
-            <span className="text-[11px] uppercase tracking-widest text-navy">Мессенджер для напоминаний</span>
+            <span className="text-[11px] uppercase tracking-widest text-navy">
+              Мессенджер для напоминаний
+            </span>
             <div className="mt-2 flex flex-wrap gap-4">
-              {([
-                { v: "telegram", label: "Telegram" },
-                { v: "vk_max", label: "ВК / Макс" },
-                { v: "none", label: "Не нужно" },
-              ] as const).map((m) => (
-                <label key={m.v} className="flex cursor-pointer items-center gap-2 text-sm text-navy">
+              {(
+                [
+                  { v: "telegram", label: "Telegram" },
+                  { v: "vk_max", label: "ВК / Макс" },
+                  { v: "none", label: "Не нужно" },
+                ] as const
+              ).map((m) => (
+                <label
+                  key={m.v}
+                  className="flex cursor-pointer items-center gap-2 text-sm text-navy"
+                >
                   <input
                     type="radio"
                     name="messenger"
@@ -351,8 +371,8 @@ function LoggedIn({ email, onSignOut }: { email: string; onSignOut: () => void }
                   </span>
                 </div>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  {fmtDate(b.check_in)} → {fmtDate(b.check_out)} · {b.nights} ноч.
-                  · {b.adults + b.children} гост.
+                  {fmtDate(b.check_in)} → {fmtDate(b.check_out)} · {b.nights} ноч. ·{" "}
+                  {b.adults + b.children} гост.
                 </p>
                 <div className="mt-4 flex flex-wrap items-baseline justify-between gap-3">
                   <span className="font-serif text-lg text-navy">
@@ -382,9 +402,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="text-[11px] uppercase tracking-widest text-muted-foreground">
-        {label}
-      </span>
+      <span className="text-[11px] uppercase tracking-widest text-muted-foreground">{label}</span>
       <input
         type={type}
         value={value}
@@ -404,9 +422,7 @@ function StatusBadge({ status }: { status: string }) {
   };
   const s = map[status] ?? { label: status, cls: "bg-beige text-navy" };
   return (
-    <span className={`px-3 py-1 text-[10px] uppercase tracking-[2px] ${s.cls}`}>
-      {s.label}
-    </span>
+    <span className={`px-3 py-1 text-[10px] uppercase tracking-[2px] ${s.cls}`}>{s.label}</span>
   );
 }
 
