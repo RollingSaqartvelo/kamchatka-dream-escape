@@ -161,13 +161,8 @@ type Booking = {
   created_at: string;
 };
 
-function LoggedIn({ email, onSignOut }: { email: string; onSignOut: () => void }) {
-  const navigate = useNavigate();
-  const fetchProfile = useServerFn(getMyProfile);
-  const saveProfile = useServerFn(upsertMyProfile);
-  const fetchBookings = useServerFn(getMyBookings);
-
-  const emptyProfile: Profile = {
+function createEmptyProfile(email: string): Profile {
+  return {
     salutation: null,
     first_name: "",
     last_name: "",
@@ -178,6 +173,13 @@ function LoggedIn({ email, onSignOut }: { email: string; onSignOut: () => void }
     messenger_type: "none",
     messenger_username: "",
   };
+}
+
+function LoggedIn({ email, onSignOut }: { email: string; onSignOut: () => void }) {
+  const navigate = useNavigate();
+  const fetchProfile = useServerFn(getMyProfile);
+  const saveProfile = useServerFn(upsertMyProfile);
+  const fetchBookings = useServerFn(getMyBookings);
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -187,12 +189,12 @@ function LoggedIn({ email, onSignOut }: { email: string; onSignOut: () => void }
   useEffect(() => {
     Promise.all([fetchProfile(), fetchBookings()])
       .then(([p, b]) => {
-        setProfile((p as Profile) ?? emptyProfile);
+        setProfile((p as Profile) ?? createEmptyProfile(email));
         setBookings(b as Booking[]);
       })
       .catch((e) => {
         console.error(e);
-        setProfile(emptyProfile);
+        setProfile(createEmptyProfile(email));
         setBookings([]);
         toast.error("Не удалось загрузить данные");
       })
