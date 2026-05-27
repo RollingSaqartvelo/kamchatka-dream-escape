@@ -11,14 +11,19 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const timeout = window.setTimeout(() => setLoading(false), 4000);
+
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
         // defer to next tick to avoid recursive supabase calls inside listener
-        setTimeout(() => loadRoles(s.user.id), 0);
+        setTimeout(() => {
+          loadRoles(s.user.id).finally(() => setLoading(false));
+        }, 0);
       } else {
         setRoles([]);
+        setLoading(false);
       }
     });
 
@@ -32,14 +37,19 @@ export function useAuth() {
       }
     });
 
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      window.clearTimeout(timeout);
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   async function loadRoles(uid: string) {
-    const { data } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", uid);
+    const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", uid);
+    if (error) {
+      console.error(error);
+      setRoles([]);
+      return;
+    }
     setRoles((data ?? []).map((r) => r.role as StaffRole));
   }
 
