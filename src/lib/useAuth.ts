@@ -39,10 +39,7 @@ export function useAuth() {
   }, []);
 
   async function loadRoles(uid: string) {
-    const { data, error } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", uid);
+    const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", uid);
     if (error) {
       console.error(error);
       setRoles([]);
