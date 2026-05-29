@@ -120,7 +120,14 @@ function AdminCalendarPage() {
   const [selected, setSelected] = useState<Bk | null>(null);
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
   const [ctxMenu, setCtxMenu] = useState<{ booking: Bk; x: number; y: number } | null>(null);
+  const [statusFilter, setStatusFilter] = useState<Set<string>>(new Set(["pending","confirmed","paid","completed"]));
   const syncFn = useServerFn(syncTravellineReservations);
+
+  // Автосинхронизация TravelLine каждые 15 минут
+  useEffect(() => {
+    const interval = setInterval(() => void syncTravelline(), 15 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [anchor]);
 
   const monthDays = useMemo(
     () =>
@@ -184,6 +191,7 @@ function AdminCalendarPage() {
   function bookingsForCell(roomId: string, day: Date) {
     return bookings.filter((b) => {
       if (b.room_id !== roomId) return false;
+      if (!statusFilter.has(b.payment_status)) return false;
       const ci = parseISO(b.check_in);
       const co = parseISO(b.check_out);
       return isWithinInterval(day, { start: ci, end: addDays(co, -1) }) || isSameDay(day, ci);
@@ -279,18 +287,22 @@ function AdminCalendarPage() {
           ))}
         </div>
 
-        {/* Legend */}
-        <div className="mt-4 flex flex-wrap gap-3 text-[11px]">
-          {Object.entries({
-            pending: "Новая",
-            confirmed: "Подтверждена",
-            paid: "Оплачена",
-            completed: "Завершена",
-          }).map(([k, label]) => (
-            <span key={k} className={`border px-2 py-0.5 ${STATUS_COLOR[k]}`}>
-              {label}
-            </span>
+        {/* Legend + фильтр */}
+        <div className="mt-4 flex flex-wrap gap-2 text-[11px]">
+          {(["pending","confirmed","paid","completed","cancelled"] as const).map((k) => (
+            <button
+              key={k}
+              onClick={() => setStatusFilter(prev => {
+                const next = new Set(prev);
+                next.has(k) ? next.delete(k) : next.add(k);
+                return next;
+              })}
+              className={`border px-2 py-0.5 transition-opacity ${STATUS_COLOR[k]} ${statusFilter.has(k) ? "opacity-100" : "opacity-30"}`}
+            >
+              {statusFilter.has(k) ? "✓ " : ""}{STATUS_LABEL[k]}
+            </button>
           ))}
+          <span className="ml-2 self-center text-[10px] text-muted-foreground">← кликни чтобы скрыть</span>
         </div>
 
         {/* Grid */}
