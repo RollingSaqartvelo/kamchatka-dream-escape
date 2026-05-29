@@ -89,6 +89,27 @@ function hostelOccupancyText(ratio: number): string {
   return "text-white";
 }
 
+const SOURCE_ICON: Record<string, string> = {
+  travelline: "🔄",
+  website:    "🌐",
+  manual:     "✏️",
+  offline:    "✏️",
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  pending:   "Новая",
+  confirmed: "Подтверждена",
+  paid:      "Оплачена",
+  cancelled: "Отменена",
+  completed: "Завершена",
+};
+
+type TooltipData = {
+  booking: Bk & { source?: string; phone?: string };
+  x: number;
+  y: number;
+};
+
 function AdminCalendarPage() {
   const [anchor, setAnchor] = useState(() => startOfMonth(new Date()));
   const [bookings, setBookings] = useState<Bk[]>([]);
@@ -97,6 +118,7 @@ function AdminCalendarPage() {
   const [modalDate, setModalDate] = useState<Date | null>(null);
   const [modalRoom, setModalRoom] = useState<string | undefined>(undefined);
   const [selected, setSelected] = useState<Bk | null>(null);
+  const [tooltip, setTooltip] = useState<TooltipData | null>(null);
   const syncFn = useServerFn(syncTravellineReservations);
 
   const monthDays = useMemo(
@@ -141,7 +163,7 @@ function AdminCalendarPage() {
     const { data, error } = await supabase
       .from("bookings")
       .select(
-        "id, booking_number, first_name, last_name, room_id, room_name, check_in, check_out, payment_status, total_price",
+        "id, booking_number, first_name, last_name, room_id, room_name, check_in, check_out, payment_status, total_price, source, phone",
       )
       .or(`and(check_in.lte.${to},check_out.gte.${from})`)
       .neq("payment_status", "cancelled")
@@ -156,10 +178,32 @@ function AdminCalendarPage() {
       if (b.room_id !== roomId) return false;
       const ci = parseISO(b.check_in);
       const co = parseISO(b.check_out);
-      // booked day = [check_in, check_out) — checkout day is free
       return isWithinInterval(day, { start: ci, end: addDays(co, -1) }) || isSameDay(day, ci);
     });
   }
+
+  // Итоги месяца
+  const monthStats = useMemo(() => {
+    const totalRoomNights = ROOMS.length * monthDays.length;
+    let occupiedNights = 0;
+    let revenue = 0;
+    const uniqueBookings = new Set<string>();
+    bookings.forEach((b) => {
+      if (!uniqueBookings.has(b.id)) {
+        uniqueBookings.add(b.id);
+        revenue += b.total_price ?? 0;
+      }
+      monthDays.forEach((d) => {
+        const ci = parseISO(b.check_in);
+        const co = parseISO(b.check_out);
+        if (isWithinInterval(d, { start: ci, end: addDays(co, -1) }) || isSameDay(d, ci)) {
+          occupiedNights++;
+        }
+      });
+    });
+    const pct = totalRoomNights > 0 ? Math.round((occupiedNights / totalRoomNights) * 100) : 0;
+    return { occupiedNights, revenue, pct, total: uniqueBookings.size };
+  }, [bookings, monthDays]);
 
   return (
     <div className="min-h-screen">
@@ -210,6 +254,21 @@ function AdminCalendarPage() {
               + Бронь вручную
             </button>
           </div>
+        </div>
+
+        {/* Итоги месяца */}
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {[
+            { label: "Броней в месяце", value: monthStats.total, icon: "📋" },
+            { label: "Занято ночей", value: monthStats.occupiedNights, icon: "🌙" },
+            { label: "Заполняемость", value: `${monthStats.pct}%`, icon: "📊" },
+            { label: "Выручка", value: `₽ ${new Intl.NumberFormat("ru-RU").format(monthStats.revenue)}`, icon: "💰" },
+          ].map((s) => (
+            <div key={s.label} className="rounded border border-border bg-cream/30 px-4 py-3">
+              <p className="text-[11px] uppercase tracking-widest text-muted-foreground">{s.icon} {s.label}</p>
+              <p className="mt-1 font-serif text-2xl text-navy">{s.value}</p>
+            </div>
+          ))}
         </div>
 
         {/* Legend */}
@@ -291,13 +350,18 @@ function AdminCalendarPage() {
                           {!HOSTEL_CAPACITY[room.id] && cellBookings[0] && (
                             <div
                               className={`flex h-full w-full flex-col items-center justify-center px-1 ${STATUS_TEXT[cellBookings[0].payment_status] ?? "text-white"}`}
-                              title={`${cellBookings[0].booking_number} · ${cellBookings[0].last_name} ${cellBookings[0].first_name}`}
+                              onMouseEnter={(e) => setTooltip({ booking: cellBookings[0] as any, x: e.clientX, y: e.clientY })}
+                              onMouseMove={(e) => setTooltip(t => t ? { ...t, x: e.clientX, y: e.clientY } : null)}
+                              onMouseLeave={() => setTooltip(null)}
                             >
                               {cellBookings[0].last_name && cellBookings[0].last_name !== "—" && (
                                 <span className="w-full truncate text-center text-[10px] font-bold leading-tight">
                                   {cellBookings[0].last_name}
                                 </span>
                               )}
+                              <span className="text-[9px] opacity-70">
+                                {SOURCE_ICON[(cellBookings[0] as any).source ?? "manual"] ?? "✏️"}
+                              </span>
                             </div>
                           )}
 
@@ -339,6 +403,29 @@ function AdminCalendarPage() {
                   </tr>
                 ))}
             </tbody>
+            {/* Строка заполняемости по дням */}
+            <tfoot>
+              <tr className="border-t-2 border-border bg-cream/40">
+                <td className="sticky left-0 z-10 border-r border-border bg-cream/80 px-3 py-2 text-[10px] uppercase tracking-widest text-navy">
+                  Занято
+                </td>
+                {monthDays.map((d) => {
+                  const occupied = ROOMS.filter((r) => bookingsForCell(r.id, d).length > 0).length;
+                  const pct = Math.round((occupied / ROOMS.length) * 100);
+                  const bg = pct === 0 ? "" : pct < 40 ? "bg-sky-200" : pct < 70 ? "bg-blue-400" : pct < 90 ? "bg-orange-400" : "bg-red-500";
+                  const txt = pct > 50 ? "text-white" : "text-navy";
+                  return (
+                    <td
+                      key={d.toISOString()}
+                      className={`border-r border-border px-1 py-2 text-center text-[10px] font-bold ${bg} ${txt}`}
+                      title={`${occupied} из ${ROOMS.length} номеров занято`}
+                    >
+                      {occupied > 0 ? `${pct}%` : ""}
+                    </td>
+                  );
+                })}
+              </tr>
+            </tfoot>
           </table>
         </div>
       </div>
@@ -389,6 +476,33 @@ function AdminCalendarPage() {
                 Открыть в списке
               </a>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Тултип */}
+      {tooltip && (
+        <div
+          className="pointer-events-none fixed z-[100] w-56 rounded-lg border border-border bg-background p-3 shadow-xl text-xs"
+          style={{
+            left: Math.min(tooltip.x + 12, window.innerWidth - 240),
+            top: tooltip.y - 10,
+          }}
+        >
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <span className="font-bold text-navy text-sm">
+              {tooltip.booking.last_name !== "—" ? `${tooltip.booking.last_name} ${tooltip.booking.first_name}` : "Гость"}
+            </span>
+            <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${STATUS_COLOR[tooltip.booking.payment_status] ?? STATUS_COLOR.pending}`}>
+              {STATUS_LABEL[tooltip.booking.payment_status] ?? tooltip.booking.payment_status}
+            </span>
+          </div>
+          <div className="space-y-1 text-muted-foreground">
+            <p>📅 {format(parseISO(tooltip.booking.check_in), "d MMM", { locale: ru })} — {format(parseISO(tooltip.booking.check_out), "d MMM", { locale: ru })}</p>
+            {(tooltip.booking as any).phone && <p>📞 {(tooltip.booking as any).phone}</p>}
+            <p>💰 ₽ {new Intl.NumberFormat("ru-RU").format(tooltip.booking.total_price)}</p>
+            <p>{SOURCE_ICON[(tooltip.booking as any).source ?? "manual"]} {(tooltip.booking as any).source === "travelline" ? "TravelLine" : (tooltip.booking as any).source === "website" ? "Сайт" : "Вручную"}</p>
+            <p className="font-mono text-[10px] text-zinc-400">{tooltip.booking.booking_number}</p>
           </div>
         </div>
       )}
