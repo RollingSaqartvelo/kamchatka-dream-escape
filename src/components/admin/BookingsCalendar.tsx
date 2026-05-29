@@ -49,6 +49,7 @@ export function BookingsCalendar() {
   const [modalDate, setModalDate] = useState<Date | null>(null);
   const [modalRoom, setModalRoom] = useState<string | undefined>(undefined);
   const [selected, setSelected] = useState<Bk | null>(null);
+  const syncFn = useServerFn(syncTravellineReservations);
 
   const monthDays = useMemo(
     () => eachDayOfInterval({ start: anchor, end: endOfMonth(anchor) }),
