@@ -30,14 +30,15 @@ type Bk = {
   check_out: string;
   payment_status: string;
   total_price: number;
+  source?: string;
 };
 
 const STATUS_COLOR: Record<string, string> = {
-  pending: "bg-amber-200 text-amber-900 border-amber-400",
-  confirmed: "bg-blue-200 text-blue-900 border-blue-400",
-  paid: "bg-emerald-200 text-emerald-900 border-emerald-400",
-  cancelled: "bg-rose-200 text-rose-900 border-rose-400 line-through opacity-60",
-  completed: "bg-zinc-200 text-zinc-700 border-zinc-400",
+  pending: "bg-amber-300 text-amber-950 border-amber-500",
+  confirmed: "bg-blue-500 text-white border-blue-700",
+  paid: "bg-emerald-500 text-white border-emerald-700",
+  cancelled: "bg-rose-300 text-rose-950 border-rose-500 line-through opacity-60",
+  completed: "bg-zinc-400 text-white border-zinc-600",
 };
 
 export function BookingsCalendar() {
