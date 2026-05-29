@@ -59,7 +59,6 @@ const STATUS_TEXT: Record<string, string> = {
   completed: "text-white",
 };
 
-// оставляем для легенды
 const STATUS_COLOR: Record<string, string> = {
   pending:   "bg-amber-400 text-amber-950 border-amber-500",
   confirmed: "bg-blue-500 text-white border-blue-700",
@@ -67,6 +66,28 @@ const STATUS_COLOR: Record<string, string> = {
   cancelled: "bg-rose-400 text-white border-rose-500 line-through opacity-60",
   completed: "bg-zinc-400 text-white border-zinc-600",
 };
+
+// ID хостельных номеров → максимальное число мест
+const HOSTEL_CAPACITY: Record<string, number> = {
+  "hostel-10-mest":   10,
+  "hostel-10-mest-b": 10,
+  "hostel-4-mesta":    4,
+  "hostel-12-mest":   12,
+};
+
+function hostelOccupancyBg(ratio: number): string {
+  if (ratio === 0)   return "";
+  if (ratio < 0.5)   return "bg-sky-300";
+  if (ratio < 0.8)   return "bg-blue-500";
+  if (ratio < 1)     return "bg-orange-500";
+  return "bg-red-600";
+}
+
+function hostelOccupancyText(ratio: number): string {
+  if (ratio === 0) return "text-zinc-400";
+  if (ratio < 0.5) return "text-sky-950";
+  return "text-white";
+}
 
 function AdminCalendarPage() {
   const [anchor, setAnchor] = useState(() => startOfMonth(new Date()));
@@ -248,23 +269,26 @@ function AdminCalendarPage() {
                       return (
                         <td
                           key={d.toISOString()}
-                          className={`relative h-14 min-w-[40px] cursor-pointer border-r border-border p-0 ${
-                            cellBookings[0]
+                          className={`relative min-w-[40px] cursor-pointer border-r border-border p-0 ${
+                            HOSTEL_CAPACITY[room.id]
+                              ? "h-14"
+                              : "h-14"
+                          } ${
+                            !HOSTEL_CAPACITY[room.id] && cellBookings[0]
                               ? (STATUS_BG[cellBookings[0].payment_status] ?? STATUS_BG.pending)
-                              : isSameDay(d, new Date())
+                              : !HOSTEL_CAPACITY[room.id] && isSameDay(d, new Date())
                               ? "bg-[#C9A96E]/10 hover:bg-[#C9A96E]/20"
-                              : "hover:bg-cream/40"
+                              : !HOSTEL_CAPACITY[room.id]
+                              ? "hover:bg-cream/40"
+                              : ""
                           }`}
                           onClick={() => {
-                            if (cellBookings[0]) {
-                              setSelected(cellBookings[0]);
-                            } else {
-                              setModalRoom(room.id);
-                              setModalDate(d);
-                            }
+                            if (cellBookings[0]) setSelected(cellBookings[0]);
+                            else { setModalRoom(room.id); setModalDate(d); }
                           }}
                         >
-                          {cellBookings[0] && (
+                          {/* Обычный номер — полная заливка */}
+                          {!HOSTEL_CAPACITY[room.id] && cellBookings[0] && (
                             <div
                               className={`flex h-full w-full flex-col items-center justify-center px-1 ${STATUS_TEXT[cellBookings[0].payment_status] ?? "text-white"}`}
                               title={`${cellBookings[0].booking_number} · ${cellBookings[0].last_name} ${cellBookings[0].first_name}`}
@@ -276,6 +300,39 @@ function AdminCalendarPage() {
                               )}
                             </div>
                           )}
+
+                          {/* Хостел — счётчик мест */}
+                          {HOSTEL_CAPACITY[room.id] && (() => {
+                            const cap = HOSTEL_CAPACITY[room.id];
+                            const occupied = cellBookings.reduce((s, b) => s + Math.max(1, b.adults ?? 1), 0);
+                            const ratio = Math.min(occupied / cap, 1);
+                            const bgCls = hostelOccupancyBg(ratio);
+                            const txtCls = hostelOccupancyText(ratio);
+                            const pct = Math.round(ratio * 100);
+                            return (
+                              <div
+                                className={`relative flex h-full w-full flex-col items-center justify-center overflow-hidden ${isSameDay(d, new Date()) ? "ring-1 ring-inset ring-[#C9A96E]" : ""}`}
+                                title={cellBookings.map(b => `${b.last_name} ${b.first_name}`).join(", ")}
+                              >
+                                {/* заливка по высоте */}
+                                {ratio > 0 && (
+                                  <div
+                                    className={`absolute bottom-0 left-0 w-full transition-all ${bgCls}`}
+                                    style={{ height: `${pct}%` }}
+                                  />
+                                )}
+                                {/* текст поверх */}
+                                <span className={`relative z-10 text-[11px] font-bold ${occupied > 0 ? txtCls : "text-zinc-300"}`}>
+                                  {occupied > 0 ? `${occupied}/${cap}` : ""}
+                                </span>
+                                {occupied > 0 && (
+                                  <span className={`relative z-10 text-[9px] ${txtCls} opacity-80`}>
+                                    мест
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </td>
                       );
                     })}
