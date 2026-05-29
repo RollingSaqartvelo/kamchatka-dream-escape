@@ -13,9 +13,12 @@ import {
   subMonths,
 } from "date-fns";
 import { ru } from "date-fns/locale";
+import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { ROOMS } from "@/data/rooms";
 import { OfflineBookingModal } from "@/components/admin/OfflineBookingModal";
+import { syncTravellineReservations } from "@/lib/travelline-sync.functions";
 
 export const Route = createFileRoute("/admin/calendar")({
   component: AdminCalendarPage,
@@ -52,9 +55,11 @@ function AdminCalendarPage() {
   const [anchor, setAnchor] = useState(() => startOfMonth(new Date()));
   const [bookings, setBookings] = useState<Bk[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [modalDate, setModalDate] = useState<Date | null>(null);
   const [modalRoom, setModalRoom] = useState<string | undefined>(undefined);
   const [selected, setSelected] = useState<Bk | null>(null);
+  const syncFn = useServerFn(syncTravellineReservations);
 
   const monthDays = useMemo(
     () =>
@@ -68,6 +73,27 @@ function AdminCalendarPage() {
   useEffect(() => {
     void load();
   }, [anchor]);
+
+  async function syncTravelline() {
+    setSyncing(true);
+    const from = format(anchor, "yyyy-MM-dd");
+    const to = format(endOfMonth(addMonths(anchor, 1)), "yyyy-MM-dd");
+    try {
+      const res = await syncFn({ data: { from, to } });
+      if (res.ok) {
+        toast.success(`Синхронизировано: ${res.synced} броней из TravelLine`);
+        void load();
+      } else {
+        toast.error(`Ошибка TravelLine: ${res.error}`);
+        console.error("TL sync error:", res);
+      }
+    } catch (e) {
+      toast.error("Не удалось подключиться к TravelLine");
+      console.error(e);
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   async function load() {
     setLoading(true);
@@ -128,6 +154,13 @@ function AdminCalendarPage() {
               className="border border-border px-3 py-2 text-[10px] uppercase tracking-widest text-navy hover:bg-navy hover:text-cream"
             >
               Сегодня
+            </button>
+            <button
+              onClick={() => void syncTravelline()}
+              disabled={syncing}
+              className="border border-[#C9A96E] px-5 py-2 text-[11px] uppercase tracking-widest text-[#C9A96E] hover:bg-[#C9A96E] hover:text-white disabled:opacity-50"
+            >
+              {syncing ? "Синхронизация…" : "↻ TravelLine"}
             </button>
             <button
               onClick={() => {
