@@ -56,33 +56,32 @@ async function fetchReservations(
   to: string,
 ): Promise<{ data: any; endpoint: string } | { error: string }> {
   const TL_API = "https://partner.tlintegration.com";
-  const pid = Number(propertyId);
   const headers = {
     Authorization: `Bearer ${token}`,
     "Content-Type": "application/json",
   };
 
   const attempts: Array<{ url: string; method: "GET" | "POST"; body?: string }> = [
-    // Вариант 1: REST с propertyId в пути
-    { url: `${TL_API}/v1/properties/${propertyId}/reservations?dateFrom=${from}&dateTo=${to}`, method: "GET" },
-    { url: `${TL_API}/v1/properties/${propertyId}/reservations?from=${from}&to=${to}`, method: "GET" },
-    { url: `${TL_API}/v2/properties/${propertyId}/reservations?dateFrom=${from}&dateTo=${to}`, method: "GET" },
-    // Вариант 2: reservations с query params
-    { url: `${TL_API}/v1/reservations?propertyId=${propertyId}&dateFrom=${from}&dateTo=${to}`, method: "GET" },
-    { url: `${TL_API}/v1/reservations?property_id=${propertyId}&date_from=${from}&date_to=${to}`, method: "GET" },
-    // Вариант 3: POST с телом
     {
-      url: `${TL_API}/v1/reservations/search`,
-      method: "POST",
-      body: JSON.stringify({ propertyId: pid, dateFrom: from, dateTo: to }),
+      url: `${TL_API}/api/reservation/v1/properties/${propertyId}/bookings?dateFrom=${from}&dateTo=${to}`,
+      method: "GET",
     },
     {
-      url: `${TL_API}/v1/reservations/list`,
-      method: "POST",
-      body: JSON.stringify({ propertyId: pid, period: { from, to } }),
+      url: `${TL_API}/api/reservation/v1/properties/${propertyId}/bookings?from=${from}&to=${to}`,
+      method: "GET",
     },
-    // Вариант 4: без версии
-    { url: `${TL_API}/reservations?propertyId=${propertyId}&dateFrom=${from}&dateTo=${to}`, method: "GET" },
+    {
+      url: `${TL_API}/api/reservation/v1/properties/${propertyId}/bookings?arrivalFrom=${from}&arrivalTo=${to}`,
+      method: "GET",
+    },
+    {
+      url: `${TL_API}/api/reservation/v1/properties/${propertyId}/bookings?checkInFrom=${from}&checkInTo=${to}`,
+      method: "GET",
+    },
+    {
+      url: `${TL_API}/api/reservation/v1/properties/${propertyId}/bookings`,
+      method: "GET",
+    },
   ];
 
   const errors: string[] = [];
