@@ -30,7 +30,7 @@ async function getToken(): Promise<string> {
     client_secret: clientSecret,
   });
 
-  const res = await fetch(`${baseUrl.replace(/\/$/, "")}/auth/token`, {
+  const res = await fetch(`https://auth.travelline.ru/connect/token`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,
