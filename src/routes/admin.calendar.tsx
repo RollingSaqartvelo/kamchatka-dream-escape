@@ -43,12 +43,29 @@ type Bk = {
   total_price: number;
 };
 
+const STATUS_BG: Record<string, string> = {
+  pending:   "bg-amber-400",
+  confirmed: "bg-blue-500",
+  paid:      "bg-emerald-500",
+  cancelled: "bg-rose-400 opacity-50",
+  completed: "bg-zinc-400",
+};
+
+const STATUS_TEXT: Record<string, string> = {
+  pending:   "text-amber-950",
+  confirmed: "text-white",
+  paid:      "text-white",
+  cancelled: "text-white line-through",
+  completed: "text-white",
+};
+
+// оставляем для легенды
 const STATUS_COLOR: Record<string, string> = {
-  pending: "bg-amber-200 text-amber-900 border-amber-400",
-  confirmed: "bg-blue-200 text-blue-900 border-blue-400",
-  paid: "bg-emerald-200 text-emerald-900 border-emerald-400",
-  cancelled: "bg-rose-200 text-rose-900 border-rose-400 line-through opacity-60",
-  completed: "bg-zinc-200 text-zinc-700 border-zinc-400",
+  pending:   "bg-amber-400 text-amber-950 border-amber-500",
+  confirmed: "bg-blue-500 text-white border-blue-700",
+  paid:      "bg-emerald-500 text-white border-emerald-700",
+  cancelled: "bg-rose-400 text-white border-rose-500 line-through opacity-60",
+  completed: "bg-zinc-400 text-white border-zinc-600",
 };
 
 function AdminCalendarPage() {
@@ -231,8 +248,12 @@ function AdminCalendarPage() {
                       return (
                         <td
                           key={d.toISOString()}
-                          className={`relative h-14 min-w-[40px] cursor-pointer border-r border-border align-top hover:bg-cream/40 ${
-                            isSameDay(d, new Date()) ? "bg-[#C9A96E]/10" : ""
+                          className={`relative h-14 min-w-[40px] cursor-pointer border-r border-border p-0 ${
+                            cellBookings[0]
+                              ? (STATUS_BG[cellBookings[0].payment_status] ?? STATUS_BG.pending)
+                              : isSameDay(d, new Date())
+                              ? "bg-[#C9A96E]/10 hover:bg-[#C9A96E]/20"
+                              : "hover:bg-cream/40"
                           }`}
                           onClick={() => {
                             if (cellBookings[0]) {
@@ -243,15 +264,19 @@ function AdminCalendarPage() {
                             }
                           }}
                         >
-                          {cellBookings.map((b) => (
+                          {cellBookings[0] && (
                             <div
-                              key={b.id}
-                              className={`mx-0.5 my-0.5 truncate border px-1 py-0.5 text-[10px] ${STATUS_COLOR[b.payment_status] ?? STATUS_COLOR.pending}`}
-                              title={`${b.booking_number} · ${b.last_name} ${b.first_name}`}
+                              className={`flex h-full w-full flex-col items-center justify-center gap-0.5 px-1 ${STATUS_TEXT[cellBookings[0].payment_status] ?? "text-white"}`}
+                              title={`${cellBookings[0].booking_number} · ${cellBookings[0].last_name} ${cellBookings[0].first_name}`}
                             >
-                              {b.last_name}
+                              <span className="w-full truncate text-center text-[10px] font-bold leading-tight">
+                                {cellBookings[0].last_name}
+                              </span>
+                              <span className="text-[9px] opacity-80">
+                                {cellBookings[0].booking_number?.slice(-4)}
+                              </span>
                             </div>
-                          ))}
+                          )}
                         </td>
                       );
                     })}
