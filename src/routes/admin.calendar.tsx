@@ -121,6 +121,8 @@ function AdminCalendarPage() {
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
   const [ctxMenu, setCtxMenu] = useState<{ booking: Bk; x: number; y: number } | null>(null);
   const [statusFilter, setStatusFilter] = useState<Set<string>>(new Set(["pending","confirmed","paid","completed"]));
+  const [viewMode, setViewMode] = useState<"month" | "week">("month");
+  const [blocks, setBlocks] = useState<{ room_id: string; date: string }[]>([]);
   const syncFn = useServerFn(syncTravellineReservations);
 
   // Автосинхронизация TravelLine каждые 15 минут
@@ -130,17 +132,29 @@ function AdminCalendarPage() {
   }, [anchor]);
 
   const monthDays = useMemo(
-    () =>
-      eachDayOfInterval({
-        start: anchor,
-        end: endOfMonth(anchor),
-      }),
-    [anchor],
-  );
+    () => eachDayOfInterval(
+      viewMode === "month"
+        ? { start: anchor, end: endOfMonth(anchor) }
+        : { start: anchor, end: addDays(anchor, 6) }
+    ), [anchor, viewMode]);
+
 
   useEffect(() => {
     void load();
   }, [anchor]);
+
+  function toggleBlock(roomId: string, date: string) {
+    setBlocks(prev => {
+      const exists = prev.find(b => b.room_id === roomId && b.date === date);
+      if (exists) { toast.success("Блокировка снята"); return prev.filter(b => !(b.room_id === roomId && b.date === date)); }
+      toast.success("Дата заблокирована 🚫");
+      return [...prev, { room_id: roomId, date }];
+    });
+  }
+
+  function isBlocked(roomId: string, day: Date) {
+    return blocks.some(b => b.room_id === roomId && b.date === format(day, "yyyy-MM-dd"));
+  }
 
   async function changeStatus(bookingId: string, status: string) {
     const { error } = await supabase.from("bookings").update({ payment_status: status }).eq("id", bookingId);
@@ -253,6 +267,14 @@ function AdminCalendarPage() {
             >
               Сегодня
             </button>
+            <div className="flex rounded border border-border overflow-hidden text-[11px] uppercase tracking-widest">
+              {(["month","week"] as const).map((m) => (
+                <button key={m} onClick={() => { setViewMode(m); setAnchor(startOfMonth(anchor)); }}
+                  className={`px-3 py-2 ${viewMode === m ? "bg-navy text-cream" : "hover:bg-cream/40"}`}>
+                  {m === "month" ? "Месяц" : "Неделя"}
+                </button>
+              ))}
+            </div>
             <button
               onClick={() => void syncTravelline()}
               disabled={syncing}
@@ -366,14 +388,25 @@ function AdminCalendarPage() {
                             else { setModalRoom(room.id); setModalDate(d); }
                           }}
                           onContextMenu={(e) => {
+                            e.preventDefault();
                             if (cellBookings[0]) {
-                              e.preventDefault();
                               setCtxMenu({ booking: cellBookings[0], x: e.clientX, y: e.clientY });
+                            } else {
+                              toggleBlock(room.id, format(d, "yyyy-MM-dd"));
                             }
                           }}
                         >
+                          {/* Блокировка техобслуживания */}
+                          {isBlocked(room.id, d) && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-zinc-200"
+                              style={{ backgroundImage: "repeating-linear-gradient(45deg,transparent,transparent 4px,rgba(0,0,0,0.08) 4px,rgba(0,0,0,0.08) 8px)" }}
+                              title="Заблокировано — техобслуживание">
+                              <span className="text-[11px]">🚫</span>
+                            </div>
+                          )}
+
                           {/* Обычный номер — полная заливка */}
-                          {!HOSTEL_CAPACITY[room.id] && cellBookings[0] && (
+                          {!HOSTEL_CAPACITY[room.id] && cellBookings[0] && !isBlocked(room.id, d) && (
                             <div
                               className={`flex h-full w-full flex-col items-center justify-center px-1 ${STATUS_TEXT[cellBookings[0].payment_status] ?? "text-white"}`}
                               onMouseEnter={(e) => setTooltip({ booking: cellBookings[0] as any, x: e.clientX, y: e.clientY })}
