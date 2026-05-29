@@ -33,14 +33,15 @@ async function getToken(): Promise<string> {
   const base = baseUrl.replace(/\/$/, "");
   const authEndpoints = [
     `${base}/connect/token`,
-    `https://identity.travelline.ru/connect/token`,
+    `${base}/identity/connect/token`,
     `https://api.tlintegration.ru/connect/token`,
+    `https://api.tlintegration.com/connect/token`,
+    `${base}/oauth2/token`,
     `${base}/oauth/token`,
-    `${base}/auth/connect/token`,
   ];
 
   let res: Response | null = null;
-  let lastErr = "";
+  const allErrors: string[] = [];
   for (const url of authEndpoints) {
     try {
       const r = await fetch(url, {
@@ -48,20 +49,22 @@ async function getToken(): Promise<string> {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body,
       });
-      if (r.ok) { res = r; break; }
       const txt = await r.text().catch(() => "");
-      lastErr = `${url} → ${r.status}: ${txt.slice(0, 120)}`;
+      if (r.ok) {
+        // parse manually since we already consumed body
+        const json = JSON.parse(txt) as { access_token: string; expires_in: number };
+        cachedToken = {
+          token: json.access_token,
+          expiresAt: now + (json.expires_in ?? 900) * 1000,
+        };
+        return cachedToken.token;
+      }
+      allErrors.push(`${url} → ${r.status}: ${txt.slice(0, 80)}`);
     } catch (e) {
-      lastErr = `${url} → exception: ${(e as Error).message}`;
+      allErrors.push(`${url} → ERR: ${(e as Error).message.slice(0, 80)}`);
     }
   }
-  if (!res) throw new Error(`Travelline auth failed. Last: ${lastErr}`);
-  const json = (await res.json()) as { access_token: string; expires_in: number };
-  cachedToken = {
-    token: json.access_token,
-    expiresAt: now + (json.expires_in ?? 900) * 1000,
-  };
-  return cachedToken.token;
+  throw new Error(`Travelline auth failed:\n${allErrors.join("\n")}`);
 }
 
 // Пробуем несколько endpoint'ов Reservations API, возвращаем первый успешный
