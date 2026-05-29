@@ -119,6 +119,7 @@ function AdminCalendarPage() {
   const [modalRoom, setModalRoom] = useState<string | undefined>(undefined);
   const [selected, setSelected] = useState<Bk | null>(null);
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
+  const [ctxMenu, setCtxMenu] = useState<{ booking: Bk; x: number; y: number } | null>(null);
   const syncFn = useServerFn(syncTravellineReservations);
 
   const monthDays = useMemo(
@@ -133,6 +134,13 @@ function AdminCalendarPage() {
   useEffect(() => {
     void load();
   }, [anchor]);
+
+  async function changeStatus(bookingId: string, status: string) {
+    const { error } = await supabase.from("bookings").update({ payment_status: status }).eq("id", bookingId);
+    if (error) toast.error("Не удалось изменить статус");
+    else { toast.success(`Статус изменён: ${STATUS_LABEL[status]}`); void load(); }
+    setCtxMenu(null);
+  }
 
   async function syncTravelline() {
     setSyncing(true);
@@ -345,6 +353,12 @@ function AdminCalendarPage() {
                             if (cellBookings[0]) setSelected(cellBookings[0]);
                             else { setModalRoom(room.id); setModalDate(d); }
                           }}
+                          onContextMenu={(e) => {
+                            if (cellBookings[0]) {
+                              e.preventDefault();
+                              setCtxMenu({ booking: cellBookings[0], x: e.clientX, y: e.clientY });
+                            }
+                          }}
                         >
                           {/* Обычный номер — полная заливка */}
                           {!HOSTEL_CAPACITY[room.id] && cellBookings[0] && (
@@ -478,6 +492,32 @@ function AdminCalendarPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Контекстное меню — смена статуса */}
+      {ctxMenu && (
+        <>
+          <div className="fixed inset-0 z-[90]" onClick={() => setCtxMenu(null)} />
+          <div
+            className="fixed z-[100] w-48 rounded-lg border border-border bg-background shadow-xl overflow-hidden"
+            style={{ left: ctxMenu.x, top: ctxMenu.y }}
+          >
+            <p className="px-3 py-2 text-[10px] uppercase tracking-widest text-muted-foreground border-b border-border">
+              Сменить статус
+            </p>
+            {(["pending","confirmed","paid","completed","cancelled"] as const).map((s) => (
+              <button
+                key={s}
+                onClick={() => void changeStatus(ctxMenu.booking.id, s)}
+                className={`w-full px-3 py-2 text-left text-xs hover:bg-cream/60 flex items-center gap-2 ${ctxMenu.booking.payment_status === s ? "font-bold" : ""}`}
+              >
+                <span className={`inline-block h-2 w-2 rounded-full ${STATUS_BG[s]}`} />
+                {STATUS_LABEL[s]}
+                {ctxMenu.booking.payment_status === s && " ✓"}
+              </button>
+            ))}
+          </div>
+        </>
       )}
 
       {/* Тултип */}
