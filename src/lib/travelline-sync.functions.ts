@@ -61,33 +61,22 @@ async function fetchReservations(
     "Content-Type": "application/json",
   };
 
-  // Сначала пробуем найти правильный propertyId через /properties
-  try {
-    const propsRes = await fetch(`${TL_API}/api/reservation/v1/properties`, { headers });
-    if (propsRes.ok) {
-      const propsJson = await propsRes.json();
-      console.log("TL properties list:", JSON.stringify(propsJson).slice(0, 500));
-    } else {
-      const txt = await propsRes.text().catch(() => "");
-      console.log("TL /properties →", propsRes.status, txt.slice(0, 200));
-    }
-  } catch (e) {
-    console.log("TL /properties exception:", (e as Error).message);
+  // Декодируем JWT чтобы узнать propertyId и scopes из токена
+  const tokenParts = token.split(".");
+  if (tokenParts.length === 3) {
+    try {
+      const payload = JSON.parse(Buffer.from(tokenParts[1], "base64").toString("utf-8"));
+      return {
+        ok: false,
+        error: `DEBUG TOKEN: ${JSON.stringify(payload).slice(0, 800)}`,
+        synced: 0,
+      } as any;
+    } catch {}
   }
 
   const attempts: Array<{ url: string; method: "GET" | "POST"; body?: string }> = [
     {
       url: `${TL_API}/api/reservation/v1/properties/${propertyId}/bookings`,
-      method: "GET",
-    },
-    // propertyId может быть строкой с нулём впереди или другим форматом
-    {
-      url: `${TL_API}/api/reservation/v1/properties/${propertyId}/bookings?page=1&pageSize=50`,
-      method: "GET",
-    },
-    // без /api/ префикса
-    {
-      url: `https://partner.tlintegration.com/reservation/v1/properties/${propertyId}/bookings`,
       method: "GET",
     },
   ];
