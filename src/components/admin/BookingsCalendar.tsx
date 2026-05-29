@@ -212,32 +212,36 @@ export function BookingsCalendar() {
                   </td>
                   {monthDays.map((d) => {
                     const cellBookings = bookingsForCell(room.id, d);
+                    const top = cellBookings[0];
                     return (
                       <td
                         key={d.toISOString()}
-                        className={`relative h-14 min-w-[40px] cursor-pointer border-r border-border align-top hover:bg-cream/40 ${
-                          isSameDay(d, new Date()) ? "bg-[#C9A96E]/10" : ""
+                        className={`relative h-14 min-w-[40px] cursor-pointer border-r border-border p-0 align-top ${
+                          top
+                            ? ""
+                            : isSameDay(d, new Date())
+                              ? "bg-[#C9A96E]/10 hover:bg-cream/40"
+                              : "hover:bg-cream/40"
                         }`}
                         onClick={() => {
-                          if (cellBookings[0]) {
-                            setSelected(cellBookings[0]);
+                          if (top) {
+                            setSelected(top);
                           } else {
                             setModalRoom(room.id);
                             setModalDate(d);
                           }
                         }}
                       >
-                        {cellBookings.map((b) => (
+                        {top && (
                           <div
-                            key={b.id}
-                            className={`mx-0.5 my-0.5 truncate border px-1 py-0.5 text-[10px] ${
-                              STATUS_COLOR[b.payment_status] ?? STATUS_COLOR.pending
+                            className={`flex h-full w-full items-center justify-center truncate border px-1 text-[10px] font-medium ${
+                              STATUS_COLOR[top.payment_status] ?? STATUS_COLOR.pending
                             }`}
-                            title={`${b.booking_number} · ${b.last_name} ${b.first_name}`}
+                            title={`${top.booking_number} · ${top.last_name} ${top.first_name}${top.source === "travelline" ? " · TL" : ""}`}
                           >
-                            {b.last_name}
+                            {top.last_name}
                           </div>
-                        ))}
+                        )}
                       </td>
                     );
                   })}
