@@ -80,14 +80,19 @@ export function BookingsCalendar() {
   async function syncTravelline() {
     setSyncing(true);
     try {
-      // TODO: подключить Travelline Reservations API.
-      // Сейчас у нас настроен только Search/Pricing — для выгрузки броней
-      // нужны дополнительные права и эндпоинт /reservations.
-      await new Promise((r) => setTimeout(r, 600));
-      toast.info(
-        "Синхронизация с Travelline требует доступа к Reservations API. Сейчас в календаре — только брони из нашей БД.",
-      );
+      const from = format(addDays(anchor, -7), "yyyy-MM-dd");
+      const to = format(addDays(endOfMonth(anchor), 14), "yyyy-MM-dd");
+      const res = await syncFn({ data: { from, to } });
+      if (res.ok) {
+        toast.success(
+          `Travelline синхронизирован: ${res.synced} брон.${res.note ? ` (${res.note})` : ""}`,
+        );
+      } else {
+        toast.error(`Travelline: ${res.error?.slice(0, 200) ?? "ошибка"}`);
+      }
       await load();
+    } catch (e) {
+      toast.error(`Sync failed: ${(e as Error).message}`);
     } finally {
       setSyncing(false);
     }
