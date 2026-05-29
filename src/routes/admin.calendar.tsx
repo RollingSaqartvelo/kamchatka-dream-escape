@@ -212,28 +212,31 @@ function AdminCalendarPage() {
     });
   }
 
-  // Итоги месяца
+  // Итоги месяца — считаем только то что реально видно в календаре
   const monthStats = useMemo(() => {
+    const validRoomIds = new Set(ROOMS.map(r => r.id));
     const totalRoomNights = ROOMS.length * monthDays.length;
     let occupiedNights = 0;
     let revenue = 0;
     const uniqueBookings = new Set<string>();
-    bookings.forEach((b) => {
-      if (!uniqueBookings.has(b.id)) {
-        uniqueBookings.add(b.id);
-        revenue += b.total_price ?? 0;
-      }
+
+    ROOMS.forEach((room) => {
       monthDays.forEach((d) => {
-        const ci = parseISO(b.check_in);
-        const co = parseISO(b.check_out);
-        if (isWithinInterval(d, { start: ci, end: addDays(co, -1) }) || isSameDay(d, ci)) {
+        const cell = bookingsForCell(room.id, d);
+        cell.forEach((b) => {
+          if (!uniqueBookings.has(b.id)) {
+            uniqueBookings.add(b.id);
+            revenue += b.total_price ?? 0;
+          }
+          // хостел считаем как 1 ночь за ячейку (не по местам)
           occupiedNights++;
-        }
+        });
       });
     });
+
     const pct = totalRoomNights > 0 ? Math.round((occupiedNights / totalRoomNights) * 100) : 0;
     return { occupiedNights, revenue, pct, total: uniqueBookings.size };
-  }, [bookings, monthDays]);
+  }, [bookings, monthDays, statusFilter]);
 
   return (
     <div className="min-h-screen">
