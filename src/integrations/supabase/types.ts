@@ -49,8 +49,10 @@ export type Database = {
           room_name: string
           room_price_total: number
           salutation: string | null
+          source: string
           special_requests: Json
           terms_consent: boolean
+          tl_reservation_id: string | null
           total_price: number
           updated_at: string
           user_id: string | null
@@ -89,8 +91,10 @@ export type Database = {
           room_name: string
           room_price_total?: number
           salutation?: string | null
+          source?: string
           special_requests?: Json
           terms_consent?: boolean
+          tl_reservation_id?: string | null
           total_price?: number
           updated_at?: string
           user_id?: string | null
@@ -129,8 +133,10 @@ export type Database = {
           room_name?: string
           room_price_total?: number
           salutation?: string | null
+          source?: string
           special_requests?: Json
           terms_consent?: boolean
+          tl_reservation_id?: string | null
           total_price?: number
           updated_at?: string
           user_id?: string | null

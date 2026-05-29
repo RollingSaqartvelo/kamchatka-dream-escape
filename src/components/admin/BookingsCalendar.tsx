@@ -13,9 +13,11 @@ import {
 } from "date-fns";
 import { ru } from "date-fns/locale";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { ROOMS } from "@/data/rooms";
 import { OfflineBookingModal } from "@/components/admin/OfflineBookingModal";
+import { syncTravellineReservations } from "@/lib/travelline-sync.functions";
 
 type Bk = {
   id: string;
@@ -28,14 +30,15 @@ type Bk = {
   check_out: string;
   payment_status: string;
   total_price: number;
+  source?: string;
 };
 
 const STATUS_COLOR: Record<string, string> = {
-  pending: "bg-amber-200 text-amber-900 border-amber-400",
-  confirmed: "bg-blue-200 text-blue-900 border-blue-400",
-  paid: "bg-emerald-200 text-emerald-900 border-emerald-400",
-  cancelled: "bg-rose-200 text-rose-900 border-rose-400 line-through opacity-60",
-  completed: "bg-zinc-200 text-zinc-700 border-zinc-400",
+  pending: "bg-amber-300 text-amber-950 border-amber-500",
+  confirmed: "bg-blue-500 text-white border-blue-700",
+  paid: "bg-emerald-500 text-white border-emerald-700",
+  cancelled: "bg-rose-300 text-rose-950 border-rose-500 line-through opacity-60",
+  completed: "bg-zinc-400 text-white border-zinc-600",
 };
 
 export function BookingsCalendar() {
@@ -46,6 +49,7 @@ export function BookingsCalendar() {
   const [modalDate, setModalDate] = useState<Date | null>(null);
   const [modalRoom, setModalRoom] = useState<string | undefined>(undefined);
   const [selected, setSelected] = useState<Bk | null>(null);
+  const syncFn = useServerFn(syncTravellineReservations);
 
   const monthDays = useMemo(
     () => eachDayOfInterval({ start: anchor, end: endOfMonth(anchor) }),
@@ -63,7 +67,7 @@ export function BookingsCalendar() {
     const { data, error } = await supabase
       .from("bookings")
       .select(
-        "id, booking_number, first_name, last_name, room_id, room_name, check_in, check_out, payment_status, total_price",
+        "id, booking_number, first_name, last_name, room_id, room_name, check_in, check_out, payment_status, total_price, source",
       )
       .or(`and(check_in.lte.${to},check_out.gte.${from})`)
       .neq("payment_status", "cancelled")
@@ -76,14 +80,19 @@ export function BookingsCalendar() {
   async function syncTravelline() {
     setSyncing(true);
     try {
-      // TODO: подключить Travelline Reservations API.
-      // Сейчас у нас настроен только Search/Pricing — для выгрузки броней
-      // нужны дополнительные права и эндпоинт /reservations.
-      await new Promise((r) => setTimeout(r, 600));
-      toast.info(
-        "Синхронизация с Travelline требует доступа к Reservations API. Сейчас в календаре — только брони из нашей БД.",
-      );
+      const from = format(addDays(anchor, -7), "yyyy-MM-dd");
+      const to = format(addDays(endOfMonth(anchor), 14), "yyyy-MM-dd");
+      const res = await syncFn({ data: { from, to } });
+      if (res.ok) {
+        toast.success(
+          `Travelline синхронизирован: ${res.synced} брон.${res.note ? ` (${res.note})` : ""}`,
+        );
+      } else {
+        toast.error(`Travelline: ${res.error?.slice(0, 200) ?? "ошибка"}`);
+      }
       await load();
+    } catch (e) {
+      toast.error(`Sync failed: ${(e as Error).message}`);
     } finally {
       setSyncing(false);
     }
@@ -203,32 +212,36 @@ export function BookingsCalendar() {
                   </td>
                   {monthDays.map((d) => {
                     const cellBookings = bookingsForCell(room.id, d);
+                    const top = cellBookings[0];
                     return (
                       <td
                         key={d.toISOString()}
-                        className={`relative h-14 min-w-[40px] cursor-pointer border-r border-border align-top hover:bg-cream/40 ${
-                          isSameDay(d, new Date()) ? "bg-[#C9A96E]/10" : ""
+                        className={`relative h-14 min-w-[40px] cursor-pointer border-r border-border p-0 align-top ${
+                          top
+                            ? ""
+                            : isSameDay(d, new Date())
+                              ? "bg-[#C9A96E]/10 hover:bg-cream/40"
+                              : "hover:bg-cream/40"
                         }`}
                         onClick={() => {
-                          if (cellBookings[0]) {
-                            setSelected(cellBookings[0]);
+                          if (top) {
+                            setSelected(top);
                           } else {
                             setModalRoom(room.id);
                             setModalDate(d);
                           }
                         }}
                       >
-                        {cellBookings.map((b) => (
+                        {top && (
                           <div
-                            key={b.id}
-                            className={`mx-0.5 my-0.5 truncate border px-1 py-0.5 text-[10px] ${
-                              STATUS_COLOR[b.payment_status] ?? STATUS_COLOR.pending
+                            className={`flex h-full w-full items-center justify-center truncate border px-1 text-[10px] font-medium ${
+                              STATUS_COLOR[top.payment_status] ?? STATUS_COLOR.pending
                             }`}
-                            title={`${b.booking_number} · ${b.last_name} ${b.first_name}`}
+                            title={`${top.booking_number} · ${top.last_name} ${top.first_name}${top.source === "travelline" ? " · TL" : ""}`}
                           >
-                            {b.last_name}
+                            {top.last_name}
                           </div>
-                        ))}
+                        )}
                       </td>
                     );
                   })}
