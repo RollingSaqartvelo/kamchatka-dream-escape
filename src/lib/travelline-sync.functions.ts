@@ -55,7 +55,7 @@ async function fetchReservations(
   from: string,
   to: string,
 ): Promise<{ data: any; endpoint: string } | { error: string }> {
-  const base = baseUrl.replace(/\/$/, "");
+  const TL_API = "https://partner.tlintegration.com";
   const headers = {
     Authorization: `Bearer ${token}`,
     "Content-Type": "application/json",
@@ -63,24 +63,25 @@ async function fetchReservations(
 
   const attempts: Array<{ url: string; method: "GET" | "POST"; body?: string }> = [
     {
-      url: `${base}/reservations/list`,
-      method: "POST",
-      body: JSON.stringify({
-        propertyId: Number(propertyId),
-        period: { from, to },
-      }),
+      url: `${TL_API}/v1/reservations`,
+      method: "GET",
     },
     {
-      url: `${base}/reservations/search`,
-      method: "POST",
-      body: JSON.stringify({
-        propertyId: Number(propertyId),
-        modifiedFrom: `${from}T00:00:00Z`,
-        modifiedTo: `${to}T23:59:59Z`,
-      }),
+      url: `${TL_API}/v1/properties/${propertyId}/reservations?from=${from}&to=${to}`,
+      method: "GET",
     },
     {
-      url: `${base}/reservations?propertyId=${propertyId}&from=${from}&to=${to}`,
+      url: `${TL_API}/reservations/list`,
+      method: "POST",
+      body: JSON.stringify({ propertyId: Number(propertyId), period: { from, to } }),
+    },
+    {
+      url: `${TL_API}/v1/reservations/list`,
+      method: "POST",
+      body: JSON.stringify({ propertyId: Number(propertyId), period: { from, to } }),
+    },
+    {
+      url: `${TL_API}/reservations?propertyId=${propertyId}&from=${from}&to=${to}`,
       method: "GET",
     },
   ];
