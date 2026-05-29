@@ -13,9 +13,11 @@ import {
 } from "date-fns";
 import { ru } from "date-fns/locale";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { ROOMS } from "@/data/rooms";
 import { OfflineBookingModal } from "@/components/admin/OfflineBookingModal";
+import { syncTravellineReservations } from "@/lib/travelline-sync.functions";
 
 type Bk = {
   id: string;
