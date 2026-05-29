@@ -30,41 +30,21 @@ async function getToken(): Promise<string> {
     client_secret: clientSecret,
   });
 
-  const base = baseUrl.replace(/\/$/, "");
-  const authEndpoints = [
-    `${base}/connect/token`,
-    `${base}/identity/connect/token`,
-    `https://api.tlintegration.ru/connect/token`,
-    `https://api.tlintegration.com/connect/token`,
-    `${base}/oauth2/token`,
-    `${base}/oauth/token`,
-  ];
-
-  let res: Response | null = null;
-  const allErrors: string[] = [];
-  for (const url of authEndpoints) {
-    try {
-      const r = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body,
-      });
-      const txt = await r.text().catch(() => "");
-      if (r.ok) {
-        // parse manually since we already consumed body
-        const json = JSON.parse(txt) as { access_token: string; expires_in: number };
-        cachedToken = {
-          token: json.access_token,
-          expiresAt: now + (json.expires_in ?? 900) * 1000,
-        };
-        return cachedToken.token;
-      }
-      allErrors.push(`${url} → ${r.status}: ${txt.slice(0, 80)}`);
-    } catch (e) {
-      allErrors.push(`${url} → ERR: ${(e as Error).message.slice(0, 80)}`);
-    }
+  const res = await fetch(`https://partner.tlintegration.com/auth/token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body,
+  });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => "");
+    throw new Error(`Travelline auth ${res.status}: ${txt.slice(0, 200)}`);
   }
-  throw new Error(`Travelline auth failed:\n${allErrors.join("\n")}`);
+  const json = (await res.json()) as { access_token: string; expires_in: number };
+  cachedToken = {
+    token: json.access_token,
+    expiresAt: now + (json.expires_in ?? 900) * 1000,
+  };
+  return cachedToken.token;
 }
 
 // Пробуем несколько endpoint'ов Reservations API, возвращаем первый успешный

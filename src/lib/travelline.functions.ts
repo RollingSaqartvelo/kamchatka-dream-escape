@@ -48,7 +48,7 @@ async function getTravellineToken(): Promise<string> {
     client_secret: clientSecret,
   });
 
-  const res = await fetch(`${baseUrl.replace(/\/$/, "")}/auth/token`, {
+  const res = await fetch(`https://partner.tlintegration.com/auth/token`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,
