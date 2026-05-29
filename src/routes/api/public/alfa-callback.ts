@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
+import { sendPaymentConfirmation } from "@/lib/email.functions";
 
 /**
  * Webhook от Альфа-Банка после оплаты.
@@ -50,16 +51,24 @@ async function handle(request: Request) {
 
   // deposited = успешная оплата
   if (operation === "deposited" && status === "1") {
-    const { error } = await supabase
+    const { data: updated, error } = await supabase
       .from("bookings")
       .update({
         payment_status: "paid",
         paid_at: new Date().toISOString(),
       })
-      .eq("alfa_order_id", mdOrder);
+      .eq("alfa_order_id", mdOrder)
+      .select("id")
+      .single();
     if (error) {
       console.error("alfa-callback update error:", error);
       return new Response("db error", { status: 500 });
+    }
+    // Отправляем письмо об успешной оплате
+    if (updated?.id) {
+      sendPaymentConfirmation(updated.id).catch((e) =>
+        console.error("sendPaymentConfirmation failed:", e),
+      );
     }
     return new Response("ok");
   }

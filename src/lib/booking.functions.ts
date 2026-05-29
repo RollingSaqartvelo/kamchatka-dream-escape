@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
 import { ROOMS } from "@/data/rooms";
 import { ROOM_ID_TO_TL, RATE_PLAN_BY_MEAL } from "./travelline.functions";
+import { sendBookingConfirmation } from "./email.functions";
 
 const BREAKFAST_PER_PERSON = 500;
 
@@ -205,6 +206,11 @@ export const createBooking = createServerFn({ method: "POST" })
       console.error("createBooking error:", error);
       throw new Error(error.message);
     }
+
+    // Отправляем подтверждение брони на email (fire-and-forget)
+    sendBookingConfirmation(row.id as string).catch((e) =>
+      console.error("sendBookingConfirmation failed:", e),
+    );
 
     return {
       id: row.id as string,
