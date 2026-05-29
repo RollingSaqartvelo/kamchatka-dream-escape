@@ -266,15 +266,14 @@ function AdminCalendarPage() {
                         >
                           {cellBookings[0] && (
                             <div
-                              className={`flex h-full w-full flex-col items-center justify-center gap-0.5 px-1 ${STATUS_TEXT[cellBookings[0].payment_status] ?? "text-white"}`}
+                              className={`flex h-full w-full flex-col items-center justify-center px-1 ${STATUS_TEXT[cellBookings[0].payment_status] ?? "text-white"}`}
                               title={`${cellBookings[0].booking_number} · ${cellBookings[0].last_name} ${cellBookings[0].first_name}`}
                             >
-                              <span className="w-full truncate text-center text-[10px] font-bold leading-tight">
-                                {cellBookings[0].last_name}
-                              </span>
-                              <span className="text-[9px] opacity-80">
-                                {cellBookings[0].booking_number?.slice(-4)}
-                              </span>
+                              {cellBookings[0].last_name && cellBookings[0].last_name !== "—" && (
+                                <span className="w-full truncate text-center text-[10px] font-bold leading-tight">
+                                  {cellBookings[0].last_name}
+                                </span>
+                              )}
                             </div>
                           )}
                         </td>
