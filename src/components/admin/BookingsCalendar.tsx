@@ -67,7 +67,7 @@ export function BookingsCalendar() {
     const { data, error } = await supabase
       .from("bookings")
       .select(
-        "id, booking_number, first_name, last_name, room_id, room_name, check_in, check_out, payment_status, total_price",
+        "id, booking_number, first_name, last_name, room_id, room_name, check_in, check_out, payment_status, total_price, source",
       )
       .or(`and(check_in.lte.${to},check_out.gte.${from})`)
       .neq("payment_status", "cancelled")
