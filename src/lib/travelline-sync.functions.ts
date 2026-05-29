@@ -30,15 +30,32 @@ async function getToken(): Promise<string> {
     client_secret: clientSecret,
   });
 
-  const res = await fetch(`https://auth.travelline.ru/connect/token`, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
-  });
-  if (!res.ok) {
-    const txt = await res.text().catch(() => "");
-    throw new Error(`Travelline auth ${res.status}: ${txt.slice(0, 200)}`);
+  const base = baseUrl.replace(/\/$/, "");
+  const authEndpoints = [
+    `${base}/connect/token`,
+    `https://identity.travelline.ru/connect/token`,
+    `https://api.tlintegration.ru/connect/token`,
+    `${base}/oauth/token`,
+    `${base}/auth/connect/token`,
+  ];
+
+  let res: Response | null = null;
+  let lastErr = "";
+  for (const url of authEndpoints) {
+    try {
+      const r = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body,
+      });
+      if (r.ok) { res = r; break; }
+      const txt = await r.text().catch(() => "");
+      lastErr = `${url} → ${r.status}: ${txt.slice(0, 120)}`;
+    } catch (e) {
+      lastErr = `${url} → exception: ${(e as Error).message}`;
+    }
   }
+  if (!res) throw new Error(`Travelline auth failed. Last: ${lastErr}`);
   const json = (await res.json()) as { access_token: string; expires_in: number };
   cachedToken = {
     token: json.access_token,
