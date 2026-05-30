@@ -8,6 +8,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/sonner";
+import { AccessibilityWidget } from "@/components/layout/AccessibilityWidget";
 
 import appCss from "../styles.css?url";
 import "@/lib/i18n";
@@ -125,6 +126,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <Outlet />
       <Toaster richColors position="top-right" />
+      <AccessibilityWidget />
     </QueryClientProvider>
   );
 }
