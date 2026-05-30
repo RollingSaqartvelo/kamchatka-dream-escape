@@ -5,6 +5,7 @@ import { ROOMS } from "@/data/rooms";
 import { ROOM_ID_TO_TL, RATE_PLAN_BY_MEAL } from "./travelline.functions";
 import { sendBookingConfirmation } from "./email.functions";
 import { notifyNewBooking } from "./telegram.functions";
+import { createConversationForBooking } from "./inbox.functions";
 
 const BREAKFAST_PER_PERSON = 500;
 
@@ -229,6 +230,17 @@ export const createBooking = createServerFn({ method: "POST" })
       prepayment_amount: prepaymentAmount,
       source: "website",
     }).catch((e) => console.error("notifyNewBooking failed:", e));
+
+    // Создаём диалог в CRM инбоксе
+    createConversationForBooking({
+      bookingId: row.id as string,
+      guestName: `${data.first_name} ${data.last_name}`,
+      guestEmail: data.email,
+      guestPhone: data.phone,
+      bookingNumber: row.booking_number as string,
+      roomName: room.name_ru,
+      checkIn: data.check_in,
+    }).catch((e) => console.error("createConversationForBooking failed:", e));
 
     return {
       id: row.id as string,
