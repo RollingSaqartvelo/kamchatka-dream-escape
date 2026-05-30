@@ -173,8 +173,10 @@ function AdminCalendarPage() {
     setTestEmailSending(true);
     try {
       const res = await sendTestEmailFn({ data: { to: "rolling_saqartvelo@outlook.com" } });
-      if (res.ok) {
-        toast.success("Тестовое письмо отправлено на rolling_saqartvelo@outlook.com");
+      if (res.pdfError) {
+        toast.error(`PDF ошибка: ${res.pdfError}`);
+      } else if (res.ok) {
+        toast.success("Тестовое письмо + ваучер отправлены!");
       } else {
         toast.error(`Ошибка отправки: ${res.error}`);
       }

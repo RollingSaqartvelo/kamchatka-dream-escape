@@ -336,12 +336,14 @@ export const sendTestEmail = createServerFn({ method: "POST" })
 
     // Генерируем тестовый PDF-ваучер
     let attachments: Array<{ filename: string; content: string }> | undefined;
+    let pdfError: string | undefined;
     try {
       const { generateVoucherPdf } = await import("./voucher");
       const pdfBuffer = await generateVoucherPdf(testBooking);
       attachments = [{ filename: "voucher-TEST-0001.pdf", content: pdfBuffer.toString("base64") }];
     } catch (e) {
-      console.error("generateVoucherPdf failed:", e);
+      pdfError = (e as Error).message ?? String(e);
+      console.error("generateVoucherPdf failed:", pdfError);
     }
 
     const result = await sendViaResend(
@@ -350,7 +352,7 @@ export const sendTestEmail = createServerFn({ method: "POST" })
       html,
       attachments,
     );
-    return result;
+    return { ...result, pdfError };
   });
 
 // ─── Отправить напоминание (вызывается из cron) ───────────────────────────────
