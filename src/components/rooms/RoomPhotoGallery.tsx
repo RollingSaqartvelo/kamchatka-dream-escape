@@ -23,7 +23,7 @@ export function RoomPhotoGallery({
       {count > 0 ? (
         <img
           src={photos[0]}
-          alt=""
+          alt="Фото номера"
           className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
           loading="lazy"
         />

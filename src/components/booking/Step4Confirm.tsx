@@ -192,7 +192,7 @@ export function Step4Confirm({ state, patch, onEditStep, onBack }: Props) {
             onChange={(v) => patch({ guest: { ...guest, firstName: v } })} />
           <Field label="Фамилия*" value={guest.lastName}
             onChange={(v) => patch({ guest: { ...guest, lastName: v } })} />
-          <Field label="Телефон*" prefix="🇷🇺 +7" value={guest.phone}
+          <PhoneField value={guest.phone}
             onChange={(v) => patch({ guest: { ...guest, phone: v } })} />
           <Field label="Email*" type="email" value={guest.email}
             onChange={(v) => patch({ guest: { ...guest, email: v } })} />
@@ -329,6 +329,78 @@ function Field({
           type={type}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          className="w-full bg-transparent px-4 py-3 text-sm text-navy outline-none"
+        />
+      </div>
+    </label>
+  );
+}
+
+const DIAL_CODES = [
+  { code: "+7", flag: "🇷🇺", label: "Россия" },
+  { code: "+375", flag: "🇧🇾", label: "Беларусь" },
+  { code: "+380", flag: "🇺🇦", label: "Украина" },
+  { code: "+77", flag: "🇰🇿", label: "Казахстан" },
+  { code: "+998", flag: "🇺🇿", label: "Узбекистан" },
+  { code: "+86", flag: "🇨🇳", label: "Китай" },
+  { code: "+81", flag: "🇯🇵", label: "Япония" },
+  { code: "+82", flag: "🇰🇷", label: "Корея" },
+  { code: "+1", flag: "🇺🇸", label: "США / Канада" },
+  { code: "+44", flag: "🇬🇧", label: "Великобритания" },
+  { code: "+49", flag: "🇩🇪", label: "Германия" },
+  { code: "+33", flag: "🇫🇷", label: "Франция" },
+  { code: "+39", flag: "🇮🇹", label: "Италия" },
+  { code: "+34", flag: "🇪🇸", label: "Испания" },
+  { code: "+90", flag: "🇹🇷", label: "Турция" },
+  { code: "+971", flag: "🇦🇪", label: "ОАЭ" },
+  { code: "+91", flag: "🇮🇳", label: "Индия" },
+];
+
+// Match longest dial code first so e.g. +375 wins over +7.
+const DIAL_BY_LENGTH = [...DIAL_CODES].sort((a, b) => b.code.length - a.code.length);
+
+function splitPhone(full: string): { dial: string; rest: string } {
+  const trimmed = full.trim();
+  const match = DIAL_BY_LENGTH.find((d) => trimmed.startsWith(d.code));
+  if (match) return { dial: match.code, rest: trimmed.slice(match.code.length).trim() };
+  return { dial: "+7", rest: trimmed };
+}
+
+/** Phone input with a country dial-code selector; stores the full international
+ *  number (e.g. "+7 9991234567") in a single string value. */
+function PhoneField({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const { dial, rest } = splitPhone(value);
+  const combine = (d: string, r: string) => onChange(r ? `${d} ${r}` : d === "+7" && !r ? "" : d);
+  return (
+    <label className="block">
+      <span className="text-[11px] uppercase tracking-widest text-muted-foreground">
+        Телефон*
+      </span>
+      <div className="mt-1.5 flex items-center border border-border bg-background focus-within:border-[#C9A96E]">
+        <select
+          value={dial}
+          onChange={(e) => combine(e.target.value, rest)}
+          aria-label="Код страны"
+          className="shrink-0 border-r border-border bg-transparent py-3 pl-3 pr-2 text-sm text-navy outline-none"
+        >
+          {DIAL_CODES.map((c) => (
+            <option key={`${c.code}-${c.label}`} value={c.code}>
+              {c.flag} {c.code}
+            </option>
+          ))}
+        </select>
+        <input
+          type="tel"
+          inputMode="tel"
+          value={rest}
+          onChange={(e) => combine(dial, e.target.value)}
+          placeholder="999 123-45-67"
           className="w-full bg-transparent px-4 py-3 text-sm text-navy outline-none"
         />
       </div>

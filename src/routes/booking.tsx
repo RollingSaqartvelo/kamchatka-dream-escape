@@ -2,7 +2,23 @@ import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/layout/SiteLayout";
 import { BookingWizard } from "@/components/booking/BookingWizard";
 
+export type BookingSearch = {
+  checkIn?: string;
+  checkOut?: string;
+  adults?: number;
+  roomId?: string;
+};
+
 export const Route = createFileRoute("/booking")({
+  validateSearch: (search: Record<string, unknown>): BookingSearch => ({
+    checkIn: typeof search.checkIn === "string" ? search.checkIn : undefined,
+    checkOut: typeof search.checkOut === "string" ? search.checkOut : undefined,
+    adults:
+      search.adults != null && Number(search.adults) > 0
+        ? Number(search.adults)
+        : undefined,
+    roomId: typeof search.roomId === "string" ? search.roomId : undefined,
+  }),
   component: BookingPage,
   head: () => ({
     meta: [
@@ -17,9 +33,10 @@ export const Route = createFileRoute("/booking")({
 });
 
 function BookingPage() {
+  const search = Route.useSearch();
   return (
     <SiteLayout>
-      <BookingWizard />
+      <BookingWizard search={search} />
     </SiteLayout>
   );
 }

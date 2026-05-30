@@ -59,6 +59,7 @@ export function PageHero({
         loop
         playsInline
         preload="none"
+        aria-hidden="true"
       />
 
       <button

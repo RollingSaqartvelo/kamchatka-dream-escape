@@ -5,6 +5,7 @@ import { SiteLayout } from "@/components/layout/SiteLayout";
 import { ROOMS } from "@/data/rooms";
 import { RoomCard } from "@/components/rooms/RoomCard";
 import { RoomFilterBar } from "@/components/rooms/RoomFilterBar";
+import type { DateRange } from "@/components/booking/types";
 
 
 export const Route = createFileRoute("/rooms")({
@@ -30,13 +31,23 @@ export const Route = createFileRoute("/rooms")({
 function RoomsPage() {
   const { t } = useTranslation();
   const [guests, setGuests] = useState(2);
-  const [dates, setDates] = useState("");
+  const [range, setRange] = useState<DateRange>({});
   const [filterActive, setFilterActive] = useState(false);
 
   const rooms = useMemo(() => {
     if (!filterActive) return ROOMS;
     return ROOMS.filter((r) => r.max_guests >= guests);
   }, [filterActive, guests]);
+
+  // Carry the chosen dates + party into the booking wizard via search params.
+  const bookingSearch = useMemo(
+    () => ({
+      adults: guests,
+      ...(range.from ? { checkIn: range.from.toISOString().slice(0, 10) } : {}),
+      ...(range.to ? { checkOut: range.to.toISOString().slice(0, 10) } : {}),
+    }),
+    [guests, range.from, range.to],
+  );
 
   return (
     <SiteLayout>
@@ -70,8 +81,8 @@ function RoomsPage() {
       <RoomFilterBar
         guests={guests}
         onGuestsChange={setGuests}
-        dates={dates}
-        onDatesChange={setDates}
+        range={range}
+        onRangeChange={setRange}
         onApply={() => setFilterActive(true)}
       />
 
@@ -84,7 +95,7 @@ function RoomsPage() {
           ) : (
             <div className="grid gap-8">
               {rooms.map((room) => (
-                <RoomCard key={room.id} room={room} />
+                <RoomCard key={room.id} room={room} bookingSearch={bookingSearch} />
               ))}
             </div>
           )}

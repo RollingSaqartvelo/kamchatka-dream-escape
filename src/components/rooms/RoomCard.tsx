@@ -10,7 +10,13 @@ function fmtPrice(n: number) {
   return new Intl.NumberFormat("ru-RU").format(n) + " ₽";
 }
 
-export function RoomCard({ room }: { room: Room }) {
+export function RoomCard({
+  room,
+  bookingSearch,
+}: {
+  room: Room;
+  bookingSearch?: Record<string, string | number>;
+}) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -132,6 +138,7 @@ export function RoomCard({ room }: { room: Room }) {
               </button>
               <Link
                 to="/booking"
+                search={{ ...(bookingSearch ?? {}), roomId: room.id }}
                 className="bg-navy px-5 py-3 text-[11px] uppercase tracking-widest text-cream hover:bg-gold transition-colors"
               >
                 {t("rooms.card.book")}

@@ -150,15 +150,41 @@ function AdminCalendarPage() {
 
   useEffect(() => {
     void load();
+    void loadBlocks();
   }, [anchor]);
 
-  function toggleBlock(roomId: string, date: string) {
-    setBlocks(prev => {
-      const exists = prev.find(b => b.room_id === roomId && b.date === date);
-      if (exists) { toast.success("Блокировка снята"); return prev.filter(b => !(b.room_id === roomId && b.date === date)); }
-      toast.success("Дата заблокирована 🚫");
-      return [...prev, { room_id: roomId, date }];
-    });
+  async function loadBlocks() {
+    const from = format(addDays(anchor, -1), "yyyy-MM-dd");
+    const to = format(addDays(endOfMonth(anchor), 1), "yyyy-MM-dd");
+    const { data, error } = await (supabase as any)
+      .from("room_blocks")
+      .select("room_id, date")
+      .gte("date", from)
+      .lte("date", to);
+    if (error) console.error(error);
+    else setBlocks((data as { room_id: string; date: string }[]) ?? []);
+  }
+
+  async function toggleBlock(roomId: string, date: string) {
+    const exists = blocks.find(b => b.room_id === roomId && b.date === date);
+    if (exists) {
+      // Optimistic remove, revert on failure.
+      setBlocks(prev => prev.filter(b => !(b.room_id === roomId && b.date === date)));
+      const { error } = await (supabase as any)
+        .from("room_blocks")
+        .delete()
+        .eq("room_id", roomId)
+        .eq("date", date);
+      if (error) { toast.error("Не удалось снять блокировку"); void loadBlocks(); }
+      else toast.success("Блокировка снята");
+    } else {
+      setBlocks(prev => [...prev, { room_id: roomId, date }]);
+      const { error } = await (supabase as any)
+        .from("room_blocks")
+        .insert({ room_id: roomId, date });
+      if (error) { toast.error("Не удалось заблокировать дату"); void loadBlocks(); }
+      else toast.success("Дата заблокирована 🚫");
+    }
   }
 
   function isBlocked(roomId: string, day: Date) {

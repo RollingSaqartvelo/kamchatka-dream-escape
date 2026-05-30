@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, ImageIcon } from "lucide-react";
+import { ImageIcon } from "lucide-react";
 import { SiteLayout } from "@/components/layout/SiteLayout";
 import introBuilding from "@/assets/intro-building.webp";
 import aboutBuilding from "@/assets/about-building.webp";
@@ -28,8 +28,8 @@ function Home() {
   return (
     <SiteLayout>
       <Hero />
-      <Intro />
       <AboutShowcase />
+      <RoomsBlock />
       <WellnessBlock />
       <ServicesBlock />
       <ReviewsBlock />
@@ -56,7 +56,7 @@ function AboutShowcase() {
             {t("sections.aboutTitle")}
           </p>
           <h2 className="font-serif text-4xl leading-tight text-navy sm:text-5xl">
-            {t("sections.aboutTitle")}
+            {t("home.introTitle")}
           </h2>
           <p className="mt-6 text-base leading-relaxed text-muted-foreground">
             {t("sections.aboutText")}
@@ -111,6 +111,8 @@ function Hero() {
         muted
         loop
         playsInline
+        aria-label="Вид на гостиницу Полуостров и Камчатку"
+        aria-hidden="true"
       />
       
 
@@ -143,31 +145,6 @@ function Hero() {
       </div>
       <div className="absolute bottom-8 left-1/2 z-10 -translate-x-1/2 text-[10px] tracking-widest-plus uppercase text-cream/60">
         {t("hero.scroll")}
-      </div>
-    </section>
-  );
-}
-
-function Intro() {
-  const { t } = useTranslation();
-  return (
-    <section className="bg-cream py-24 sm:py-32">
-      <div className="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
-        <p className="mb-5 text-[11px] tracking-widest-plus uppercase text-gold">
-          {t("sections.aboutTitle")}
-        </p>
-        <h2 className="font-serif text-4xl text-navy sm:text-5xl">
-          {t("home.introTitle")}
-        </h2>
-        <p className="mt-7 text-base leading-relaxed text-muted-foreground sm:text-lg">
-          {t("sections.aboutText")}
-        </p>
-        <Link
-          to="/about"
-          className="mt-8 inline-flex items-center gap-2 text-[11px] tracking-widest-plus uppercase text-navy hover:text-gold"
-        >
-          {t("sections.discover")} <ArrowRight className="h-3 w-3" />
-        </Link>
       </div>
     </section>
   );
@@ -229,84 +206,48 @@ function FeatureBlock({
 
 function RoomsBlock() {
   const { t } = useTranslation();
+  const stats = [
+    { icon: "🛏", title: t("home.roomsBlock.stat1Title"), caption: t("home.roomsBlock.stat1Sub") },
+    { icon: "🌊", title: t("home.roomsBlock.stat2Title"), caption: t("home.roomsBlock.stat2Sub") },
+    { icon: "✓", title: t("home.roomsBlock.stat3Title"), caption: t("home.roomsBlock.stat3Sub") },
+  ];
   return (
     <section className="bg-cream py-20 sm:py-28">
       <div className="mx-auto max-w-[720px] px-4 text-center sm:px-6 lg:px-8">
         <p className="mb-5 text-[11px] tracking-widest-plus uppercase text-gold">
-          01 — Stay
+          {t("home.roomsBlock.eyebrow")}
         </p>
         <h2 className="font-serif text-4xl text-navy sm:text-5xl">
           {t("sections.roomsTitle")}
         </h2>
         <p className="mt-6 font-serif text-xl italic text-navy/80 sm:text-2xl">
-          Виды на океан и вулканы из каждого окна
+          {t("home.roomsBlock.tagline")}
         </p>
-        <p
-          className="mt-8 text-center"
-          style={{
-            fontFamily: "Inter, sans-serif",
-            fontSize: "17px",
-            color: "#444",
-            lineHeight: 1.9,
-          }}
-        >
-          21 номер для тех, кто ценит настоящий отдых на краю земли.
-          От уютных стандартных номеров до просторных семейных — каждый
-          оснащён всем необходимым: удобными кроватями, телевизором,
-          холодильником, феном, Wi-Fi и тёплыми полами. Из окон ряда
-          номеров открывается вид на Авачинский залив и силуэты камчатских
-          вулканов — панорама, которую невозможно забыть.
+        <p className="mt-8 text-base leading-loose text-muted-foreground">
+          {t("home.roomsBlock.body")}
         </p>
 
         <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-3 sm:gap-0">
-          {[
-            { icon: "🛏", title: "21 номер", caption: "от 1 200 ₽/ночь" },
-            { icon: "🌊", title: "Вид на залив", caption: "и вулканы" },
-            { icon: "✓", title: "Все удобства", caption: "включены" },
-          ].map((item, i) => (
+          {stats.map((item, i) => (
             <div
               key={item.title}
               className={`flex flex-col items-center px-4 ${
-                i > 0 ? "sm:border-l sm:border-[#e0e0e0]" : ""
+                i > 0 ? "sm:border-l sm:border-border" : ""
               }`}
             >
               <div className="mb-3 text-2xl text-gold">{item.icon}</div>
-              <div
-                style={{
-                  fontFamily: "'Cormorant Garamond', serif",
-                  fontSize: "22px",
-                  color: "#1a1a1a",
-                }}
-              >
-                {item.title}
-              </div>
-              <div
-                className="mt-1"
-                style={{
-                  fontFamily: "Inter, sans-serif",
-                  fontSize: "12px",
-                  color: "#888",
-                }}
-              >
-                {item.caption}
-              </div>
+              <div className="font-serif text-2xl text-navy">{item.title}</div>
+              <div className="mt-1 text-xs text-muted-foreground">{item.caption}</div>
             </div>
           ))}
         </div>
 
         <Link
           to="/rooms"
-          className="mt-12 inline-flex items-center justify-center text-white transition-colors hover:bg-gold"
-          style={{
-            background: "#1a1a1a",
-            padding: "16px 48px",
-            letterSpacing: "2px",
-            fontSize: "11px",
-            textTransform: "uppercase",
-            borderRadius: "2px",
-          }}
+          className="mt-12 inline-flex h-12 items-center justify-center bg-navy px-12 text-[11px] tracking-widest-plus uppercase text-cream transition-colors hover:bg-gold hover:text-navy"
+          style={{ borderRadius: "2px" }}
         >
-          Посмотреть номера
+          {t("home.roomsBlock.cta")}
         </Link>
       </div>
     </section>

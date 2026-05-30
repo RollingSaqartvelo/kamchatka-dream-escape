@@ -151,6 +151,7 @@ export function FloatingWidgets() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={t("widget.msgPh")}
+              aria-label={t("widget.msgPh")}
               disabled={loading}
               className="flex-1 bg-light-gray px-3 py-2 text-sm outline-none placeholder:text-muted-foreground/60 disabled:opacity-60"
               style={{ borderRadius: "2px" }}
