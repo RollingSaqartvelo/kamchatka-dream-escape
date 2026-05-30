@@ -43,8 +43,17 @@ function VoucherPage() {
   const { e: emailParam } = Route.useSearch();
   const [data, setData] = useState<BookingData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [printed, setPrinted] = useState(false);
   const getChatFn = useServerFn(getGuestChat);
   const isDemo = id === "test-id";
+
+  // Автоматически открываем диалог печати как только данные загружены
+  useEffect(() => {
+    if (!loading && data && !printed) {
+      setPrinted(true);
+      setTimeout(() => window.print(), 800);
+    }
+  }, [loading, data, printed]);
 
   useEffect(() => {
     if (isDemo) {
