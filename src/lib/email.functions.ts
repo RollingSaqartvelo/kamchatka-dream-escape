@@ -313,10 +313,11 @@ export async function sendPaymentConfirmation(bookingId: string) {
 export const sendTestEmail = createServerFn({ method: "POST" })
   .inputValidator(z.object({ to: z.string().email() }))
   .handler(async ({ data }) => {
-    const html = bookingConfirmationHtml({
+    const testBooking = {
       booking_number: "TEST-0001",
       first_name: "Иван",
       last_name: "Тестовый",
+      salutation: "mr" as const,
       room_name: "Стандарт Делюкс",
       check_in: "2026-07-01",
       check_out: "2026-07-05",
@@ -326,11 +327,28 @@ export const sendTestEmail = createServerFn({ method: "POST" })
       meal_plan: "breakfast",
       total_price: 24000,
       prepayment_amount: 8000,
-    });
+      phone: "+7 (914) 000-00-00",
+      email: data.to,
+      payment_status: "confirmed",
+    };
+
+    const html = bookingConfirmationHtml(testBooking);
+
+    // Генерируем тестовый PDF-ваучер
+    let attachments: Array<{ filename: string; content: string }> | undefined;
+    try {
+      const { generateVoucherPdf } = await import("./voucher");
+      const pdfBuffer = await generateVoucherPdf(testBooking);
+      attachments = [{ filename: "voucher-TEST-0001.pdf", content: pdfBuffer.toString("base64") }];
+    } catch (e) {
+      console.error("generateVoucherPdf failed:", e);
+    }
+
     const result = await sendViaResend(
       data.to,
       "Тестовое письмо — Гостиница Полуостров",
       html,
+      attachments,
     );
     return result;
   });
