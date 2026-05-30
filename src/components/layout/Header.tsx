@@ -3,8 +3,8 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Phone, MapPin, Menu, User, X } from "lucide-react";
 import { LanguageSwitcher } from "./LanguageSwitcher";
-import logoDark from "@/assets/logo-poluostrov-dark.png";
-import logoLight from "@/assets/logo-poluostrov-light.png";
+import logoDark from "@/assets/logo-poluostrov-dark.svg";
+import logoLight from "@/assets/logo-poluostrov-light.svg";
 
 export function Header() {
   const { t } = useTranslation();
@@ -87,20 +87,13 @@ export function Header() {
         }`}
       >
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-3">
+          {/* Logo — the SVG already contains the «ПОЛУОСТРОВ» wordmark + tagline */}
+          <Link to="/" className="flex items-center" aria-label={t("brand.short")}>
             <img
               src={scrolled ? logoDark : logoLight}
               alt={t("brand.short")}
               className="h-12 w-auto transition-opacity"
             />
-            <span
-              className={`font-serif text-lg tracking-wide transition-colors ${
-                scrolled ? "text-navy" : "text-cream"
-              }`}
-            >
-              {t("brand.wordmark")}
-            </span>
           </Link>
 
 

@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Phone, Mail, MapPin } from "lucide-react";
-import logoLight from "@/assets/logo-poluostrov-light.png";
+import logoLight from "@/assets/logo-poluostrov-light.svg";
 
 
 export function Footer() {
@@ -12,9 +12,8 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-4">
           <div className="md:col-span-2">
-            <div className="mb-4 flex items-center gap-4">
-              <img src={logoLight} alt={t("brand.short")} className="h-12 w-auto" />
-              <div className="font-serif text-2xl text-cream">{t("brand.wordmark")}</div>
+            <div className="mb-4 flex items-center">
+              <img src={logoLight} alt={t("brand.short")} className="h-14 w-auto" />
             </div>
             <p className="max-w-md text-sm leading-relaxed text-cream/60">
               {t("footer.about")}
