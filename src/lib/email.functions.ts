@@ -54,6 +54,7 @@ export function bookingConfirmationHtml(b: {
   booking_id?: string;
   email?: string;
   voucher_url?: string;
+  tg_bot_username?: string;
 }): string {
   const mealLabel = b.meal_plan === "breakfast" ? "Завтрак включён" : "Без питания";
   const fmt = (d: string) => new Date(d).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
@@ -116,6 +117,11 @@ export function bookingConfirmationHtml(b: {
       <a href="https://kamchatka-dream-escape.lovable.app/booking/chat/${b.booking_id}?e=${encodeURIComponent(b.email)}"
          style="display:inline-block;background:#1a1a2e;color:#fff;padding:14px 28px;text-decoration:none;font-size:11px;letter-spacing:3px;text-transform:uppercase;">
         ✉ Написать нам
+      </a>` : ""}
+      ${b.booking_id && b.tg_bot_username ? `
+      <a href="https://t.me/${b.tg_bot_username}?start=${b.booking_id.replace(/-/g,'')}"
+         style="display:inline-block;background:#2AABEE;color:#fff;padding:14px 28px;text-decoration:none;font-size:11px;letter-spacing:3px;text-transform:uppercase;">
+        🔔 Напоминание в Telegram
       </a>` : ""}
     </div>
     <p style="color:#666;font-size:13px;line-height:1.7;">
@@ -256,7 +262,14 @@ export async function sendBookingConfirmation(bookingId: string) {
   if (!b?.email) return;
 
   const voucherUrl = `https://kamchatka-dream-escape.lovable.app/booking/voucher/${bookingId}?e=${encodeURIComponent(b.email)}`;
-  const html = bookingConfirmationHtml({ ...b, booking_id: bookingId, email: b.email, voucher_url: voucherUrl });
+  const tgBotUsername = process.env.TELEGRAM_BOT_USERNAME;
+  const html = bookingConfirmationHtml({
+    ...b,
+    booking_id: bookingId,
+    email: b.email,
+    voucher_url: voucherUrl,
+    tg_bot_username: tgBotUsername,
+  });
 
   await sendViaResend(
     b.email,
@@ -347,16 +360,50 @@ export async function sendReminderEmails() {
 
   if (!bookings?.length) return { sent: 0 };
 
-  let sent = 0;
+  let sentEmail = 0;
+  let sentTg = 0;
+
   for (const b of bookings) {
-    if (!b.email) continue;
-    const html = reminderHtml(b);
-    const result = await sendViaResend(
-      b.email,
-      `Напоминание: завтра ваш заезд в гостиницу Полуостров`,
-      html,
-    );
-    if (result.ok) sent++;
+    // Email напоминание
+    if (b.email) {
+      const html = reminderHtml(b);
+      const result = await sendViaResend(
+        b.email,
+        `Напоминание: завтра ваш заезд в гостиницу Полуостров`,
+        html,
+      );
+      if (result.ok) sentEmail++;
+    }
+
+    // Telegram напоминание подписчикам
+    const { data: subscribers } = await supabase
+      .from("telegram_subscribers")
+      .select("chat_id,first_name")
+      .eq("booking_id", b.id);
+
+    if (subscribers?.length) {
+      const token = process.env.TELEGRAM_BOT_TOKEN;
+      const checkIn = new Date(b.check_in).toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+      if (token) {
+        for (const sub of subscribers) {
+          const text = [
+            `🏨 <b>Напоминание о заезде</b>`,
+            ``,
+            `${sub.first_name ? sub.first_name + ", з" : "З"}автра ваш заезд в гостиницу «Полуостров»!`,
+            ``,
+            `🛏 ${b.room_name}`,
+            `📅 ${checkIn}, с 14:00`,
+            `📞 +7 (914) 994-57-57`,
+          ].join("\n");
+          await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chat_id: sub.chat_id, text, parse_mode: "HTML" }),
+          });
+          sentTg++;
+        }
+      }
+    }
   }
-  return { sent };
+  return { sentEmail, sentTg };
 }
