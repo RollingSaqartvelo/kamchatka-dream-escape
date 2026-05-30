@@ -20,6 +20,7 @@ import { ROOMS } from "@/data/rooms";
 import { OfflineBookingModal } from "@/components/admin/OfflineBookingModal";
 import { syncTravellineReservations } from "@/lib/travelline-sync.functions";
 import { sendTestEmail } from "@/lib/email.functions";
+import { sendTelegramTest } from "@/lib/telegram.functions";
 
 export const Route = createFileRoute("/admin/calendar")({
   component: AdminCalendarPage,
@@ -117,7 +118,9 @@ function AdminCalendarPage() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [testEmailSending, setTestEmailSending] = useState(false);
+  const [testTgSending, setTestTgSending] = useState(false);
   const sendTestEmailFn = useServerFn(sendTestEmail);
+  const sendTelegramTestFn = useServerFn(sendTelegramTest);
   const [modalDate, setModalDate] = useState<Date | null>(null);
   const [modalRoom, setModalRoom] = useState<string | undefined>(undefined);
   const [selected, setSelected] = useState<Bk | null>(null);
@@ -180,6 +183,23 @@ function AdminCalendarPage() {
       console.error(e);
     } finally {
       setTestEmailSending(false);
+    }
+  }
+
+  async function handleTestTelegram() {
+    setTestTgSending(true);
+    try {
+      const res = await sendTelegramTestFn({});
+      if (res.ok) {
+        toast.success("Тестовое сообщение отправлено в Telegram!");
+      } else {
+        toast.error("Ошибка: проверь TELEGRAM_BOT_TOKEN и TELEGRAM_ADMIN_CHAT_ID");
+      }
+    } catch (e) {
+      toast.error("Не удалось отправить в Telegram");
+      console.error(e);
+    } finally {
+      setTestTgSending(false);
     }
   }
 
@@ -311,6 +331,13 @@ function AdminCalendarPage() {
               className="border border-zinc-400 px-5 py-2 text-[11px] uppercase tracking-widest text-zinc-500 hover:bg-zinc-100 disabled:opacity-50"
             >
               {testEmailSending ? "Отправка…" : "✉ Тест email"}
+            </button>
+            <button
+              onClick={() => void handleTestTelegram()}
+              disabled={testTgSending}
+              className="border border-sky-400 px-5 py-2 text-[11px] uppercase tracking-widest text-sky-600 hover:bg-sky-50 disabled:opacity-50"
+            >
+              {testTgSending ? "Отправка…" : "✈ Тест TG"}
             </button>
             <button
               onClick={() => {

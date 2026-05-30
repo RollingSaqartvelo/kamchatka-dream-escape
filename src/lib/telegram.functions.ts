@@ -134,3 +134,21 @@ export async function notifyCancellation(b: {
   const chatId = process.env.TELEGRAM_ADMIN_CHAT_ID ?? "";
   return sendMessage(chatId, text);
 }
+
+// ─── Тестовое сообщение ───────────────────────────────────────────────────────
+
+import { createServerFn } from "@tanstack/react-start";
+
+export const sendTelegramTest = createServerFn({ method: "POST" }).handler(async () => {
+  const chatId = process.env.TELEGRAM_ADMIN_CHAT_ID ?? "";
+  const ok = await sendMessage(
+    chatId,
+    [
+      `🏨 <b>Тест уведомлений — Гостиница Полуостров</b>`,
+      ``,
+      `✅ Telegram-бот подключён успешно!`,
+      `Вы будете получать уведомления о новых бронях и оплатах.`,
+    ].join("\n"),
+  );
+  return { ok };
+});
