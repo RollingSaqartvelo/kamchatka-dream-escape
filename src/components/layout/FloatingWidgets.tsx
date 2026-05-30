@@ -6,16 +6,11 @@ import { auroraChat } from "@/lib/aurora.functions";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
-const GREETING: Msg = {
-  role: "assistant",
-  content:
-    "Здравствуйте! 👋 Я Аврора — AI-консьерж отеля «Полуостров». Помогу подобрать номер, рассказать об услугах и Камчатке. Чем могу быть полезна?",
-};
-
 export function FloatingWidgets() {
   const { t } = useTranslation();
+  const greeting: Msg = { role: "assistant", content: t("widget.greeting") };
   const [chatOpen, setChatOpen] = useState(false);
-  const [messages, setMessages] = useState<Msg[]>([GREETING]);
+  const [messages, setMessages] = useState<Msg[]>([greeting]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const callChat = useServerFn(auroraChat);
@@ -64,8 +59,7 @@ export function FloatingWidgets() {
         const copy = [...prev];
         copy[copy.length - 1] = {
           role: "assistant",
-          content:
-            "Не удалось связаться с сервисом. Позвоните, пожалуйста, на +7 (914) 994-57-57.",
+          content: t("widget.errFallback"),
         };
         return copy;
       });
@@ -108,9 +102,9 @@ export function FloatingWidgets() {
               <span className="font-serif text-lg italic">A</span>
             </div>
             <div>
-              <div className="font-serif text-base">Аврора</div>
+              <div className="font-serif text-base">Aurora</div>
               <div className="text-[10px] tracking-widest-plus uppercase text-cream/60">
-                AI-консьерж · онлайн
+                {t("widget.online")}
               </div>
             </div>
           </div>
@@ -156,7 +150,7 @@ export function FloatingWidgets() {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Сообщение..."
+              placeholder={t("widget.msgPh")}
               disabled={loading}
               className="flex-1 bg-light-gray px-3 py-2 text-sm outline-none placeholder:text-muted-foreground/60 disabled:opacity-60"
               style={{ borderRadius: "2px" }}
@@ -166,7 +160,7 @@ export function FloatingWidgets() {
               disabled={loading || !input.trim()}
               className="grid h-9 w-9 place-items-center bg-navy text-cream transition-opacity hover:opacity-90 disabled:opacity-40"
               style={{ borderRadius: "2px" }}
-              aria-label="Отправить"
+              aria-label={t("widget.send")}
             >
               <Send className="h-4 w-4" />
             </button>

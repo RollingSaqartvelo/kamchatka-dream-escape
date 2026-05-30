@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export function PageHero({
   eyebrow,
@@ -11,12 +12,12 @@ export function PageHero({
   subtitle?: string;
   videoSrc?: string;
 }) {
+  const { t } = useTranslation();
   const videoRef = useRef<HTMLVideoElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const [muted, setMuted] = useState(true);
   const [srcLoaded, setSrcLoaded] = useState(false);
 
-  // Загружаем видео только когда секция входит в viewport
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
@@ -33,7 +34,6 @@ export function PageHero({
     return () => obs.disconnect();
   }, []);
 
-  // Автозапуск после загрузки src
   useEffect(() => {
     if (srcLoaded && videoRef.current) {
       videoRef.current.play().catch(() => {});
@@ -64,7 +64,7 @@ export function PageHero({
       <button
         type="button"
         onClick={toggleSound}
-        aria-label={muted ? "Включить звук" : "Выключить звук"}
+        aria-label={muted ? t("hero.soundOn") : t("hero.soundOff")}
         aria-pressed={!muted}
         className="absolute right-5 top-5 z-20 inline-flex items-center gap-2 bg-navy/60 px-4 py-2 text-[10px] tracking-widest-plus uppercase text-cream backdrop-blur-sm transition hover:bg-navy/80"
         style={{ borderRadius: "2px" }}
@@ -72,7 +72,7 @@ export function PageHero({
         <span aria-hidden className="text-base leading-none">
           {muted ? "🔇" : "🔊"}
         </span>
-        <span>Динамика</span>
+        <span>{t("hero.sound")}</span>
       </button>
 
       <div className="relative z-10 flex h-full items-end pb-16 sm:pb-20">

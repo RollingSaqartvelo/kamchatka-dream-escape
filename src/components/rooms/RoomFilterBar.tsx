@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Users, Calendar } from "lucide-react";
 
 type Props = {
@@ -15,6 +16,7 @@ export function RoomFilterBar({
   onDatesChange,
   onApply,
 }: Props) {
+  const { t } = useTranslation();
   return (
     <div className="sticky top-0 z-30 w-full border-b border-border bg-background/95 backdrop-blur">
       <div className="mx-auto flex max-w-7xl flex-col items-stretch gap-3 px-4 py-4 sm:flex-row sm:items-center sm:gap-5 sm:px-6 lg:px-8">
@@ -22,7 +24,7 @@ export function RoomFilterBar({
           <label className="flex items-center gap-2 text-sm text-navy">
             <Users className="h-4 w-4 text-gold" strokeWidth={1.5} />
             <span className="text-[11px] uppercase tracking-widest text-muted-foreground">
-              Гостей
+              {t("rooms.filterGuests")}
             </span>
             <select
               value={guests}
@@ -39,13 +41,13 @@ export function RoomFilterBar({
           <label className="flex items-center gap-2 text-sm text-navy">
             <Calendar className="h-4 w-4 text-gold" strokeWidth={1.5} />
             <span className="text-[11px] uppercase tracking-widest text-muted-foreground">
-              Даты
+              {t("rooms.filterDates")}
             </span>
             <input
               type="text"
               value={dates}
               onChange={(e) => onDatesChange(e.target.value)}
-              placeholder="дд.мм — дд.мм"
+              placeholder={t("rooms.filterDatesPh")}
               className="border border-border bg-background px-3 py-2 text-sm text-navy outline-none focus:border-gold"
             />
           </label>
@@ -56,7 +58,7 @@ export function RoomFilterBar({
           onClick={onApply}
           className="bg-navy px-6 py-3 text-[11px] uppercase tracking-widest text-cream hover:bg-gold transition-colors"
         >
-          Показать доступные
+          {t("rooms.filterApply")}
         </button>
       </div>
     </div>

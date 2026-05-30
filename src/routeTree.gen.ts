@@ -35,6 +35,7 @@ import { Route as BookingChatIdRouteImport } from './routes/booking.chat.$id'
 import { Route as ApiPublicTravellineTestRouteImport } from './routes/api/public/travelline-test'
 import { Route as ApiPublicAlfaCallbackRouteImport } from './routes/api/public/alfa-callback'
 import { Route as ApiInternalCronRemindersRouteImport } from './routes/api/internal/cron-reminders'
+import { Route as ApiPublicVoucherIdRouteImport } from './routes/api/public/voucher.$id'
 
 const WellnessRoute = WellnessRouteImport.update({
   id: '/wellness',
@@ -167,6 +168,11 @@ const ApiInternalCronRemindersRoute =
     path: '/api/internal/cron-reminders',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicVoucherIdRoute = ApiPublicVoucherIdRouteImport.update({
+  id: '/api/public/voucher/$id',
+  path: '/api/public/voucher/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -195,6 +201,7 @@ export interface FileRoutesByFullPath {
   '/booking/chat/$id': typeof BookingChatIdRoute
   '/booking/pay/$id': typeof BookingPayIdRoute
   '/booking/voucher/$id': typeof BookingVoucherIdRoute
+  '/api/public/voucher/$id': typeof ApiPublicVoucherIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -222,6 +229,7 @@ export interface FileRoutesByTo {
   '/booking/chat/$id': typeof BookingChatIdRoute
   '/booking/pay/$id': typeof BookingPayIdRoute
   '/booking/voucher/$id': typeof BookingVoucherIdRoute
+  '/api/public/voucher/$id': typeof ApiPublicVoucherIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -251,6 +259,7 @@ export interface FileRoutesById {
   '/booking/chat/$id': typeof BookingChatIdRoute
   '/booking/pay/$id': typeof BookingPayIdRoute
   '/booking/voucher/$id': typeof BookingVoucherIdRoute
+  '/api/public/voucher/$id': typeof ApiPublicVoucherIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -281,6 +290,7 @@ export interface FileRouteTypes {
     | '/booking/chat/$id'
     | '/booking/pay/$id'
     | '/booking/voucher/$id'
+    | '/api/public/voucher/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -308,6 +318,7 @@ export interface FileRouteTypes {
     | '/booking/chat/$id'
     | '/booking/pay/$id'
     | '/booking/voucher/$id'
+    | '/api/public/voucher/$id'
   id:
     | '__root__'
     | '/'
@@ -336,6 +347,7 @@ export interface FileRouteTypes {
     | '/booking/chat/$id'
     | '/booking/pay/$id'
     | '/booking/voucher/$id'
+    | '/api/public/voucher/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -355,6 +367,7 @@ export interface RootRouteChildren {
   ApiInternalCronRemindersRoute: typeof ApiInternalCronRemindersRoute
   ApiPublicAlfaCallbackRoute: typeof ApiPublicAlfaCallbackRoute
   ApiPublicTravellineTestRoute: typeof ApiPublicTravellineTestRoute
+  ApiPublicVoucherIdRoute: typeof ApiPublicVoucherIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -541,6 +554,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiInternalCronRemindersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/voucher/$id': {
+      id: '/api/public/voucher/$id'
+      path: '/api/public/voucher/$id'
+      fullPath: '/api/public/voucher/$id'
+      preLoaderRoute: typeof ApiPublicVoucherIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -598,6 +618,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiInternalCronRemindersRoute: ApiInternalCronRemindersRoute,
   ApiPublicAlfaCallbackRoute: ApiPublicAlfaCallbackRoute,
   ApiPublicTravellineTestRoute: ApiPublicTravellineTestRoute,
+  ApiPublicVoucherIdRoute: ApiPublicVoucherIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

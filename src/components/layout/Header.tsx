@@ -38,7 +38,7 @@ export function Header() {
     { to: "/rooms", label: t("nav.rooms") },
     { to: "/services", label: t("nav.services") },
     { to: "/wellness", label: t("nav.wellness") },
-    { to: "/kamchatka", label: "О Камчатке" },
+    { to: "/kamchatka", label: t("nav.kamchatka") },
     { to: "/about", label: t("nav.about") },
     { to: "/contacts", label: t("nav.contacts") },
   ];
@@ -91,7 +91,7 @@ export function Header() {
           <Link to="/" className="flex items-center gap-3">
             <img
               src={scrolled ? logoDark : logoLight}
-              alt="Полуостров"
+              alt={t("brand.short")}
               className="h-12 w-auto transition-opacity"
             />
             <span
@@ -99,7 +99,7 @@ export function Header() {
                 scrolled ? "text-navy" : "text-cream"
               }`}
             >
-              ПОЛУОСТРОВ
+              {t("brand.wordmark")}
             </span>
           </Link>
 
