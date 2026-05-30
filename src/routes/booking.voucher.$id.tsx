@@ -4,6 +4,21 @@ import { z } from "zod";
 import { useServerFn } from "@tanstack/react-start";
 import { getGuestChat } from "@/lib/inbox.functions";
 
+async function downloadVoucherPdf(element: HTMLElement, filename: string) {
+  const html2canvas = (await import("html2canvas")).default;
+  const jsPDF = (await import("jspdf")).jsPDF;
+  const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+  const imgData = canvas.toDataURL("image/png");
+  const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+  const ratio = canvas.width / canvas.height;
+  const imgH = pageW / ratio;
+  const topMargin = Math.max(0, (pageH - imgH) / 2);
+  pdf.addImage(imgData, "PNG", 0, topMargin, pageW, imgH);
+  pdf.save(filename);
+}
+
 export const Route = createFileRoute("/booking/voucher/$id")({
   validateSearch: z.object({ e: z.string().optional() }),
   component: VoucherPage,
@@ -43,17 +58,20 @@ function VoucherPage() {
   const { e: emailParam } = Route.useSearch();
   const [data, setData] = useState<BookingData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [printed, setPrinted] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const voucherRef = useRef<HTMLDivElement>(null);
   const getChatFn = useServerFn(getGuestChat);
   const isDemo = id === "test-id";
 
-  // Автоматически открываем диалог печати как только данные загружены
-  useEffect(() => {
-    if (!loading && data && !printed) {
-      setPrinted(true);
-      setTimeout(() => window.print(), 800);
+  async function handleDownload() {
+    if (!voucherRef.current || !data) return;
+    setDownloading(true);
+    try {
+      await downloadVoucherPdf(voucherRef.current, `voucher-${data.booking_number}.pdf`);
+    } finally {
+      setDownloading(false);
     }
-  }, [loading, data, printed]);
+  }
 
   useEffect(() => {
     if (isDemo) {
@@ -107,17 +125,18 @@ function VoucherPage() {
             </Link>
           )}
           <button
-            onClick={() => window.print()}
-            className="bg-[#C9A96E] px-6 py-2 text-[11px] uppercase tracking-widest text-white hover:opacity-90"
+            onClick={() => void handleDownload()}
+            disabled={downloading}
+            className="bg-[#C9A96E] px-6 py-2 text-[11px] uppercase tracking-widest text-white hover:opacity-90 disabled:opacity-60"
           >
-            ⬇ Сохранить PDF
+            {downloading ? "Подготовка…" : "⬇ Скачать PDF"}
           </button>
         </div>
       </div>
 
-      {/* Ваучер (печатается) */}
+      {/* Ваучер */}
       <div className="voucher-wrap bg-white min-h-screen p-8 flex items-start justify-center">
-        <div className="voucher w-full max-w-4xl border border-gray-200 shadow-lg">
+        <div ref={voucherRef} className="voucher w-full max-w-4xl border border-gray-200 shadow-lg">
 
           {/* Шапка */}
           <div style={{ background: "#1a1a2e", padding: "20px 28px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
