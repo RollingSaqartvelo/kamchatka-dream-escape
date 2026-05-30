@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function PageHero({
   eyebrow,
@@ -12,29 +12,53 @@ export function PageHero({
   videoSrc?: string;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
   const [muted, setMuted] = useState(true);
+  const [srcLoaded, setSrcLoaded] = useState(false);
+
+  // Загружаем видео только когда секция входит в viewport
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setSrcLoaded(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.1 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  // Автозапуск после загрузки src
+  useEffect(() => {
+    if (srcLoaded && videoRef.current) {
+      videoRef.current.play().catch(() => {});
+    }
+  }, [srcLoaded]);
 
   const toggleSound = () => {
     const v = videoRef.current;
     if (!v) return;
     const next = !muted;
     v.muted = next;
-    if (!next) {
-      v.play().catch(() => {});
-    }
+    if (!next) v.play().catch(() => {});
     setMuted(next);
   };
 
   return (
-    <section className="relative h-[70vh] min-h-[460px] w-full overflow-hidden bg-navy">
+    <section ref={sectionRef} className="relative h-[70vh] min-h-[460px] w-full overflow-hidden bg-navy">
       <video
         ref={videoRef}
         className="absolute inset-0 h-full w-full object-cover"
-        src={videoSrc}
-        autoPlay
+        src={srcLoaded ? videoSrc : undefined}
         muted
         loop
         playsInline
+        preload="none"
       />
 
       <button
