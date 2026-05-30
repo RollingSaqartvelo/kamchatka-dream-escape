@@ -47,7 +47,40 @@ async function getToken(): Promise<string> {
   return cachedToken.token;
 }
 
-// Пробуем несколько endpoint'ов Reservations API, возвращаем первый успешный
+// Получаем список объектов через Reference API чтобы найти правильный propertyId
+async function discoverPropertyId(token: string): Promise<{ id: any; debug: string }> {
+  const TL_API = "https://partner.tlintegration.com";
+  const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
+
+  const urls = [
+    `${TL_API}/api/reference/v1/properties`,
+    `${TL_API}/api/reference/v1/hotels`,
+    `${TL_API}/api/content/v1/properties`,
+    `${TL_API}/api/content/v1/hotels`,
+  ];
+
+  const results: string[] = [];
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, { headers });
+      const txt = await res.text().catch(() => "");
+      results.push(`${url} → ${res.status}: ${txt.slice(0, 200)}`);
+      if (res.ok) {
+        const json = JSON.parse(txt);
+        const arr = Array.isArray(json) ? json : json?.items ?? json?.properties ?? json?.hotels ?? [];
+        if (arr.length > 0) {
+          const firstId = arr[0]?.id ?? arr[0]?.propertyId ?? arr[0]?.hotelId;
+          return { id: firstId, debug: `Found via ${url}: ${JSON.stringify(arr[0]).slice(0, 200)}` };
+        }
+      }
+    } catch (e) {
+      results.push(`${url} → exception: ${(e as Error).message}`);
+    }
+  }
+  return { id: null, debug: results.join(" | ") };
+}
+
+// Загружаем брони через Reservation API
 async function fetchReservations(
   token: string,
   baseUrl: string,
@@ -56,32 +89,23 @@ async function fetchReservations(
   to: string,
 ): Promise<{ data: any; endpoint: string } | { error: string }> {
   const TL_API = "https://partner.tlintegration.com";
-  const headers = {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json",
-  };
+  const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
 
-  // Декодируем JWT чтобы узнать propertyId и scopes из токена
-  const tokenParts = token.split(".");
-  if (tokenParts.length === 3) {
-    try {
-      const payload = JSON.parse(Buffer.from(tokenParts[1], "base64").toString("utf-8"));
-      return {
-        ok: false,
-        error: `DEBUG TOKEN: ${JSON.stringify(payload).slice(0, 800)}`,
-        synced: 0,
-      } as any;
-    } catch {}
-  }
+  // Сначала пробуем найти правильный propertyId через Reference API
+  const discovered = await discoverPropertyId(token);
+  const effectiveId = discovered.id ?? propertyId;
 
   const attempts: Array<{ url: string; method: "GET" | "POST"; body?: string }> = [
-    {
-      url: `${TL_API}/api/reservation/v1/properties/${propertyId}/bookings`,
-      method: "GET",
-    },
+    // Официальный endpoint из документации
+    { url: `${TL_API}/api/reservation/v1/properties/${effectiveId}/bookings?from=${from}&to=${to}`, method: "GET" },
+    { url: `${TL_API}/api/reservation/v1/properties/${effectiveId}/bookings`, method: "GET" },
+    // Альтернативные варианты
+    { url: `${TL_API}/api/reservation/v1/reservations?propertyId=${effectiveId}&from=${from}&to=${to}`, method: "GET" },
+    { url: `${TL_API}/api/reservation/v1/bookings?propertyId=${effectiveId}`, method: "GET" },
+    { url: `${TL_API}/api/reservation/v2/properties/${effectiveId}/reservations`, method: "GET" },
   ];
 
-  const errors: string[] = [];
+  const errors: string[] = [`Discovery: ${discovered.debug}`];
   for (const a of attempts) {
     try {
       const res = await fetch(a.url, { method: a.method, headers, body: a.body });
@@ -95,7 +119,7 @@ async function fetchReservations(
       errors.push(`${a.method} ${a.url} → exception ${(e as Error).message}`);
     }
   }
-  return { error: errors.join(" | ") };
+  return { error: errors.join(" || ") };
 }
 
 function extractReservationsArray(payload: any): any[] {
