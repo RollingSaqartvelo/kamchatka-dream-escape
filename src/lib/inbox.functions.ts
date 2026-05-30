@@ -11,6 +11,47 @@ function admin() {
   );
 }
 
+async function sendReplyEmail(to: string, guestName: string, body: string) {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) return;
+
+  const html = `<!DOCTYPE html>
+<html lang="ru"><head><meta charset="UTF-8"></head>
+<body style="font-family:Georgia,serif;background:#f5f2ee;margin:0;padding:0;">
+  <div style="max-width:600px;margin:40px auto;background:#fff;border-radius:4px;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,0.08);">
+    <div style="background:#1a1a2e;padding:32px 40px;text-align:center;">
+      <p style="color:#C9A96E;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 8px;">ГОСТИНИЦА</p>
+      <h1 style="color:#fff;font-family:Georgia,serif;font-size:28px;margin:0;font-weight:400;">ПОЛУОСТРОВ</h1>
+    </div>
+    <div style="padding:40px;">
+      <p style="color:#C9A96E;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 12px;">Ответ администратора</p>
+      <p style="color:#666;font-size:14px;margin:0 0 8px;">${guestName}, вам ответили:</p>
+      <div style="background:#f9f7f4;border-left:4px solid #C9A96E;padding:16px 20px;margin:16px 0;border-radius:2px;">
+        <p style="color:#1a1a2e;font-size:14px;line-height:1.7;margin:0;white-space:pre-wrap;">${body.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+      </div>
+      <p style="color:#888;font-size:13px;line-height:1.7;margin-top:24px;">
+        Чтобы ответить, напишите нам:<br>
+        📞 <strong>+7 (914) 994-57-57</strong>
+      </p>
+    </div>
+    <div style="background:#f5f2ee;padding:24px 40px;text-align:center;border-top:1px solid #e8e4de;">
+      <p style="color:#888;font-size:12px;margin:0;">Гостиница «Полуостров» · ул. Абеля, 41, Петропавловск-Камчатский</p>
+    </div>
+  </div>
+</body></html>`;
+
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: "Гостиница Полуостров <no-reply@poluostrov-hotel.ru>",
+      to,
+      subject: "Ответ от гостиницы «Полуостров»",
+      html,
+    }),
+  });
+}
+
 // ─── Создать диалог (вызывается при новой брони) ──────────────────────────────
 
 export async function createConversationForBooking(opts: {
@@ -107,6 +148,13 @@ export const replyToGuest = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const db = admin();
 
+    // Получаем данные гостя для отправки email
+    const { data: conv } = await db
+      .from("conversations")
+      .select("guest_name,guest_email")
+      .eq("id", data.conversationId)
+      .single();
+
     const { data: msg, error } = await db
       .from("messages")
       .insert({
@@ -127,6 +175,13 @@ export const replyToGuest = createServerFn({ method: "POST" })
         last_message_at: new Date().toISOString(),
       })
       .eq("id", data.conversationId);
+
+    // Отправляем email гостю (fire-and-forget)
+    if (conv?.guest_email) {
+      sendReplyEmail(conv.guest_email, conv.guest_name, data.body).catch((e) =>
+        console.error("sendReplyEmail failed:", e),
+      );
+    }
 
     return msg;
   });
