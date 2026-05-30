@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { sendPaymentConfirmation } from "@/lib/email.functions";
+import { notifyPaymentReceived } from "@/lib/telegram.functions";
 
 /**
  * Webhook от Альфа-Банка после оплаты.
@@ -64,11 +65,22 @@ async function handle(request: Request) {
       console.error("alfa-callback update error:", error);
       return new Response("db error", { status: 500 });
     }
-    // Отправляем письмо об успешной оплате
     if (updated?.id) {
+      // Email + Telegram при успешной оплате (fire-and-forget)
       sendPaymentConfirmation(updated.id).catch((e) =>
         console.error("sendPaymentConfirmation failed:", e),
       );
+      // Получаем детали брони для Telegram
+      const { data: bk } = await supabase
+        .from("bookings")
+        .select("booking_number,first_name,last_name,room_name,check_in,total_price")
+        .eq("id", updated.id)
+        .single();
+      if (bk) {
+        notifyPaymentReceived(bk).catch((e) =>
+          console.error("notifyPaymentReceived failed:", e),
+        );
+      }
     }
     return new Response("ok");
   }

@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { ROOMS } from "@/data/rooms";
 import { ROOM_ID_TO_TL, RATE_PLAN_BY_MEAL } from "./travelline.functions";
 import { sendBookingConfirmation } from "./email.functions";
+import { notifyNewBooking } from "./telegram.functions";
 
 const BREAKFAST_PER_PERSON = 500;
 
@@ -207,10 +208,27 @@ export const createBooking = createServerFn({ method: "POST" })
       throw new Error(error.message);
     }
 
-    // Отправляем подтверждение брони на email (fire-and-forget)
+    // Отправляем подтверждение брони на email + Telegram (fire-and-forget)
     sendBookingConfirmation(row.id as string).catch((e) =>
       console.error("sendBookingConfirmation failed:", e),
     );
+    notifyNewBooking({
+      booking_number: row.booking_number as string,
+      first_name: data.first_name,
+      last_name: data.last_name,
+      phone: data.phone,
+      email: data.email,
+      room_name: room.name_ru,
+      check_in: data.check_in,
+      check_out: data.check_out,
+      nights: data.nights,
+      adults: data.adults,
+      children: data.children,
+      meal_plan: data.meal_plan,
+      total_price: totalPrice,
+      prepayment_amount: prepaymentAmount,
+      source: "website",
+    }).catch((e) => console.error("notifyNewBooking failed:", e));
 
     return {
       id: row.id as string,
