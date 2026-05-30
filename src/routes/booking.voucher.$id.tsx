@@ -56,12 +56,12 @@ function fmtLong(iso: string) {
 function VoucherPage() {
   const { id } = Route.useParams();
   const { e: emailParam } = Route.useSearch();
-  const [data, setData] = useState<BookingData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const isDemo = id === "test-id";
+  const [data, setData] = useState<BookingData | null>(isDemo ? DEMO : null);
+  const [loading, setLoading] = useState(!isDemo);
   const [downloading, setDownloading] = useState(false);
   const voucherRef = useRef<HTMLDivElement>(null);
   const getChatFn = useServerFn(getGuestChat);
-  const isDemo = id === "test-id";
 
   async function handleDownload() {
     if (!voucherRef.current || !data) return;
