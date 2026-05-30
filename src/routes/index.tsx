@@ -11,7 +11,7 @@ export const Route = createFileRoute("/")({
   component: Home,
   head: () => ({
     meta: [
-      { title: "Отель «Полуостров» — бутик-отель на Камчатке" },
+      { title: "Отель «Полуостров» — бутик-отель на Камчатке | Poluostrov Hotel Kamchatka" },
       {
         name: "description",
         content:
@@ -142,7 +142,7 @@ function Hero() {
         </div>
       </div>
       <div className="absolute bottom-8 left-1/2 z-10 -translate-x-1/2 text-[10px] tracking-widest-plus uppercase text-cream/60">
-        Scroll
+        {t("hero.scroll")}
       </div>
     </section>
   );
@@ -157,7 +157,7 @@ function Intro() {
           {t("sections.aboutTitle")}
         </p>
         <h2 className="font-serif text-4xl text-navy sm:text-5xl">
-          Камчатка, как вы её ещё не видели
+          {t("home.introTitle")}
         </h2>
         <p className="mt-7 text-base leading-relaxed text-muted-foreground sm:text-lg">
           {t("sections.aboutText")}
@@ -335,17 +335,17 @@ function WellnessBlock() {
 function ServicesBlock() {
   const { t } = useTranslation();
   const items = [
-    { num: "01", title: "Трансфер", text: "Из аэропорта и по городу на премиальных авто." },
-    { num: "02", title: "Экскурсии", text: "Вулканы, океан, термальные источники." },
-    { num: "03", title: "Консьерж", text: "Бронирование, советы, особые запросы 24/7." },
-    { num: "04", title: "Завтрак", text: "Камчатская кухня от шеф-повара ресторана." },
+    { num: "01", title: t("home.services.i1Title"), text: t("home.services.i1Text") },
+    { num: "02", title: t("home.services.i2Title"), text: t("home.services.i2Text") },
+    { num: "03", title: t("home.services.i3Title"), text: t("home.services.i3Text") },
+    { num: "04", title: t("home.services.i4Title"), text: t("home.services.i4Text") },
   ];
   return (
     <section className="bg-navy py-24 text-cream sm:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-16 max-w-2xl">
           <p className="mb-5 text-[11px] tracking-widest-plus uppercase text-gold">
-            04 — Services
+            {t("home.services.eyebrow")}
           </p>
           <h2 className="font-serif text-4xl sm:text-5xl">{t("sections.servicesTitle")}</h2>
           <p className="mt-5 text-cream/70">{t("sections.servicesSub")}</p>

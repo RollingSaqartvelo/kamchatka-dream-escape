@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { ChevronDown, Users, Ruler, DoorClosed, Layers } from "lucide-react";
 import type { Room } from "@/data/rooms";
 import { RoomPhotoGallery } from "./RoomPhotoGallery";
@@ -10,6 +11,7 @@ function fmtPrice(n: number) {
 }
 
 export function RoomCard({ room }: { room: Room }) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -39,20 +41,20 @@ export function RoomCard({ room }: { room: Room }) {
           <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
               <Users className="h-4 w-4 text-gold" strokeWidth={1.5} />
-              до {room.max_guests} мест
+              {t("rooms.card.seats", { n: room.max_guests })}
             </span>
             <span className="inline-flex items-center gap-1.5">
               <Ruler className="h-4 w-4 text-gold" strokeWidth={1.5} />
-              {room.area_sqm} м²
+              {t("rooms.card.area", { n: room.area_sqm })}
             </span>
             <span className="inline-flex items-center gap-1.5">
               <DoorClosed className="h-4 w-4 text-gold" strokeWidth={1.5} />
-              {room.rooms_count} комн.
+              {t("rooms.card.rooms", { n: room.rooms_count })}
             </span>
             {room.levels && (
               <span className="inline-flex items-center gap-1.5">
                 <Layers className="h-4 w-4 text-gold" strokeWidth={1.5} />
-                {room.levels} уровня
+                {t("rooms.card.levels", { n: room.levels })}
               </span>
             )}
           </div>
@@ -81,7 +83,7 @@ export function RoomCard({ room }: { room: Room }) {
             onClick={() => setExpanded((v) => !v)}
             className="mt-3 inline-flex w-fit items-center gap-1 text-xs uppercase tracking-widest text-gold hover:text-gold-dark transition-colors"
           >
-            Подробнее
+            {t("rooms.card.more")}
             <ChevronDown
               className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`}
               strokeWidth={1.5}
@@ -113,11 +115,11 @@ export function RoomCard({ room }: { room: Room }) {
           <div className="mt-5 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <div>
               <p className="text-[11px] uppercase tracking-widest text-muted-foreground">
-                от
+                {t("rooms.card.from")}
               </p>
               <p className="font-serif text-2xl text-navy">
                 {fmtPrice(room.price_from_rub)}{" "}
-                <span className="text-sm text-muted-foreground">/ ночь</span>
+                <span className="text-sm text-muted-foreground">{t("rooms.card.perNight")}</span>
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -126,13 +128,13 @@ export function RoomCard({ room }: { room: Room }) {
                 onClick={() => setModalOpen(true)}
                 className="border border-navy px-5 py-3 text-[11px] uppercase tracking-widest text-navy hover:bg-navy hover:text-cream transition-colors"
               >
-                Узнать цену
+                {t("rooms.card.priceCta")}
               </button>
               <Link
                 to="/booking"
                 className="bg-navy px-5 py-3 text-[11px] uppercase tracking-widest text-cream hover:bg-gold transition-colors"
               >
-                Забронировать
+                {t("rooms.card.book")}
               </Link>
             </div>
           </div>
