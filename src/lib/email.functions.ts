@@ -107,8 +107,8 @@ export function bookingConfirmationHtml(b: {
     </div>
 
     <div style="margin:24px 0;text-align:center;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-      ${b.voucher_url ? `
-      <a href="${b.voucher_url}"
+      ${b.booking_id && b.email ? `
+      <a href="https://kamchatka-dream-escape.lovable.app/api/public/voucher/${b.booking_id}?e=${encodeURIComponent(b.email)}"
          style="display:inline-block;background:#C9A96E;color:#fff;padding:14px 28px;text-decoration:none;font-size:11px;letter-spacing:3px;text-transform:uppercase;">
         ⬇ Скачать ваучер PDF
       </a>` : ""}
@@ -313,8 +313,11 @@ export const sendTestEmail = createServerFn({ method: "POST" })
       payment_status: "confirmed",
     };
 
-    const voucherUrl = `https://kamchatka-dream-escape.lovable.app/booking/voucher/test-id?e=${encodeURIComponent(data.to)}`;
-    const html = bookingConfirmationHtml({ ...testBooking, voucher_url: voucherUrl });
+    const html = bookingConfirmationHtml({
+      ...testBooking,
+      booking_id: "00000000-0000-0000-0000-000000000001",
+      email: data.to,
+    });
 
     const result = await sendViaResend(
       data.to,
