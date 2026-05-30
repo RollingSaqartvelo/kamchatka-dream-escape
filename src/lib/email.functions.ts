@@ -53,6 +53,7 @@ export function bookingConfirmationHtml(b: {
   prepayment_amount?: number;
   booking_id?: string;
   email?: string;
+  voucher_url?: string;
 }): string {
   const mealLabel = b.meal_plan === "breakfast" ? "Завтрак включён" : "Без питания";
   const fmt = (d: string) => new Date(d).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
@@ -105,15 +106,18 @@ export function bookingConfirmationHtml(b: {
       </table>
     </div>
 
-    ${b.booking_id && b.email ? `
-    <div style="margin:24px 0;text-align:center;">
+    <div style="margin:24px 0;text-align:center;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      ${b.voucher_url ? `
+      <a href="${b.voucher_url}"
+         style="display:inline-block;background:#C9A96E;color:#fff;padding:14px 28px;text-decoration:none;font-size:11px;letter-spacing:3px;text-transform:uppercase;">
+        ⬇ Скачать ваучер PDF
+      </a>` : ""}
+      ${b.booking_id && b.email ? `
       <a href="https://kamchatka-dream-escape.lovable.app/booking/chat/${b.booking_id}?e=${encodeURIComponent(b.email)}"
-         style="display:inline-block;background:#1a1a2e;color:#fff;padding:14px 32px;text-decoration:none;font-size:11px;letter-spacing:3px;text-transform:uppercase;">
+         style="display:inline-block;background:#1a1a2e;color:#fff;padding:14px 28px;text-decoration:none;font-size:11px;letter-spacing:3px;text-transform:uppercase;">
         ✉ Написать нам
-      </a>
-      <p style="color:#999;font-size:11px;margin:8px 0 0;">Трансфер, пожелания, вопросы — всё здесь</p>
+      </a>` : ""}
     </div>
-    ` : ""}
     <p style="color:#666;font-size:13px;line-height:1.7;">
       Или звоните: <strong>+7 (914) 994-57-57</strong>
     </p>
@@ -251,36 +255,13 @@ export async function sendBookingConfirmation(bookingId: string) {
 
   if (!b?.email) return;
 
-  const html = bookingConfirmationHtml({ ...b, booking_id: bookingId, email: b.email });
-
-  // Генерируем PDF-ваучер и прикрепляем к письму
-  let attachments: Array<{ filename: string; content: string }> | undefined;
-  try {
-    const { generateVoucherPdf } = await import("./voucher");
-    const pdfBuffer = await generateVoucherPdf({
-      ...b,
-      booking_id: bookingId,
-      email: b.email,
-      phone: b.phone ?? "",
-      salutation: b.salutation,
-      payment_status: b.payment_status ?? "pending",
-      prepayment_amount: b.prepayment_amount ?? 0,
-    });
-    attachments = [
-      {
-        filename: `voucher-${b.booking_number}.pdf`,
-        content: pdfBuffer.toString("base64"),
-      },
-    ];
-  } catch (e) {
-    console.error("generateVoucherPdf failed:", e);
-  }
+  const voucherUrl = `https://kamchatka-dream-escape.lovable.app/booking/voucher/${bookingId}?e=${encodeURIComponent(b.email)}`;
+  const html = bookingConfirmationHtml({ ...b, booking_id: bookingId, email: b.email, voucher_url: voucherUrl });
 
   await sendViaResend(
     b.email,
     `Бронирование подтверждено — ${b.booking_number} · Гостиница Полуостров`,
     html,
-    attachments,
   );
 }
 
@@ -332,27 +313,15 @@ export const sendTestEmail = createServerFn({ method: "POST" })
       payment_status: "confirmed",
     };
 
-    const html = bookingConfirmationHtml(testBooking);
-
-    // Генерируем тестовый PDF-ваучер
-    let attachments: Array<{ filename: string; content: string }> | undefined;
-    let pdfError: string | undefined;
-    try {
-      const { generateVoucherPdf } = await import("./voucher");
-      const pdfBuffer = await generateVoucherPdf(testBooking);
-      attachments = [{ filename: "voucher-TEST-0001.pdf", content: pdfBuffer.toString("base64") }];
-    } catch (e) {
-      pdfError = (e as Error).message ?? String(e);
-      console.error("generateVoucherPdf failed:", pdfError);
-    }
+    const voucherUrl = `https://kamchatka-dream-escape.lovable.app/booking/voucher/test-id?e=${encodeURIComponent(data.to)}`;
+    const html = bookingConfirmationHtml({ ...testBooking, voucher_url: voucherUrl });
 
     const result = await sendViaResend(
       data.to,
       "Тестовое письмо — Гостиница Полуостров",
       html,
-      attachments,
     );
-    return { ...result, pdfError };
+    return result;
   });
 
 // ─── Отправить напоминание (вызывается из cron) ───────────────────────────────
