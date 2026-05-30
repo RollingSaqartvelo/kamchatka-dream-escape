@@ -172,9 +172,9 @@ function AdminCalendarPage() {
   async function handleTestEmail() {
     setTestEmailSending(true);
     try {
-      const res = await sendTestEmailFn({ data: { to: "Romanc2002@mail.ru" } });
+      const res = await sendTestEmailFn({ data: { to: "rolling_saqartvelo@outlook.com" } });
       if (res.ok) {
-        toast.success("Тестовое письмо отправлено на Romanc2002@mail.ru");
+        toast.success("Тестовое письмо отправлено на rolling_saqartvelo@outlook.com");
       } else {
         toast.error(`Ошибка отправки: ${res.error}`);
       }
