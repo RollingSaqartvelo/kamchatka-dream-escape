@@ -43,6 +43,9 @@ type Bk = {
   check_out: string;
   payment_status: string;
   total_price: number;
+  adults?: number;
+  source?: string;
+  phone?: string;
 };
 
 const STATUS_BG: Record<string, string> = {
@@ -173,12 +176,11 @@ function AdminCalendarPage() {
     setTestEmailSending(true);
     try {
       const res = await sendTestEmailFn({ data: { to: "rolling_saqartvelo@outlook.com" } });
-      if (res.pdfError) {
-        toast.error(`PDF ошибка: ${res.pdfError}`);
-      } else if (res.ok) {
-        toast.success("Тестовое письмо + ваучер отправлены!");
+      const r = res as any;
+      if (r.ok) {
+        toast.success("Тестовое письмо отправлено!");
       } else {
-        toast.error(`Ошибка отправки: ${res.error}`);
+        toast.error(`Ошибка отправки: ${r.error}`);
       }
     } catch (e) {
       toast.error("Не удалось отправить письмо");

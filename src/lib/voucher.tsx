@@ -312,21 +312,3 @@ export function VoucherDocument({ b }: { b: VoucherData }) {
 
 // ─── Генерация PDF в Buffer ────────────────────────────────────────────────────
 
-export async function generateVoucherPdf(data: VoucherData): Promise<Buffer> {
-  const { renderToBuffer } = await import("@react-pdf/renderer");
-
-  // QR-код ведёт на страницу чата гостя
-  const chatUrl = data.booking_id
-    ? `https://kamchatka-dream-escape.lovable.app/booking/chat/${data.booking_id}?e=${encodeURIComponent(data.email)}`
-    : `https://kamchatka-dream-escape.lovable.app`;
-
-  const qrDataUrl = await QRCode.toDataURL(chatUrl, {
-    width: 144,
-    margin: 1,
-    color: { dark: "#1a1a2e", light: "#ffffff" },
-  });
-
-  return renderToBuffer(
-    React.createElement(VoucherDocument, { b: { ...data, qrDataUrl } }),
-  ) as Promise<Buffer>;
-}

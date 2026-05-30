@@ -55,7 +55,7 @@ export const Route = createFileRoute("/api/public/voucher/$id")({
 
           const pdfBytes = await buildPdf(b, params.id, email);
 
-          return new Response(pdfBytes, {
+          return new Response(pdfBytes.buffer as ArrayBuffer, {
             headers: {
               "Content-Type": "application/pdf",
               "Content-Disposition": `attachment; filename="voucher-${b.booking_number}.pdf"`,
