@@ -96,13 +96,17 @@ async function fetchReservations(
   const effectiveId = discovered.id ?? propertyId;
 
   const attempts: Array<{ url: string; method: "GET" | "POST"; body?: string }> = [
-    // Официальный endpoint из документации
+    // v1 reservations (не bookings!)
+    { url: `${TL_API}/api/reservation/v1/properties/${effectiveId}/reservations?from=${from}&to=${to}`, method: "GET" },
+    { url: `${TL_API}/api/reservation/v1/properties/${effectiveId}/reservations`, method: "GET" },
+    // С датами в query
+    { url: `${TL_API}/api/reservation/v1/properties/${effectiveId}/reservations?arrivalFrom=${from}&arrivalTo=${to}`, method: "GET" },
+    { url: `${TL_API}/api/reservation/v1/properties/${effectiveId}/reservations?dateFrom=${from}&dateTo=${to}`, method: "GET" },
+    // v1 bookings (пробовали, но вдруг с другим propertyId работает)
     { url: `${TL_API}/api/reservation/v1/properties/${effectiveId}/bookings?from=${from}&to=${to}`, method: "GET" },
-    { url: `${TL_API}/api/reservation/v1/properties/${effectiveId}/bookings`, method: "GET" },
-    // Альтернативные варианты
-    { url: `${TL_API}/api/reservation/v1/reservations?propertyId=${effectiveId}&from=${from}&to=${to}`, method: "GET" },
-    { url: `${TL_API}/api/reservation/v1/bookings?propertyId=${effectiveId}`, method: "GET" },
-    { url: `${TL_API}/api/reservation/v2/properties/${effectiveId}/reservations`, method: "GET" },
+    // v2
+    { url: `${TL_API}/api/reservation/v2/properties/${effectiveId}/reservations?from=${from}&to=${to}`, method: "GET" },
+    { url: `${TL_API}/api/reservation/v2/properties/${effectiveId}/bookings?from=${from}&to=${to}`, method: "GET" },
   ];
 
   const errors: string[] = [`Discovery: ${discovered.debug}`];
