@@ -155,6 +155,7 @@ export type Database = {
           messenger_type: string | null
           messenger_username: string | null
           phone: string | null
+          role: string
           salutation: string | null
           updated_at: string
           user_id: string
@@ -170,6 +171,7 @@ export type Database = {
           messenger_type?: string | null
           messenger_username?: string | null
           phone?: string | null
+          role?: string
           salutation?: string | null
           updated_at?: string
           user_id: string
@@ -185,6 +187,7 @@ export type Database = {
           messenger_type?: string | null
           messenger_username?: string | null
           phone?: string | null
+          role?: string
           salutation?: string | null
           updated_at?: string
           user_id?: string
