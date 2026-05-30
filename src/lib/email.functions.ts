@@ -200,7 +200,12 @@ const sendEmailSchema = z.object({
   html: z.string(),
 });
 
-async function sendViaResend(to: string, subject: string, html: string) {
+async function sendViaResend(
+  to: string,
+  subject: string,
+  html: string,
+  attachments?: Array<{ filename: string; content: string }>,
+) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     console.error("RESEND_API_KEY not set — email not sent");
@@ -218,6 +223,7 @@ async function sendViaResend(to: string, subject: string, html: string) {
       to,
       subject,
       html,
+      ...(attachments?.length ? { attachments } : {}),
     }),
   });
 
@@ -239,17 +245,42 @@ export async function sendBookingConfirmation(bookingId: string) {
 
   const { data: b } = await supabase
     .from("bookings")
-    .select("booking_number,first_name,last_name,email,room_name,check_in,check_out,nights,adults,children,meal_plan,total_price,prepayment_amount")
+    .select("booking_number,first_name,last_name,salutation,email,phone,room_name,check_in,check_out,nights,adults,children,meal_plan,total_price,prepayment_amount,payment_status")
     .eq("id", bookingId)
     .single();
 
   if (!b?.email) return;
 
   const html = bookingConfirmationHtml({ ...b, booking_id: bookingId, email: b.email });
+
+  // Генерируем PDF-ваучер и прикрепляем к письму
+  let attachments: Array<{ filename: string; content: string }> | undefined;
+  try {
+    const { generateVoucherPdf } = await import("./voucher");
+    const pdfBuffer = await generateVoucherPdf({
+      ...b,
+      booking_id: bookingId,
+      email: b.email,
+      phone: b.phone ?? "",
+      salutation: b.salutation,
+      payment_status: b.payment_status ?? "pending",
+      prepayment_amount: b.prepayment_amount ?? 0,
+    });
+    attachments = [
+      {
+        filename: `voucher-${b.booking_number}.pdf`,
+        content: pdfBuffer.toString("base64"),
+      },
+    ];
+  } catch (e) {
+    console.error("generateVoucherPdf failed:", e);
+  }
+
   await sendViaResend(
     b.email,
     `Бронирование подтверждено — ${b.booking_number} · Гостиница Полуостров`,
     html,
+    attachments,
   );
 }
 
