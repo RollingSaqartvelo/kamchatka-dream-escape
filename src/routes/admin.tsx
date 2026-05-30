@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import {
   createFileRoute,
   Link,
@@ -26,10 +26,36 @@ const NAV = [
   { to: "/admin/notifications", label: "Уведомления", icon: "🔔" },
 ] as const;
 
+const IDLE_TIMEOUT_MS = 15 * 60 * 1000; // 15 минут
+
 function AdminLayout() {
   const navigate = useNavigate();
   const { user, isStaff, loading, signOut } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleSignOut = useCallback(() => {
+    signOut().then(() => navigate({ to: "/login" }));
+  }, [signOut, navigate]);
+
+  // Автовыход через 15 минут бездействия
+  useEffect(() => {
+    if (!user) return;
+
+    const reset = () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(handleSignOut, IDLE_TIMEOUT_MS);
+    };
+
+    const events = ["mousemove", "keydown", "mousedown", "touchstart", "scroll"];
+    events.forEach((e) => window.addEventListener(e, reset, { passive: true }));
+    reset(); // запускаем таймер сразу
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      events.forEach((e) => window.removeEventListener(e, reset));
+    };
+  }, [user, handleSignOut]);
 
   useEffect(() => {
     if (loading) return;
