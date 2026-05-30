@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ROOMS } from "@/data/rooms";
 import { OfflineBookingModal } from "@/components/admin/OfflineBookingModal";
 import { syncTravellineReservations } from "@/lib/travelline-sync.functions";
+import { sendTestEmail } from "@/lib/email.functions";
 
 export const Route = createFileRoute("/admin/calendar")({
   component: AdminCalendarPage,
@@ -115,6 +116,8 @@ function AdminCalendarPage() {
   const [bookings, setBookings] = useState<Bk[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [testEmailSending, setTestEmailSending] = useState(false);
+  const sendTestEmailFn = useServerFn(sendTestEmail);
   const [modalDate, setModalDate] = useState<Date | null>(null);
   const [modalRoom, setModalRoom] = useState<string | undefined>(undefined);
   const [selected, setSelected] = useState<Bk | null>(null);
@@ -161,6 +164,23 @@ function AdminCalendarPage() {
     if (error) toast.error("Не удалось изменить статус");
     else { toast.success(`Статус изменён: ${STATUS_LABEL[status]}`); void load(); }
     setCtxMenu(null);
+  }
+
+  async function handleTestEmail() {
+    setTestEmailSending(true);
+    try {
+      const res = await sendTestEmailFn({ data: { to: "Romanc2002@mail.ru" } });
+      if (res.ok) {
+        toast.success("Тестовое письмо отправлено на Romanc2002@mail.ru");
+      } else {
+        toast.error(`Ошибка отправки: ${res.error}`);
+      }
+    } catch (e) {
+      toast.error("Не удалось отправить письмо");
+      console.error(e);
+    } finally {
+      setTestEmailSending(false);
+    }
   }
 
   async function syncTravelline() {
@@ -284,6 +304,13 @@ function AdminCalendarPage() {
               className="border border-[#C9A96E] px-5 py-2 text-[11px] uppercase tracking-widest text-[#C9A96E] hover:bg-[#C9A96E] hover:text-white disabled:opacity-50"
             >
               {syncing ? "Синхронизация…" : "↻ TravelLine"}
+            </button>
+            <button
+              onClick={() => void handleTestEmail()}
+              disabled={testEmailSending}
+              className="border border-zinc-400 px-5 py-2 text-[11px] uppercase tracking-widest text-zinc-500 hover:bg-zinc-100 disabled:opacity-50"
+            >
+              {testEmailSending ? "Отправка…" : "✉ Тест email"}
             </button>
             <button
               onClick={() => {

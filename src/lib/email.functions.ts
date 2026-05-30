@@ -267,6 +267,33 @@ export async function sendPaymentConfirmation(bookingId: string) {
   );
 }
 
+// ─── Тестовое письмо ─────────────────────────────────────────────────────────
+
+export const sendTestEmail = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ to: z.string().email() }))
+  .handler(async ({ data }) => {
+    const html = bookingConfirmationHtml({
+      booking_number: "TEST-0001",
+      first_name: "Иван",
+      last_name: "Тестовый",
+      room_name: "Стандарт Делюкс",
+      check_in: "2026-07-01",
+      check_out: "2026-07-05",
+      nights: 4,
+      adults: 2,
+      children: 0,
+      meal_plan: "breakfast",
+      total_price: 24000,
+      prepayment_amount: 8000,
+    });
+    const result = await sendViaResend(
+      data.to,
+      "Тестовое письмо — Гостиница Полуостров",
+      html,
+    );
+    return result;
+  });
+
 // ─── Отправить напоминание (вызывается из cron) ───────────────────────────────
 
 export async function sendReminderEmails() {
