@@ -214,7 +214,7 @@ async function sendViaResend(to: string, subject: string, html: string) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "Гостиница Полуостров <no-reply@poluostrov-hotel.ru>",
+      from: "Гостиница Полуостров <onboarding@resend.dev>",
       to,
       subject,
       html,

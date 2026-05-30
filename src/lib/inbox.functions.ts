@@ -44,7 +44,7 @@ async function sendReplyEmail(to: string, guestName: string, body: string) {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "Гостиница Полуостров <no-reply@poluostrov-hotel.ru>",
+      from: "Гостиница Полуостров <onboarding@resend.dev>",
       to,
       subject: "Ответ от гостиницы «Полуостров»",
       html,
