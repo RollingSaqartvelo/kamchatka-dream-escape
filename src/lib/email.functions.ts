@@ -51,6 +51,8 @@ export function bookingConfirmationHtml(b: {
   meal_plan: string;
   total_price: number;
   prepayment_amount?: number;
+  booking_id?: string;
+  email?: string;
 }): string {
   const mealLabel = b.meal_plan === "breakfast" ? "Завтрак включён" : "Без питания";
   const fmt = (d: string) => new Date(d).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
@@ -103,9 +105,17 @@ export function bookingConfirmationHtml(b: {
       </table>
     </div>
 
+    ${b.booking_id && b.email ? `
+    <div style="margin:24px 0;text-align:center;">
+      <a href="https://kamchatka-dream-escape.lovable.app/booking/chat/${b.booking_id}?e=${encodeURIComponent(b.email)}"
+         style="display:inline-block;background:#1a1a2e;color:#fff;padding:14px 32px;text-decoration:none;font-size:11px;letter-spacing:3px;text-transform:uppercase;">
+        ✉ Написать нам
+      </a>
+      <p style="color:#999;font-size:11px;margin:8px 0 0;">Трансфер, пожелания, вопросы — всё здесь</p>
+    </div>
+    ` : ""}
     <p style="color:#666;font-size:13px;line-height:1.7;">
-      Если у вас возникнут вопросы или вам потребуется трансфер — пишите нам в Telegram или звоните:
-      <strong>+7 (914) 994-57-57</strong>
+      Или звоните: <strong>+7 (914) 994-57-57</strong>
     </p>
   `);
 }
@@ -235,7 +245,7 @@ export async function sendBookingConfirmation(bookingId: string) {
 
   if (!b?.email) return;
 
-  const html = bookingConfirmationHtml(b);
+  const html = bookingConfirmationHtml({ ...b, booking_id: bookingId, email: b.email });
   await sendViaResend(
     b.email,
     `Бронирование подтверждено — ${b.booking_number} · Гостиница Полуостров`,

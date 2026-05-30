@@ -246,3 +246,131 @@ export const createManualConversation = createServerFn({ method: "POST" })
 
     return { id: conv.id };
   });
+
+// ─── Публичные функции для гостя (без авторизации) ───────────────────────────
+// Защищены парой bookingId + email — гость получает ссылку в письме
+
+export const getGuestChat = createServerFn({ method: "GET" })
+  .inputValidator(z.object({ bookingId: z.string().uuid(), email: z.string().email() }))
+  .handler(async ({ data }) => {
+    const db = admin();
+
+    // Проверяем что email совпадает с бронью
+    const { data: booking } = await db
+      .from("bookings")
+      .select("id,first_name,last_name,room_name,check_in,check_out,nights,payment_status")
+      .eq("id", data.bookingId)
+      .ilike("email", data.email)
+      .single();
+
+    if (!booking) return { booking: null, messages: [] };
+
+    // Находим диалог по брони
+    const { data: conv } = await db
+      .from("conversations")
+      .select("id")
+      .eq("booking_id", data.bookingId)
+      .single();
+
+    if (!conv) return { booking, messages: [] };
+
+    const { data: msgs } = await db
+      .from("messages")
+      .select("id,sender,body,created_at")
+      .eq("conversation_id", conv.id)
+      .order("created_at", { ascending: true });
+
+    return { booking, messages: msgs ?? [], conversationId: conv.id };
+  });
+
+export const sendGuestMessage = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      bookingId: z.string().uuid(),
+      email: z.string().email(),
+      body: z.string().trim().min(1).max(2000),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const db = admin();
+
+    // Проверяем бронь + email
+    const { data: booking } = await db
+      .from("bookings")
+      .select("id,first_name,last_name,email,room_name,check_in")
+      .eq("id", data.bookingId)
+      .ilike("email", data.email)
+      .single();
+
+    if (!booking) throw new Error("Бронирование не найдено");
+
+    // Находим или создаём диалог
+    let convId: string;
+    const { data: existing } = await db
+      .from("conversations")
+      .select("id,unread_count")
+      .eq("booking_id", data.bookingId)
+      .single();
+
+    if (existing) {
+      convId = existing.id;
+      await db.from("conversations").update({
+        unread_count: (existing.unread_count ?? 0) + 1,
+        last_preview: data.body.slice(0, 100),
+        last_message_at: new Date().toISOString(),
+        status: "open",
+      }).eq("id", convId);
+    } else {
+      const { data: newConv } = await db.from("conversations").insert({
+        booking_id: data.bookingId,
+        guest_name: `${booking.first_name} ${booking.last_name}`,
+        guest_email: booking.email,
+        channel: "website",
+        status: "open",
+        unread_count: 1,
+        last_preview: data.body.slice(0, 100),
+        last_message_at: new Date().toISOString(),
+      }).select("id").single();
+      if (!newConv) throw new Error("Не удалось создать диалог");
+      convId = newConv.id;
+    }
+
+    const { data: msg } = await db.from("messages").insert({
+      conversation_id: convId,
+      sender: "guest",
+      body: data.body,
+    }).select("id,sender,body,created_at").single();
+
+    // Уведомляем администратора в Telegram
+    notifyAdminNewGuestMessage({
+      guestName: `${booking.first_name} ${booking.last_name}`,
+      roomName: booking.room_name,
+      checkIn: booking.check_in,
+      body: data.body,
+    }).catch(() => {});
+
+    return msg;
+  });
+
+async function notifyAdminNewGuestMessage(b: {
+  guestName: string; roomName: string; checkIn: string; body: string;
+}) {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_ADMIN_CHAT_ID;
+  if (!token || !chatId) return;
+  const fmt = (d: string) => new Date(d).toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
+  const text = [
+    `💬 <b>СООБЩЕНИЕ ОТ ГОСТЯ</b>`,
+    ``,
+    `👤 ${b.guestName}  •  ${b.roomName}, заезд ${fmt(b.checkIn)}`,
+    ``,
+    `"${b.body.slice(0, 300)}"`,
+    ``,
+    `🔗 <a href="https://kamchatka-dream-escape.lovable.app/admin/inbox">Открыть инбокс</a>`,
+  ].join("\n");
+  await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML" }),
+  });
+}
