@@ -7,23 +7,46 @@ export const Route = createFileRoute("/api/public/voucher/$id")({
     handlers: {
       GET: async ({ request, params }) => {
         const url = new URL(request.url);
-        const email = url.searchParams.get("e");
-        if (!email) return new Response("Missing email", { status: 400 });
+        const email = url.searchParams.get("e") ?? "test@example.com";
 
-        const db = createClient(
-          process.env.SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!,
-          { auth: { persistSession: false } },
-        );
+        // Демо-режим
+        const isDemo = params.id === "test";
+        let b: any;
 
-        const { data: b } = await db
-          .from("bookings")
-          .select("booking_number,first_name,last_name,salutation,phone,email,room_name,check_in,check_out,nights,adults,children,meal_plan,total_price,prepayment_amount,payment_status")
-          .eq("id", params.id)
-          .ilike("email", email)
-          .single();
-
-        if (!b) return new Response("Not found", { status: 404 });
+        if (isDemo) {
+          b = {
+            booking_number: "TEST-0001",
+            first_name: "Иван",
+            last_name: "Тестовый",
+            salutation: "mr",
+            phone: "+7 (914) 000-00-00",
+            email,
+            room_name: "Стандарт Делюкс",
+            check_in: "2026-07-01",
+            check_out: "2026-07-05",
+            nights: 4,
+            adults: 2,
+            children: 0,
+            meal_plan: "breakfast",
+            total_price: 24000,
+            prepayment_amount: 8000,
+            payment_status: "confirmed",
+          };
+        } else {
+          const db = createClient(
+            process.env.SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!,
+            { auth: { persistSession: false } },
+          );
+          const { data } = await db
+            .from("bookings")
+            .select("booking_number,first_name,last_name,salutation,phone,email,room_name,check_in,check_out,nights,adults,children,meal_plan,total_price,prepayment_amount,payment_status")
+            .eq("id", params.id)
+            .ilike("email", email)
+            .single();
+          if (!data) return new Response("Not found", { status: 404 });
+          b = data;
+        }
 
         const chatUrl = `https://kamchatka-dream-escape.lovable.app/booking/chat/${params.id}?e=${encodeURIComponent(email)}`;
         const qrDataUrl = await QRCode.toDataURL(chatUrl, { width: 80, margin: 1 });
