@@ -241,6 +241,12 @@ const ru = {
     ctaText:
       "Наш консьерж составит маршрут — от восхождения на вулкан до ужина с видом на бухту.",
     ctaBtn: "Забронировать номер",
+    backAll: "Ко всем статьям",
+    author: "Автор",
+    source: "Источник",
+    notFoundTitle: "Статья не найдена",
+    loadError: "Не удалось загрузить статью",
+    retry: "Повторить",
   },
   booking: {
     progress: {
@@ -733,6 +739,12 @@ const en: typeof ru = {
     ctaText:
       "Our concierge will plan your route — from a volcano climb to a dinner overlooking the bay.",
     ctaBtn: "Book a room",
+    backAll: "Back to all articles",
+    author: "Author",
+    source: "Source",
+    notFoundTitle: "Article not found",
+    loadError: "Could not load the article",
+    retry: "Retry",
   },
   booking: {
     progress: {
@@ -1213,6 +1225,12 @@ const zh: typeof ru = {
     ctaTitle: "从半岛酒店探索堪察加",
     ctaText: "礼宾将为您规划行程 — 从攀登火山到湾景晚餐。",
     ctaBtn: "预订房间",
+    backAll: "返回全部文章",
+    author: "作者",
+    source: "来源",
+    notFoundTitle: "未找到该文章",
+    loadError: "文章加载失败",
+    retry: "重试",
   },
   booking: {
     progress: {

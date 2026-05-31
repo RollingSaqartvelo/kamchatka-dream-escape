@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { SiteLayout } from "@/components/layout/SiteLayout";
 import { PageHero } from "@/components/sections/PageHero";
+import { getArticles } from "@/data/kamchatka-articles";
 
 export const Route = createFileRoute("/kamchatka/")({
   component: KamchatkaPage,
@@ -22,84 +24,18 @@ export const Route = createFileRoute("/kamchatka/")({
   }),
 });
 
-type Article = {
-  slug: string;
-  category: string;
-  title: string;
-  excerpt: string;
-  readingTime: string;
-  image: string;
-};
-
-const articles: Article[] = [
-  {
-    slug: "wild-nature",
-    category: "О крае",
-    title: "Камчатка: край дикой природы, вулканов и суровых нравов",
-    excerpt:
-      "Полуостров длиной 1200 км — от Ключевской сопки и Авачинской бухты до коряков, ительменов и Долины гейзеров. Большой гид по краю.",
-    readingTime: "20 мин чтения",
-    image:
-      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1600&q=80",
-  },
-  {
-    slug: "thermal-springs",
-    category: "Оздоровление",
-    title: "Термальные источники полуострова",
-    excerpt:
-      "Паратунка, Малки, Налычево — где найти воду температурой 40°C под открытым небом и какие источники доступны круглый год.",
-    readingTime: "6 мин чтения",
-    image: "/media/thermal-springs.webp",
-  },
-  {
-    slug: "ocean",
-    category: "Океан",
-    title: "Авачинская бухта: вторая по величине в мире",
-    excerpt:
-      "Морские прогулки к острову Старичков, наблюдение за касатками и сивучами, рыбалка на палтуса — что попробовать на воде.",
-    readingTime: "7 мин чтения",
-    image: "/media/starichkov-island.jpg",
-  },
-  {
-    slug: "cuisine",
-    category: "Гастрономия",
-    title: "Камчатская кухня: краб, икра, папоротник",
-    excerpt:
-      "Что попробовать обязательно — от свежего камчатского краба и икры пятой минуты до медвежатины и юколы по рецептам ительменов.",
-    readingTime: "5 мин чтения",
-    image: "/media/cuisine.jpg",
-  },
-  {
-    slug: "indigenous",
-    category: "Культура",
-    title: "Коренные народы Камчатки",
-    excerpt:
-      "Ительмены, коряки, эвены, алеуты — четыре культуры, сохранившие древние традиции охоты, шаманизма и танца Алхалалалай.",
-    readingTime: "9 мин чтения",
-    image: "/media/indigenous.jpg",
-  },
-  {
-    slug: "seasons",
-    category: "Путешествие",
-    title: "Когда ехать на Камчатку",
-    excerpt:
-      "Хели-ски в марте, цветение тундры в июле, нерест лосося в августе, медведи на Курильском озере в сентябре — календарь сезонов.",
-    readingTime: "6 мин чтения",
-    image:
-      "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?auto=format&fit=crop&w=1600&q=80",
-  },
-];
-
 function KamchatkaPage() {
+  const { t, i18n } = useTranslation();
+  const articles = getArticles(i18n.language);
   const featured = articles[0];
   const rest = articles.slice(1);
 
   return (
     <SiteLayout>
       <PageHero
-        eyebrow="Гид по краю"
-        title="О Камчатке"
-        subtitle="Истории о земле вулканов, океана и тишины — от наших консьержей и проводников."
+        eyebrow={t("kamchatka.guide")}
+        title={t("kamchatka.title")}
+        subtitle={t("kamchatka.subtitle")}
         videoSrc="/media/kamchatka-hero.mp4"
       />
 
@@ -107,7 +43,7 @@ function KamchatkaPage() {
       <section className="bg-cream py-24 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <p className="mb-10 text-center text-[11px] tracking-widest-plus uppercase text-gold">
-            Главная история
+            {t("kamchatka.mainStory")}
           </p>
           <article className="grid gap-10 lg:grid-cols-2 lg:items-center">
             <div className="aspect-[4/3] overflow-hidden bg-beige" style={{ borderRadius: "2px" }}>
@@ -132,7 +68,7 @@ function KamchatkaPage() {
                 params={{ slug: featured.slug }}
                 className="mt-8 inline-flex items-center gap-3 text-[11px] tracking-widest-plus uppercase text-navy hover:text-gold"
               >
-                Читать статью
+                {t("kamchatka.readArticle")}
                 <span aria-hidden>→</span>
               </Link>
             </div>
@@ -146,14 +82,14 @@ function KamchatkaPage() {
           <div className="mb-14 flex items-end justify-between">
             <div>
               <p className="text-[11px] tracking-widest-plus uppercase text-gold">
-                Журнал
+                {t("kamchatka.journal")}
               </p>
               <h3 className="mt-3 font-serif text-3xl text-navy sm:text-4xl">
-                Все статьи
+                {t("kamchatka.allArticles")}
               </h3>
             </div>
             <p className="hidden text-sm text-muted-foreground sm:block">
-              {articles.length} материалов
+              {t("kamchatka.articlesCount", { n: articles.length })}
             </p>
           </div>
 
@@ -195,20 +131,18 @@ function KamchatkaPage() {
       <section className="bg-navy py-24 text-cream">
         <div className="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
           <p className="text-[11px] tracking-widest-plus uppercase text-gold">
-            Готовы к путешествию
+            {t("kamchatka.ctaEyebrow")}
           </p>
           <h3 className="mt-5 font-serif text-4xl sm:text-5xl">
-            Откройте Камчатку из «Полуострова»
+            {t("kamchatka.ctaTitle")}
           </h3>
-          <p className="mt-6 text-cream/80">
-            Наш консьерж составит маршрут — от восхождения на вулкан до ужина с видом на бухту.
-          </p>
+          <p className="mt-6 text-cream/80">{t("kamchatka.ctaText")}</p>
           <Link
             to="/booking"
             className="mt-10 inline-flex h-12 items-center bg-cream px-8 text-[11px] tracking-widest-plus uppercase text-navy hover:bg-cream/90"
             style={{ borderRadius: "2px" }}
           >
-            Забронировать номер
+            {t("kamchatka.ctaBtn")}
           </Link>
         </div>
       </section>
