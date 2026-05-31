@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   addDays,
@@ -7,7 +7,6 @@ import {
   endOfMonth,
   format,
   isSameDay,
-  isWithinInterval,
   parseISO,
   startOfMonth,
   subMonths,
@@ -272,15 +271,56 @@ function AdminCalendarPage() {
     setLoading(false);
   }
 
-  function bookingsForCell(roomId: string, day: Date) {
-    return bookings.filter((b) => {
-      if (b.room_id !== roomId) return false;
-      if (!statusFilter.has(b.payment_status)) return false;
+  // Индекс «комната|дата → брони»: строится один раз за изменение
+  // bookings/фильтра, а не фильтрует весь массив в каждой из ~650 ячеек.
+  // parseISO для каждой брони вызывается единожды (а не на каждую ячейку).
+  const cellIndex = useMemo(() => {
+    const idx = new Map<string, Bk[]>();
+    for (const b of bookings) {
+      if (!statusFilter.has(b.payment_status)) continue;
       const ci = parseISO(b.check_in);
       const co = parseISO(b.check_out);
-      return isWithinInterval(day, { start: ci, end: addDays(co, -1) }) || isSameDay(day, ci);
-    });
-  }
+      // Бронь занимает ночи [check_in, check_out-1]; как минимум день заезда.
+      const days = co > ci ? eachDayOfInterval({ start: ci, end: addDays(co, -1) }) : [ci];
+      for (const d of days) {
+        const key = `${b.room_id}|${format(d, "yyyy-MM-dd")}`;
+        const arr = idx.get(key);
+        if (arr) arr.push(b);
+        else idx.set(key, [b]);
+      }
+    }
+    return idx;
+  }, [bookings, statusFilter]);
+
+  const EMPTY = useMemo<Bk[]>(() => [], []);
+  const bookingsForCell = useCallback(
+    (roomId: string, day: Date) =>
+      cellIndex.get(`${roomId}|${format(day, "yyyy-MM-dd")}`) ?? EMPTY,
+    [cellIndex, EMPTY],
+  );
+
+  // Двойные брони: обычный (не хостел) номер с >1 бронью в одной ячейке.
+  const conflictCount = useMemo(() => {
+    let n = 0;
+    for (const [key, arr] of cellIndex) {
+      const roomId = key.slice(0, key.indexOf("|"));
+      if (!HOSTEL_CAPACITY[roomId] && arr.length > 1) n++;
+    }
+    return n;
+  }, [cellIndex]);
+
+  // Заезды и выезды на сегодня (независимо от просматриваемого месяца).
+  const todayStr = format(new Date(), "yyyy-MM-dd");
+  const { arrivals, departures } = useMemo(() => {
+    const arr: Bk[] = [];
+    const dep: Bk[] = [];
+    for (const b of bookings) {
+      if (!statusFilter.has(b.payment_status)) continue;
+      if (b.check_in === todayStr) arr.push(b);
+      if (b.check_out === todayStr) dep.push(b);
+    }
+    return { arrivals: arr, departures: dep };
+  }, [bookings, statusFilter, todayStr]);
 
   // Итоги месяца — считаем только то что реально видно в календаре
   const monthStats = useMemo(() => {
@@ -306,7 +346,7 @@ function AdminCalendarPage() {
 
     const pct = totalRoomNights > 0 ? Math.round((occupiedNights / totalRoomNights) * 100) : 0;
     return { occupiedNights, revenue, pct, total: uniqueBookings.size };
-  }, [bookings, monthDays, statusFilter]);
+  }, [bookingsForCell, monthDays]);
 
   return (
     <div className="min-h-screen">
@@ -396,6 +436,31 @@ function AdminCalendarPage() {
           ))}
         </div>
 
+        {/* Конфликты двойных броней */}
+        {conflictCount > 0 && (
+          <div className="mt-4 flex items-center gap-2 border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-800">
+            <span className="text-base">⚠️</span>
+            Обнаружены пересечения броней: {conflictCount} ячеек с двойным
+            бронированием (обведены красным). Проверьте и разнесите по номерам.
+          </div>
+        )}
+
+        {/* Заезды / выезды сегодня */}
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <ArrivalsBoard
+            title="🛬 Заезды сегодня"
+            list={arrivals}
+            empty="Сегодня заездов нет"
+            onPick={setSelected}
+          />
+          <ArrivalsBoard
+            title="🛫 Выезды сегодня"
+            list={departures}
+            empty="Сегодня выездов нет"
+            onPick={setSelected}
+          />
+        </div>
+
         {/* Legend + фильтр */}
         <div className="mt-4 flex flex-wrap gap-2 text-[11px]">
           {(["pending","confirmed","paid","completed","cancelled"] as const).map((k) => (
@@ -469,6 +534,10 @@ function AdminCalendarPage() {
                               : !HOSTEL_CAPACITY[room.id]
                               ? "hover:bg-cream/40"
                               : ""
+                          } ${
+                            !HOSTEL_CAPACITY[room.id] && cellBookings.length > 1
+                              ? "z-10 ring-2 ring-inset ring-red-600"
+                              : ""
                           }`}
                           onClick={() => {
                             if (cellBookings[0]) setSelected(cellBookings[0]);
@@ -497,7 +566,6 @@ function AdminCalendarPage() {
                             <div
                               className={`flex h-full w-full flex-col items-center justify-center px-1 ${STATUS_TEXT[cellBookings[0].payment_status] ?? "text-white"}`}
                               onMouseEnter={(e) => setTooltip({ booking: cellBookings[0] as any, x: e.clientX, y: e.clientY })}
-                              onMouseMove={(e) => setTooltip(t => t ? { ...t, x: e.clientX, y: e.clientY } : null)}
                               onMouseLeave={() => setTooltip(null)}
                             >
                               {cellBookings[0].last_name && cellBookings[0].last_name !== "—" && (
@@ -508,6 +576,14 @@ function AdminCalendarPage() {
                               <span className="text-[9px] opacity-70">
                                 {SOURCE_ICON[(cellBookings[0] as any).source ?? "manual"] ?? "✏️"}
                               </span>
+                              {cellBookings.length > 1 && (
+                                <span
+                                  className="absolute right-0 top-0 bg-red-600 px-1 text-[9px] font-bold leading-tight text-white"
+                                  title={`Двойная бронь: ${cellBookings.length} брони на эту дату`}
+                                >
+                                  ⚠{cellBookings.length}
+                                </span>
+                              )}
                             </div>
                           )}
 
@@ -677,6 +753,46 @@ function AdminCalendarPage() {
             <p className="font-mono text-[10px] text-zinc-400">{tooltip.booking.booking_number}</p>
           </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+function ArrivalsBoard({
+  title,
+  list,
+  empty,
+  onPick,
+}: {
+  title: string;
+  list: Bk[];
+  empty: string;
+  onPick: (b: Bk) => void;
+}) {
+  return (
+    <div className="rounded border border-border bg-background">
+      <p className="border-b border-border px-4 py-2 text-[11px] uppercase tracking-widest text-navy">
+        {title} · {list.length}
+      </p>
+      {list.length === 0 ? (
+        <p className="px-4 py-3 text-xs text-muted-foreground">{empty}</p>
+      ) : (
+        <ul className="max-h-40 divide-y divide-border overflow-y-auto">
+          {list.map((b) => (
+            <li key={b.id}>
+              <button
+                type="button"
+                onClick={() => onPick(b)}
+                className="flex w-full items-center justify-between gap-3 px-4 py-2 text-left text-sm hover:bg-cream/50"
+              >
+                <span className="truncate text-navy">
+                  {b.last_name} {b.first_name}
+                </span>
+                <span className="shrink-0 text-xs text-muted-foreground">{b.room_name}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );
