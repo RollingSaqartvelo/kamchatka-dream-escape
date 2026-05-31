@@ -32,6 +32,7 @@ import { Route as AdminBookingsRouteImport } from './routes/admin.bookings'
 import { Route as BookingVoucherIdRouteImport } from './routes/booking.voucher.$id'
 import { Route as BookingPayIdRouteImport } from './routes/booking.pay.$id'
 import { Route as BookingChatIdRouteImport } from './routes/booking.chat.$id'
+import { Route as ApiTelegramWebhookRouteImport } from './routes/api/telegram/webhook'
 import { Route as ApiPublicTravellineTestRouteImport } from './routes/api/public/travelline-test'
 import { Route as ApiPublicAlfaCallbackRouteImport } from './routes/api/public/alfa-callback'
 import { Route as ApiInternalCronRemindersRouteImport } from './routes/api/internal/cron-reminders'
@@ -152,6 +153,11 @@ const BookingChatIdRoute = BookingChatIdRouteImport.update({
   path: '/chat/$id',
   getParentRoute: () => BookingRoute,
 } as any)
+const ApiTelegramWebhookRoute = ApiTelegramWebhookRouteImport.update({
+  id: '/api/telegram/webhook',
+  path: '/api/telegram/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicTravellineTestRoute = ApiPublicTravellineTestRouteImport.update({
   id: '/api/public/travelline-test',
   path: '/api/public/travelline-test',
@@ -198,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/api/internal/cron-reminders': typeof ApiInternalCronRemindersRoute
   '/api/public/alfa-callback': typeof ApiPublicAlfaCallbackRoute
   '/api/public/travelline-test': typeof ApiPublicTravellineTestRoute
+  '/api/telegram/webhook': typeof ApiTelegramWebhookRoute
   '/booking/chat/$id': typeof BookingChatIdRoute
   '/booking/pay/$id': typeof BookingPayIdRoute
   '/booking/voucher/$id': typeof BookingVoucherIdRoute
@@ -226,6 +233,7 @@ export interface FileRoutesByTo {
   '/api/internal/cron-reminders': typeof ApiInternalCronRemindersRoute
   '/api/public/alfa-callback': typeof ApiPublicAlfaCallbackRoute
   '/api/public/travelline-test': typeof ApiPublicTravellineTestRoute
+  '/api/telegram/webhook': typeof ApiTelegramWebhookRoute
   '/booking/chat/$id': typeof BookingChatIdRoute
   '/booking/pay/$id': typeof BookingPayIdRoute
   '/booking/voucher/$id': typeof BookingVoucherIdRoute
@@ -256,6 +264,7 @@ export interface FileRoutesById {
   '/api/internal/cron-reminders': typeof ApiInternalCronRemindersRoute
   '/api/public/alfa-callback': typeof ApiPublicAlfaCallbackRoute
   '/api/public/travelline-test': typeof ApiPublicTravellineTestRoute
+  '/api/telegram/webhook': typeof ApiTelegramWebhookRoute
   '/booking/chat/$id': typeof BookingChatIdRoute
   '/booking/pay/$id': typeof BookingPayIdRoute
   '/booking/voucher/$id': typeof BookingVoucherIdRoute
@@ -287,6 +296,7 @@ export interface FileRouteTypes {
     | '/api/internal/cron-reminders'
     | '/api/public/alfa-callback'
     | '/api/public/travelline-test'
+    | '/api/telegram/webhook'
     | '/booking/chat/$id'
     | '/booking/pay/$id'
     | '/booking/voucher/$id'
@@ -315,6 +325,7 @@ export interface FileRouteTypes {
     | '/api/internal/cron-reminders'
     | '/api/public/alfa-callback'
     | '/api/public/travelline-test'
+    | '/api/telegram/webhook'
     | '/booking/chat/$id'
     | '/booking/pay/$id'
     | '/booking/voucher/$id'
@@ -344,6 +355,7 @@ export interface FileRouteTypes {
     | '/api/internal/cron-reminders'
     | '/api/public/alfa-callback'
     | '/api/public/travelline-test'
+    | '/api/telegram/webhook'
     | '/booking/chat/$id'
     | '/booking/pay/$id'
     | '/booking/voucher/$id'
@@ -367,6 +379,7 @@ export interface RootRouteChildren {
   ApiInternalCronRemindersRoute: typeof ApiInternalCronRemindersRoute
   ApiPublicAlfaCallbackRoute: typeof ApiPublicAlfaCallbackRoute
   ApiPublicTravellineTestRoute: typeof ApiPublicTravellineTestRoute
+  ApiTelegramWebhookRoute: typeof ApiTelegramWebhookRoute
   ApiPublicVoucherIdRoute: typeof ApiPublicVoucherIdRoute
 }
 
@@ -533,6 +546,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BookingChatIdRouteImport
       parentRoute: typeof BookingRoute
     }
+    '/api/telegram/webhook': {
+      id: '/api/telegram/webhook'
+      path: '/api/telegram/webhook'
+      fullPath: '/api/telegram/webhook'
+      preLoaderRoute: typeof ApiTelegramWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/travelline-test': {
       id: '/api/public/travelline-test'
       path: '/api/public/travelline-test'
@@ -618,8 +638,19 @@ const rootRouteChildren: RootRouteChildren = {
   ApiInternalCronRemindersRoute: ApiInternalCronRemindersRoute,
   ApiPublicAlfaCallbackRoute: ApiPublicAlfaCallbackRoute,
   ApiPublicTravellineTestRoute: ApiPublicTravellineTestRoute,
+  ApiTelegramWebhookRoute: ApiTelegramWebhookRoute,
   ApiPublicVoucherIdRoute: ApiPublicVoucherIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

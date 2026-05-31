@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Users,
   Ruler,
@@ -26,10 +27,12 @@ function fmtPrice(n: number) {
 function PhotoTile({
   src,
   label,
+  alt,
   onClick,
 }: {
   src?: string;
   label?: string;
+  alt?: string;
   onClick?: () => void;
 }) {
   const Tag = onClick ? "button" : "div";
@@ -45,7 +48,7 @@ function PhotoTile({
       {src ? (
         <img
           src={src}
-          alt={label ?? "Фото номера"}
+          alt={alt ?? label ?? ""}
           loading="lazy"
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
@@ -70,6 +73,7 @@ export function RoomModal({
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const photos = room.photos;
   const total = photos.length;
   const [lightbox, setLightbox] = useState<number | null>(null);
@@ -128,14 +132,21 @@ export function RoomModal({
 
         {/* Photos */}
         <div className="grid h-[280px] grid-cols-1 gap-1 p-4 pt-12 sm:h-[380px] sm:grid-cols-[2fr_1fr] sm:p-6 sm:pt-6">
-          <PhotoTile src={photos[0]} onClick={photos[0] ? () => setLightbox(0) : undefined} />
+          <PhotoTile src={photos[0]} alt={room.name_ru} onClick={photos[0] ? () => setLightbox(0) : undefined} />
           <div className="hidden grid-cols-2 grid-rows-2 gap-1 sm:grid">
-            <PhotoTile src={photos[1]} onClick={photos[1] ? () => setLightbox(1) : undefined} />
-            <PhotoTile src={photos[2]} onClick={photos[2] ? () => setLightbox(2) : undefined} />
-            <PhotoTile src={photos[3]} onClick={photos[3] ? () => setLightbox(3) : undefined} />
+            <PhotoTile src={photos[1]} alt={room.name_ru} onClick={photos[1] ? () => setLightbox(1) : undefined} />
+            <PhotoTile src={photos[2]} alt={room.name_ru} onClick={photos[2] ? () => setLightbox(2) : undefined} />
+            <PhotoTile src={photos[3]} alt={room.name_ru} onClick={photos[3] ? () => setLightbox(3) : undefined} />
             <PhotoTile
               src={photos[4]}
-              label={total > 5 ? `+${total - 4} фото` : total > 4 ? "Смотреть все →" : undefined}
+              alt={room.name_ru}
+              label={
+                total > 5
+                  ? t("rooms.gallery.morePhotos", { n: total - 4 })
+                  : total > 4
+                    ? t("rooms.gallery.viewAll")
+                    : undefined
+              }
               onClick={photos[4] ? () => setLightbox(4) : undefined}
             />
           </div>
@@ -144,7 +155,7 @@ export function RoomModal({
         {/* Body */}
         <div className="grid gap-8 px-4 pb-32 sm:px-6 md:grid-cols-[1fr_1fr] md:pb-28">
           <div>
-            <p className="text-[11px] uppercase tracking-widest text-gold">Номер</p>
+            <p className="text-[11px] uppercase tracking-widest text-gold">{t("rooms.modal.eyebrow")}</p>
             <h2 className="mt-2 font-serif text-3xl text-navy sm:text-4xl">
               {room.name_ru}
             </h2>
@@ -152,20 +163,20 @@ export function RoomModal({
             <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-1.5">
                 <Users className="h-4 w-4 text-gold" strokeWidth={1.5} />
-                до {room.max_guests} мест
+                {t("rooms.card.seats", { n: room.max_guests })}
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <Ruler className="h-4 w-4 text-gold" strokeWidth={1.5} />
-                {room.area_sqm} м²
+                {t("rooms.card.area", { n: room.area_sqm })}
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <DoorClosed className="h-4 w-4 text-gold" strokeWidth={1.5} />
-                {room.rooms_count} комн.
+                {t("rooms.card.rooms", { n: room.rooms_count })}
               </span>
               {room.levels && (
                 <span className="inline-flex items-center gap-1.5">
                   <Layers className="h-4 w-4 text-gold" strokeWidth={1.5} />
-                  {room.levels} уровня
+                  {t("rooms.card.levels", { n: room.levels })}
                 </span>
               )}
             </div>
@@ -202,14 +213,14 @@ export function RoomModal({
 
           <div>
             <p className="text-[11px] uppercase tracking-widest text-gold">
-              Описание
+              {t("rooms.modal.desc")}
             </p>
             <p className="mt-4 text-base italic leading-relaxed text-muted-foreground">
               {room.description_ru}
             </p>
             <div className="mt-6 border-t border-border pt-5">
               <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                Спальные места
+                {t("rooms.modal.beds")}
               </p>
               <p className="mt-2 text-sm text-navy">{room.beds}</p>
             </div>
@@ -220,9 +231,9 @@ export function RoomModal({
         <div className="sticky bottom-0 left-0 right-0 flex flex-col items-start justify-between gap-3 border-t border-border bg-background/95 px-4 py-4 backdrop-blur sm:flex-row sm:items-center sm:px-6">
           <div>
             <p className="font-serif text-xl text-navy">
-              от {fmtPrice(room.price_from_rub)}
+              {t("rooms.card.from")} {fmtPrice(room.price_from_rub)}
               <span className="ml-1 text-sm text-muted-foreground">
-                за 1 ночь
+                {t("rooms.modal.perNight")}
               </span>
             </p>
           </div>
@@ -231,7 +242,7 @@ export function RoomModal({
             className="bg-navy px-6 py-3 text-[11px] uppercase tracking-widest text-cream hover:bg-gold transition-colors"
             onClick={() => onOpenChange(false)}
           >
-            Узнать цену на другие даты
+            {t("rooms.modal.otherDates")}
           </Link>
         </div>
 
@@ -242,7 +253,7 @@ export function RoomModal({
             onClick={close}
             role="dialog"
             aria-modal="true"
-            aria-label={`${room.name_ru} — фото ${lightbox + 1} из ${total}`}
+            aria-label={`${room.name_ru} — ${lightbox + 1} / ${total}`}
           >
             <button
               type="button"
@@ -251,7 +262,7 @@ export function RoomModal({
                 close();
               }}
               className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-cream transition-colors hover:bg-white/20"
-              aria-label="Закрыть"
+              aria-label={t("rooms.gallery.close")}
             >
               <X className="h-5 w-5" />
             </button>
@@ -264,7 +275,7 @@ export function RoomModal({
                   prev();
                 }}
                 className="absolute left-3 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-cream transition-colors hover:bg-white/20 sm:left-6"
-                aria-label="Предыдущее фото"
+                aria-label={t("rooms.gallery.prev")}
               >
                 <ChevronLeft className="h-6 w-6" />
               </button>
@@ -272,7 +283,7 @@ export function RoomModal({
 
             <img
               src={photos[lightbox]}
-              alt={`${room.name_ru} — фото ${lightbox + 1}`}
+              alt={`${room.name_ru} — ${lightbox + 1}`}
               className="max-h-[88vh] max-w-[92vw] object-contain"
               onClick={(e) => e.stopPropagation()}
             />
@@ -285,7 +296,7 @@ export function RoomModal({
                   next();
                 }}
                 className="absolute right-3 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-cream transition-colors hover:bg-white/20 sm:right-6"
-                aria-label="Следующее фото"
+                aria-label={t("rooms.gallery.next")}
               >
                 <ChevronRight className="h-6 w-6" />
               </button>

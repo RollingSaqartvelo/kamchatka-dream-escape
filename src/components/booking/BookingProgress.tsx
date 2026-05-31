@@ -1,14 +1,15 @@
 import { Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
-const STEPS = [
-  { n: 1, label: "Даты и гости" },
-  { n: 2, label: "Выбор номера" },
-  { n: 3, label: "Пожелания" },
-  { n: 4, label: "Подтверждение" },
-] as const;
-
 export function BookingProgress({ step }: { step: 1 | 2 | 3 | 4 }) {
+  const { t } = useTranslation();
+  const STEPS = [
+    { n: 1, label: t("booking.progress.s1") },
+    { n: 2, label: t("booking.progress.s2") },
+    { n: 3, label: t("booking.progress.s3") },
+    { n: 4, label: t("booking.progress.s4") },
+  ] as const;
   return (
     <div className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-4 py-5 sm:px-6 sm:py-6">

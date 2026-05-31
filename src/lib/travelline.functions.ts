@@ -67,6 +67,84 @@ async function getTravellineToken(): Promise<string> {
   return cachedToken.token;
 }
 
+// ─── Core search (plain async, reused by single + batch server fns) ──────────
+export type AvailabilityResult = {
+  roomId: string;
+  available: boolean;
+  totalPrice: number | null;
+  ratePlanId?: number;
+  tlRoomTypeId?: number;
+  error?: string;
+};
+
+type SearchInput = {
+  roomId: string;
+  checkIn: string;
+  checkOut: string;
+  adults: number;
+  children: number;
+  mealPlan: "room_only" | "breakfast";
+};
+
+async function searchAvailabilityCore(
+  data: SearchInput,
+  token: string,
+): Promise<AvailabilityResult> {
+  const tlRoomTypeId = ROOM_ID_TO_TL[data.roomId];
+  if (!tlRoomTypeId) {
+    return { roomId: data.roomId, available: false, totalPrice: null, error: "no_mapping" };
+  }
+
+  try {
+    const baseUrl = process.env.TRAVELLINE_API_BASE_URL!;
+    const propertyId = process.env.TRAVELLINE_PROPERTY_ID!;
+    const ratePlanId = RATE_PLAN_BY_MEAL[data.mealPlan];
+
+    const res = await fetch(`${baseUrl.replace(/\/$/, "")}/search`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        propertyId: Number(propertyId),
+        arrival: data.checkIn,
+        departure: data.checkOut,
+        adults: data.adults,
+        children: data.children,
+        roomTypeIds: [tlRoomTypeId],
+        ratePlanIds: [ratePlanId],
+      }),
+    });
+
+    if (!res.ok) {
+      const txt = await res.text().catch(() => "");
+      console.error("TL search error", res.status, txt.slice(0, 300));
+      return { roomId: data.roomId, available: false, totalPrice: null, error: `tl_${res.status}` };
+    }
+
+    const json: any = await res.json();
+    // Travelline search response: roomStays[].total.amount
+    const stay = json?.roomStays?.[0] ?? json?.offers?.[0] ?? null;
+    const amount =
+      stay?.total?.amount ??
+      stay?.totalPrice ??
+      stay?.price?.amount ??
+      null;
+
+    return {
+      roomId: data.roomId,
+      available: amount != null,
+      totalPrice: amount != null ? Math.round(Number(amount)) : null,
+      ratePlanId,
+      tlRoomTypeId,
+    };
+  } catch (e) {
+    console.error("TL search exception", e);
+    return { roomId: data.roomId, available: false, totalPrice: null, error: "exception" };
+  }
+}
+
 // ─── Server function: search availability for one room/date range ────────────
 export const searchTravellineAvailability = createServerFn({ method: "POST" })
   .inputValidator(
@@ -80,58 +158,50 @@ export const searchTravellineAvailability = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data }) => {
-    const tlRoomTypeId = ROOM_ID_TO_TL[data.roomId];
-    if (!tlRoomTypeId) {
+    if (!ROOM_ID_TO_TL[data.roomId]) {
       return { available: false, totalPrice: null as number | null, error: "no_mapping" };
     }
+    const token = await getTravellineToken();
+    return searchAvailabilityCore(data, token);
+  });
 
+// ─── Server function: batch availability for many rooms in one round-trip ────
+// Fetches the auth token once, then queries all rooms in parallel upstream.
+export const searchTravellineAvailabilityBatch = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      roomIds: z.array(z.string().min(1).max(64)).min(1).max(40),
+      checkIn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      checkOut: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      adults: z.number().int().min(1).max(10),
+      children: z.number().int().min(0).max(10).default(0),
+      mealPlan: z.enum(["room_only", "breakfast"]).default("room_only"),
+    }),
+  )
+  .handler(async ({ data }) => {
+    let token: string;
     try {
-      const token = await getTravellineToken();
-      const baseUrl = process.env.TRAVELLINE_API_BASE_URL!;
-      const propertyId = process.env.TRAVELLINE_PROPERTY_ID!;
-      const ratePlanId = RATE_PLAN_BY_MEAL[data.mealPlan];
-
-      const res = await fetch(`${baseUrl.replace(/\/$/, "")}/search`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          propertyId: Number(propertyId),
-          arrival: data.checkIn,
-          departure: data.checkOut,
-          adults: data.adults,
-          children: data.children,
-          roomTypeIds: [tlRoomTypeId],
-          ratePlanIds: [ratePlanId],
-        }),
-      });
-
-      if (!res.ok) {
-        const txt = await res.text().catch(() => "");
-        console.error("TL search error", res.status, txt.slice(0, 300));
-        return { available: false, totalPrice: null, error: `tl_${res.status}` };
-      }
-
-      const json: any = await res.json();
-      // Travelline search response: roomStays[].total.amount
-      const stay = json?.roomStays?.[0] ?? json?.offers?.[0] ?? null;
-      const amount =
-        stay?.total?.amount ??
-        stay?.totalPrice ??
-        stay?.price?.amount ??
-        null;
-
-      return {
-        available: amount != null,
-        totalPrice: amount != null ? Math.round(Number(amount)) : null,
-        ratePlanId,
-        tlRoomTypeId,
-        raw: stay ?? null,
-      };
+      token = await getTravellineToken();
     } catch (e) {
-      console.error("TL search exception", e);
-      return { available: false, totalPrice: null, error: "exception" };
+      console.error("TL batch auth failed", e);
+      // Signal a hard failure so the client can fall back gracefully.
+      return { ok: false as const, results: [] as AvailabilityResult[] };
     }
+
+    const results = await Promise.all(
+      data.roomIds.map((roomId) =>
+        searchAvailabilityCore(
+          {
+            roomId,
+            checkIn: data.checkIn,
+            checkOut: data.checkOut,
+            adults: data.adults,
+            children: data.children,
+            mealPlan: data.mealPlan,
+          },
+          token,
+        ),
+      ),
+    );
+    return { ok: true as const, results };
   });

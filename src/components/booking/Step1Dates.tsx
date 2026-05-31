@@ -1,12 +1,20 @@
 import { useState } from "react";
-import { format } from "date-fns";
-import { ru } from "date-fns/locale";
+import { useTranslation } from "react-i18next";
+import { format, type Locale } from "date-fns";
+import { ru, enUS, zhCN } from "date-fns/locale";
 import { Calendar as CalendarIcon, Check, ChevronRight, Minus, Plus, Users } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import type { DateRange, GuestParty } from "./types";
 import { nightsBetween } from "./types";
+
+/** date-fns locale matching the active UI language. */
+export function dfLocale(lang: string): Locale {
+  if (lang.startsWith("en")) return enUS;
+  if (lang.startsWith("zh")) return zhCN;
+  return ru;
+}
 
 type Props = {
   dates: DateRange;
@@ -18,9 +26,9 @@ type Props = {
   onContinue: () => void;
 };
 
-function fmtShort(d?: Date) {
+function fmtShort(d: Date | undefined, loc: Locale) {
   if (!d) return "—";
-  return format(d, "EEE d MMM", { locale: ru });
+  return format(d, "EEE d MMM", { locale: loc });
 }
 
 export function Step1Dates({
@@ -32,6 +40,8 @@ export function Step1Dates({
   onPromoChange,
   onContinue,
 }: Props) {
+  const { t, i18n } = useTranslation();
+  const loc = dfLocale(i18n.language);
   const nights = nightsBetween(dates.from, dates.to);
   const canContinue = nights > 0;
   const [datesOpen, setDatesOpen] = useState(false);
@@ -44,11 +54,11 @@ export function Step1Dates({
         {/* Hotel block */}
         <div className="border-b border-border pb-4">
           <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-            Гостиница
+            {t("booking.step1.hotel")}
           </p>
           <p className="mt-2 flex items-start gap-2 text-sm text-navy">
             <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#C9A96E]" strokeWidth={2} />
-            Гостиница «Полуостров», Петропавловск-Камчатский
+            {t("booking.step1.hotelName")}
           </p>
         </div>
 
@@ -61,27 +71,27 @@ export function Step1Dates({
             >
               <div>
                 <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                  Номера и гости
+                  {t("booking.step1.roomsGuests")}
                 </p>
                 <p className="mt-2 text-sm text-navy">
-                  1 номер · {party.adults} взр. · {party.children} дет.
+                  {t("booking.step1.roomsGuestsValue", { a: party.adults, c: party.children })}
                 </p>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-90" />
             </button>
           </PopoverTrigger>
           <PopoverContent align="start" className="w-72 p-5">
-            <p className="font-serif text-lg text-navy">Комната 1</p>
+            <p className="font-serif text-lg text-navy">{t("booking.step1.room1")}</p>
             <div className="mt-4 space-y-3">
               <CounterRow
-                label="Взрослых"
+                label={t("booking.step1.adults")}
                 value={party.adults}
                 min={1}
                 max={6}
                 onChange={(v) => onPartyChange({ ...party, adults: v })}
               />
               <CounterRow
-                label="Детей (до 12 лет)"
+                label={t("booking.step1.childrenLabel")}
                 value={party.children}
                 min={0}
                 max={4}
@@ -93,7 +103,7 @@ export function Step1Dates({
               onClick={() => setGuestsOpen(false)}
               className="mt-5 w-full bg-[#1a1a1a] py-3 text-[11px] uppercase tracking-[2px] text-white transition-colors hover:bg-[#C9A96E]"
             >
-              Применить
+              {t("booking.step1.apply")}
             </button>
           </PopoverContent>
         </Popover>
@@ -107,16 +117,17 @@ export function Step1Dates({
             >
               <div>
                 <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                  Даты
+                  {t("booking.step1.dates")}
                 </p>
                 {nights > 0 ? (
                   <p className="mt-2 text-sm text-navy">
-                    {fmtShort(dates.from)} — {fmtShort(dates.to)} · {nights} {nightsWord(nights)}
+                    {fmtShort(dates.from, loc)} — {fmtShort(dates.to, loc)} · {nights}{" "}
+                    {t("booking.step1.nights", { count: nights })}
                   </p>
                 ) : (
                   <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
                     <CalendarIcon className="h-4 w-4 text-[#C9A96E]" strokeWidth={1.5} />
-                    Заезд — Выезд
+                    {t("booking.step1.datesPick")}
                   </p>
                 )}
               </div>
@@ -125,7 +136,7 @@ export function Step1Dates({
           </PopoverTrigger>
           <PopoverContent align="start" className="w-auto p-4">
             <p className="mb-3 text-center text-[11px] uppercase tracking-widest text-muted-foreground">
-              Выберите даты
+              {t("booking.step1.datesChoose")}
             </p>
             <Calendar
               mode="range"
@@ -135,11 +146,11 @@ export function Step1Dates({
                 onDatesChange({ from: range?.from, to: range?.to })
               }
               disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-              locale={ru}
+              locale={loc}
               className={cn("p-0 pointer-events-auto")}
             />
             <p className="mt-3 text-center text-[11px] text-muted-foreground">
-              Заезд в 14:00 · Выезд до 12:00
+              {t("booking.step1.datesTimes")}
             </p>
           </PopoverContent>
         </Popover>
@@ -147,13 +158,13 @@ export function Step1Dates({
         {/* Promo */}
         <div className="border-b border-border pb-4">
           <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-            Промокод
+            {t("booking.step1.promo")}
           </p>
           <input
             type="text"
             value={promoCode}
             onChange={(e) => onPromoChange(e.target.value)}
-            placeholder="Введите промокод (необязательно)"
+            placeholder={t("booking.step1.promoPh")}
             className="mt-2 w-full border-0 bg-transparent p-0 text-sm text-navy outline-none placeholder:text-muted-foreground"
           />
         </div>
@@ -164,33 +175,32 @@ export function Step1Dates({
           onClick={onContinue}
           className="w-full bg-[#1a1a1a] py-4 text-[11px] uppercase tracking-[2px] text-white transition-colors hover:bg-[#C9A96E] disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Показать доступные номера
+          {t("booking.step1.continue")}
         </button>
       </aside>
 
       {/* RIGHT INFO PANEL */}
       <div className="self-start">
         <p className="text-[11px] uppercase tracking-widest text-[#C9A96E]">
-          Шаг 01 — Назначение
+          {t("booking.step1.stepEyebrow")}
         </p>
         <h1 className="mt-3 font-serif text-4xl text-navy sm:text-5xl">
-          Выберите даты пребывания
+          {t("booking.step1.stepTitle")}
         </h1>
         <p className="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
-          Укажите даты заезда и выезда, количество гостей и при наличии — промокод.
-          После этого мы покажем все доступные на ваши даты номера и тарифы.
+          {t("booking.step1.stepIntro")}
         </p>
 
         <div className="mt-10 grid gap-5 sm:grid-cols-2">
           <InfoTile
             icon={<Users className="h-5 w-5 text-[#C9A96E]" strokeWidth={1.5} />}
-            title="Размещение"
-            text="До 4 гостей в одном номере. Дети до 5 лет — бесплатно."
+            title={t("booking.step1.placementTitle")}
+            text={t("booking.step1.placementText")}
           />
           <InfoTile
             icon={<CalendarIcon className="h-5 w-5 text-[#C9A96E]" strokeWidth={1.5} />}
-            title="Время"
-            text="Заезд с 14:00, выезд до 12:00. Ранний заезд по запросу."
+            title={t("booking.step1.timeTitle")}
+            text={t("booking.step1.timeText")}
           />
         </div>
       </div>
@@ -255,12 +265,4 @@ function InfoTile({
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{text}</p>
     </div>
   );
-}
-
-function nightsWord(n: number) {
-  const mod10 = n % 10;
-  const mod100 = n % 100;
-  if (mod10 === 1 && mod100 !== 11) return "ночь";
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "ночи";
-  return "ночей";
 }

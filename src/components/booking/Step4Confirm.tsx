@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -23,6 +24,7 @@ type Props = {
 };
 
 export function Step4Confirm({ state, patch, onEditStep, onBack }: Props) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const submit = useServerFn(createBooking);
   const fetchProfile = useServerFn(getMyProfile);
@@ -152,7 +154,7 @@ export function Step4Confirm({ state, patch, onEditStep, onBack }: Props) {
       });
     } catch (err) {
       console.error(err);
-      toast.error("Не удалось отправить заявку. Попробуйте ещё раз.");
+      toast.error(t("booking.step4.errorSubmit"));
       setSubmitting(false);
     }
   };
@@ -161,15 +163,15 @@ export function Step4Confirm({ state, patch, onEditStep, onBack }: Props) {
     <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[1fr_320px] lg:py-16">
       <div>
         <p className="text-[11px] uppercase tracking-widest text-[#C9A96E]">
-          Шаг 04 — Подтверждение
+          {t("booking.step4.eyebrow")}
         </p>
         <h1 className="mt-3 font-serif text-4xl text-navy sm:text-5xl">
-          Подтвердить бронирование
+          {t("booking.step4.title")}
         </h1>
 
         {/* Salutation */}
         <div className="mt-10">
-          <p className="text-[11px] uppercase tracking-widest text-navy">Обращение</p>
+          <p className="text-[11px] uppercase tracking-widest text-navy">{t("booking.step4.salutation")}</p>
           <div className="mt-3 flex gap-6">
             {(["mr", "mrs"] as const).map((s) => (
               <label key={s} className="flex cursor-pointer items-center gap-2 text-sm text-navy">
@@ -180,7 +182,7 @@ export function Step4Confirm({ state, patch, onEditStep, onBack }: Props) {
                   checked={guest.salutation === s}
                   onChange={() => patch({ guest: { ...guest, salutation: s } })}
                 />
-                {s === "mr" ? "Господин" : "Госпожа"}
+                {s === "mr" ? t("booking.step4.mr") : t("booking.step4.mrs")}
               </label>
             ))}
           </div>
@@ -188,30 +190,30 @@ export function Step4Confirm({ state, patch, onEditStep, onBack }: Props) {
 
         {/* Guest fields */}
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          <Field label="Имя*" value={guest.firstName}
+          <Field label={t("booking.step4.firstName")} value={guest.firstName}
             onChange={(v) => patch({ guest: { ...guest, firstName: v } })} />
-          <Field label="Фамилия*" value={guest.lastName}
+          <Field label={t("booking.step4.lastName")} value={guest.lastName}
             onChange={(v) => patch({ guest: { ...guest, lastName: v } })} />
-          <PhoneField value={guest.phone}
+          <PhoneField label={t("booking.step4.phone")} value={guest.phone}
             onChange={(v) => patch({ guest: { ...guest, phone: v } })} />
-          <Field label="Email*" type="email" value={guest.email}
+          <Field label={t("booking.step4.email")} type="email" value={guest.email}
             onChange={(v) => patch({ guest: { ...guest, email: v } })} />
-          <Field label="Город" value={guest.city}
+          <Field label={t("booking.step4.city")} value={guest.city}
             onChange={(v) => patch({ guest: { ...guest, city: v } })} />
-          <Field label="Страна" value={guest.country}
+          <Field label={t("booking.step4.country")} value={guest.country}
             onChange={(v) => patch({ guest: { ...guest, country: v } })} />
         </div>
 
         {/* Messenger */}
         <div className="mt-8 border-t border-border pt-8">
           <p className="text-[11px] uppercase tracking-widest text-navy">
-            Куда отправить напоминание за день до заезда?
+            {t("booking.step4.reminderTitle")}
           </p>
           <div className="mt-3 flex flex-wrap gap-6">
             {([
               { v: "telegram", label: "Telegram" },
               { v: "vk_max", label: "ВКонтакте / Макс" },
-              { v: "none", label: "Не нужно" },
+              { v: "none", label: t("booking.step4.none") },
             ] as const).map((m) => (
               <label key={m.v} className="flex cursor-pointer items-center gap-2 text-sm text-navy">
                 <input
@@ -232,7 +234,7 @@ export function Step4Confirm({ state, patch, onEditStep, onBack }: Props) {
               onChange={(e) =>
                 patch({ messenger: { ...messenger, username: e.target.value } })
               }
-              placeholder="@username или номер телефона"
+              placeholder={t("booking.step4.usernamePh")}
               className="mt-3 w-full max-w-sm border border-border bg-background px-4 py-3 text-sm outline-none focus:border-[#C9A96E]"
             />
           )}
@@ -241,20 +243,19 @@ export function Step4Confirm({ state, patch, onEditStep, onBack }: Props) {
         {/* Prepayment block */}
         <div className="mt-8 border-t border-border pt-8">
           <p className="text-[11px] uppercase tracking-widest text-navy">
-            Оплата
+            {t("booking.step4.paymentTitle")}
           </p>
           <div className="mt-4 border border-[#C9A96E]/40 bg-[#C9A96E]/5 p-5">
             <div className="flex items-baseline justify-between">
-              <span className="text-sm text-navy">Предоплата сейчас</span>
+              <span className="text-sm text-navy">{t("booking.step4.prepayNow")}</span>
               <span className="font-serif text-2xl text-navy">{fmtRub(prepayment)}</span>
             </div>
             <div className="mt-2 flex items-baseline justify-between text-sm text-muted-foreground">
-              <span>К доплате при заезде</span>
+              <span>{t("booking.step4.remaining")}</span>
               <span>{fmtRub(remaining)}</span>
             </div>
             <p className="mt-4 text-xs text-muted-foreground">
-              Карта · СБП · SberPay · оплата по счёту — выберете на следующем шаге.
-              Предоплата = бо́льшее из 30% стоимости и цены одной ночи.
+              {t("booking.step4.paymentNote")}
             </p>
           </div>
         </div>
@@ -264,12 +265,12 @@ export function Step4Confirm({ state, patch, onEditStep, onBack }: Props) {
           <ConsentRow
             checked={idConsent}
             onChange={(v) => patch({ idConsent: v })}
-            text="Я предъявлю документ, удостоверяющий личность, при регистрации."
+            text={t("booking.step4.consentId")}
           />
           <ConsentRow
             checked={termsConsent}
             onChange={(v) => patch({ termsConsent: v })}
-            text="Я ознакомился и согласен с Условиями бронирования и Политикой конфиденциальности (ФЗ-152)."
+            text={t("booking.step4.consentTerms")}
           />
         </div>
 
@@ -280,7 +281,7 @@ export function Step4Confirm({ state, patch, onEditStep, onBack }: Props) {
             onClick={onBack}
             className="text-[11px] uppercase tracking-widest text-muted-foreground hover:text-navy"
           >
-            ← Назад
+            {t("booking.step4.back")}
           </button>
           <button
             type="button"
@@ -291,7 +292,7 @@ export function Step4Confirm({ state, patch, onEditStep, onBack }: Props) {
               (!valid || submitting) && "cursor-not-allowed opacity-40 hover:bg-[#1a1a1a]",
             )}
           >
-            {submitting ? "Создаём бронь…" : "Перейти к оплате"}
+            {submitting ? t("booking.step4.submitting") : t("booking.step4.submit")}
           </button>
         </div>
       </div>
@@ -369,9 +370,11 @@ function splitPhone(full: string): { dial: string; rest: string } {
 /** Phone input with a country dial-code selector; stores the full international
  *  number (e.g. "+7 9991234567") in a single string value. */
 function PhoneField({
+  label,
   value,
   onChange,
 }: {
+  label: string;
   value: string;
   onChange: (v: string) => void;
 }) {
@@ -380,7 +383,7 @@ function PhoneField({
   return (
     <label className="block">
       <span className="text-[11px] uppercase tracking-widest text-muted-foreground">
-        Телефон*
+        {label}
       </span>
       <div className="mt-1.5 flex items-center border border-border bg-background focus-within:border-[#C9A96E]">
         <select

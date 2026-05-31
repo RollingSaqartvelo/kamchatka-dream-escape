@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { BookingState } from "./types";
 import { SPECIAL_REQUEST_OPTIONS } from "./types";
 import { StaySummary } from "./StaySummary";
@@ -20,11 +21,12 @@ export function Step3Requests({
   onContinue,
   onBack,
 }: Props) {
-  const toggle = (label: string) => {
-    if (state.requests.includes(label)) {
-      onRequestsChange(state.requests.filter((r) => r !== label));
+  const { t } = useTranslation();
+  const toggle = (value: string) => {
+    if (state.requests.includes(value)) {
+      onRequestsChange(state.requests.filter((r) => r !== value));
     } else {
-      onRequestsChange([...state.requests, label]);
+      onRequestsChange([...state.requests, value]);
     }
   };
 
@@ -32,23 +34,23 @@ export function Step3Requests({
     <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[1fr_320px] lg:py-16">
       <div>
         <p className="text-[11px] uppercase tracking-widest text-[#C9A96E]">
-          Шаг 03 — Специальные запросы
+          {t("booking.step3.eyebrow")}
         </p>
         <h1 className="mt-3 font-serif text-4xl text-navy sm:text-5xl">
-          Как сделать ваше пребывание особенным?
+          {t("booking.step3.title")}
         </h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          Выберите дополнительные опции. Мы постараемся учесть все ваши пожелания.
+          {t("booking.step3.intro")}
         </p>
 
         <div className="mt-10 grid gap-3 sm:grid-cols-2">
-          {SPECIAL_REQUEST_OPTIONS.map((label) => {
-            const checked = state.requests.includes(label);
+          {SPECIAL_REQUEST_OPTIONS.map(({ value, key }) => {
+            const checked = state.requests.includes(value);
             return (
               <button
-                key={label}
+                key={key}
                 type="button"
-                onClick={() => toggle(label)}
+                onClick={() => toggle(value)}
                 className={cn(
                   "flex items-center gap-3 border bg-card px-4 py-4 text-left text-[11px] uppercase tracking-[1px] transition-colors",
                   checked
@@ -74,7 +76,7 @@ export function Step3Requests({
                     </svg>
                   )}
                 </span>
-                {label}
+                {t(`booking.step3.options.${key}`)}
               </button>
             );
           })}
@@ -82,12 +84,12 @@ export function Step3Requests({
 
         <div className="mt-10">
           <label className="text-[11px] uppercase tracking-widest text-navy">
-            Не нашли нужное? Напишите ваш запрос
+            {t("booking.step3.customLabel")}
           </label>
           <textarea
             value={state.customRequest}
             onChange={(e) => onCustomChange(e.target.value.slice(0, 500))}
-            placeholder="Например: аллергия на перья, нужна подушка потвёрже…"
+            placeholder={t("booking.step3.customPh")}
             rows={4}
             className="mt-3 w-full resize-none border border-border bg-background p-4 text-sm text-navy outline-none focus:border-[#C9A96E]"
           />
@@ -102,14 +104,14 @@ export function Step3Requests({
             onClick={onBack}
             className="text-[11px] uppercase tracking-widest text-muted-foreground hover:text-navy"
           >
-            ← Назад к выбору номера
+            {t("booking.step3.back")}
           </button>
           <button
             type="button"
             onClick={onContinue}
             className="bg-[#1a1a1a] px-10 py-4 text-[11px] uppercase tracking-[2px] text-white transition-colors hover:bg-[#C9A96E]"
           >
-            Продолжить
+            {t("booking.step3.continue")}
           </button>
         </div>
       </div>

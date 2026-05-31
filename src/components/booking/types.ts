@@ -72,17 +72,19 @@ export const initialBooking: BookingState = {
 
 export const BREAKFAST_PER_PERSON = 500;
 
-export const SPECIAL_REQUEST_OPTIONS = [
-  "Ранний заезд (с 10:00)",
-  "Поздний выезд (до 16:00)",
-  "Дополнительная кровать",
-  "Детская кроватка",
-  "Трансфер из аэропорта",
-  "Тихий номер",
-  "Номер на высоком этаже",
-  "Вид на залив",
-  "Дополнительные полотенца",
-  "Праздничное украшение номера",
+// `value` is the canonical Russian string stored in the booking (so the admin
+// always reads requests in Russian); `key` selects the localized display label.
+export const SPECIAL_REQUEST_OPTIONS: { value: string; key: string }[] = [
+  { value: "Ранний заезд (с 10:00)", key: "earlyCheckin" },
+  { value: "Поздний выезд (до 16:00)", key: "lateCheckout" },
+  { value: "Дополнительная кровать", key: "extraBed" },
+  { value: "Детская кроватка", key: "babyCot" },
+  { value: "Трансфер из аэропорта", key: "transfer" },
+  { value: "Тихий номер", key: "quiet" },
+  { value: "Номер на высоком этаже", key: "highFloor" },
+  { value: "Вид на залив", key: "bayView" },
+  { value: "Дополнительные полотенца", key: "towels" },
+  { value: "Праздничное украшение номера", key: "decoration" },
 ];
 
 export function nightsBetween(from?: Date, to?: Date): number {

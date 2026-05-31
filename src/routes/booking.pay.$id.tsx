@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
+import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { format, parseISO } from "date-fns";
-import { ru } from "date-fns/locale";
 import { CreditCard, Smartphone, Wallet, FileText, ShieldCheck } from "lucide-react";
 import { getPublicBooking, createAlfaPayment } from "@/lib/payment.functions";
+import { dfLocale } from "@/components/booking/Step1Dates";
 import { cn } from "@/lib/utils";
 
 const searchSchema = z.object({
@@ -29,32 +30,32 @@ type Method = "card" | "sbp" | "sberpay" | "invoice";
 
 const METHODS: Array<{
   id: Method;
-  title: string;
-  subtitle: string;
+  titleKey: string;
+  subKey: string;
   icon: React.ReactNode;
 }> = [
   {
     id: "card",
-    title: "Банковская карта",
-    subtitle: "Visa · Mastercard · МИР",
+    titleKey: "booking.pay.methodCard",
+    subKey: "booking.pay.methodCardSub",
     icon: <CreditCard className="h-5 w-5 text-[#C9A96E]" strokeWidth={1.5} />,
   },
   {
     id: "sbp",
-    title: "СБП",
-    subtitle: "Оплата по QR-коду из приложения банка",
+    titleKey: "booking.pay.methodSbp",
+    subKey: "booking.pay.methodSbpSub",
     icon: <Smartphone className="h-5 w-5 text-[#C9A96E]" strokeWidth={1.5} />,
   },
   {
     id: "sberpay",
-    title: "SberPay",
-    subtitle: "Оплата через приложение СберБанк Онлайн",
+    titleKey: "booking.pay.methodSber",
+    subKey: "booking.pay.methodSberSub",
     icon: <Wallet className="h-5 w-5 text-[#C9A96E]" strokeWidth={1.5} />,
   },
   {
     id: "invoice",
-    title: "Оплата по счёту",
-    subtitle: "Для юр. лиц и ИП. Реквизиты пришлём на email",
+    titleKey: "booking.pay.methodInvoice",
+    subKey: "booking.pay.methodInvoiceSub",
     icon: <FileText className="h-5 w-5 text-[#C9A96E]" strokeWidth={1.5} />,
   },
 ];
@@ -64,6 +65,8 @@ function fmtRub(n: number) {
 }
 
 function PayPage() {
+  const { t, i18n } = useTranslation();
+  const loc = dfLocale(i18n.language);
   const { id } = Route.useParams();
   const { e: emailFromUrl, failed } = Route.useSearch();
   const navigate = useNavigate();
@@ -86,7 +89,7 @@ function PayPage() {
       setBooking(data);
     } catch (err) {
       console.error(err);
-      setError("Бронь не найдена. Проверьте email.");
+      setError(t("booking.pay.errorNotFound"));
     } finally {
       setLoading(false);
     }
@@ -113,7 +116,7 @@ function PayPage() {
       }
     } catch (err) {
       console.error(err);
-      setError("Не удалось перейти к оплате. Попробуйте ещё раз.");
+      setError(t("booking.pay.errorPay"));
       setPaying(false);
     }
   }
@@ -125,21 +128,21 @@ function PayPage() {
           Полуостров
         </Link>
         <p className="mt-1 text-[10px] uppercase tracking-[3px] text-muted-foreground">
-          Оплата бронирования
+          {t("booking.pay.title")}
         </p>
 
         {failed && (
           <div className="mt-6 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
-            Оплата не прошла. Попробуйте ещё раз или выберите другой способ.
+            {t("booking.pay.failed")}
           </div>
         )}
 
         {/* Email gate */}
         {!booking && (
           <div className="mt-10 border border-border bg-background p-8">
-            <h1 className="font-serif text-3xl text-navy">Подтвердите email</h1>
+            <h1 className="font-serif text-3xl text-navy">{t("booking.pay.gateTitle")}</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Введите email, который вы указали при бронировании.
+              {t("booking.pay.gateText")}
             </p>
             <form
               onSubmit={(e) => {
@@ -161,7 +164,7 @@ function PayPage() {
                 disabled={loading}
                 className="bg-[#1a1a1a] px-8 py-3 text-[11px] uppercase tracking-[2px] text-white hover:bg-[#C9A96E] disabled:opacity-50"
               >
-                {loading ? "Загрузка…" : "Продолжить"}
+                {loading ? t("booking.pay.loading") : t("booking.pay.continueBtn")}
               </button>
             </form>
             {error && <p className="mt-4 text-sm text-rose-700">{error}</p>}
@@ -172,14 +175,16 @@ function PayPage() {
         {booking && booking.payment_status === "paid" && (
           <div className="mt-10 border border-emerald-200 bg-emerald-50 p-8">
             <p className="text-[10px] uppercase tracking-[3px] text-emerald-700">
-              Бронь №{booking.booking_number}
+              {t("booking.pay.bookingNo", { n: booking.booking_number })}
             </p>
             <h1 className="mt-2 font-serif text-3xl text-emerald-900">
-              Оплата уже получена
+              {t("booking.pay.paidTitle")}
             </h1>
             <p className="mt-3 text-sm text-emerald-900/80">
-              Спасибо! Подтверждение отправлено на {booking.email}. Ждём вас{" "}
-              {format(parseISO(booking.check_in), "d MMMM yyyy", { locale: ru })}.
+              {t("booking.pay.paidText", {
+                email: booking.email,
+                date: format(parseISO(booking.check_in), "d MMMM yyyy", { locale: loc }),
+              })}
             </p>
           </div>
         )}
@@ -189,16 +194,17 @@ function PayPage() {
           <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_320px]">
             <div className="border border-border bg-background p-8">
               <p className="text-[10px] uppercase tracking-[3px] text-[#C9A96E]">
-                Бронь №{booking.booking_number}
+                {t("booking.pay.bookingNo", { n: booking.booking_number })}
               </p>
               <h1 className="mt-2 font-serif text-3xl text-navy">
-                Выберите способ оплаты
+                {t("booking.pay.choose")}
               </h1>
               <p className="mt-3 text-sm text-muted-foreground">
-                Чтобы закрепить номер, нужно внести предоплату{" "}
-                <span className="text-navy">{fmtRub(booking.prepayment_amount)}</span>.
-                Остаток <span className="text-navy">{fmtRub(booking.remaining_amount)}</span>{" "}
-                оплачивается на ресепшн при заезде.
+                {t("booking.pay.prepayText1")}
+                <span className="text-navy">{fmtRub(booking.prepayment_amount)}</span>
+                {t("booking.pay.prepayText2")}
+                <span className="text-navy">{fmtRub(booking.remaining_amount)}</span>
+                {t("booking.pay.prepayText3")}
               </p>
 
               <div className="mt-8 grid gap-3">
@@ -218,8 +224,8 @@ function PayPage() {
                       {m.icon}
                     </span>
                     <div className="flex-1">
-                      <p className="text-sm text-navy">{m.title}</p>
-                      <p className="text-xs text-muted-foreground">{m.subtitle}</p>
+                      <p className="text-sm text-navy">{t(m.titleKey)}</p>
+                      <p className="text-xs text-muted-foreground">{t(m.subKey)}</p>
                     </div>
                     <span
                       className={cn(
@@ -240,15 +246,15 @@ function PayPage() {
                 className="mt-8 w-full bg-[#1a1a1a] py-4 text-[11px] uppercase tracking-[2px] text-white hover:bg-[#C9A96E] disabled:opacity-50"
               >
                 {paying
-                  ? "Перенаправляем…"
+                  ? t("booking.pay.paying")
                   : method === "invoice"
-                    ? "Запросить счёт"
-                    : `Оплатить ${fmtRub(booking.prepayment_amount)}`}
+                    ? t("booking.pay.requestInvoice")
+                    : t("booking.pay.payBtn", { amount: fmtRub(booking.prepayment_amount) })}
               </button>
 
               <p className="mt-4 flex items-center gap-2 text-[11px] text-muted-foreground">
                 <ShieldCheck className="h-3.5 w-3.5" strokeWidth={1.5} />
-                Платёж защищён эквайрингом Альфа-Банка. Данные карты не сохраняются.
+                {t("booking.pay.secure")}
               </p>
 
               {error && <p className="mt-4 text-sm text-rose-700">{error}</p>}
@@ -256,37 +262,37 @@ function PayPage() {
 
             {/* Summary */}
             <aside className="self-start border border-border bg-cream/50 p-6 lg:sticky lg:top-8">
-              <p className="font-serif text-xl text-navy">Ваша бронь</p>
+              <p className="font-serif text-xl text-navy">{t("booking.pay.summaryTitle")}</p>
               <dl className="mt-4 space-y-3 text-sm">
-                <Row label="Гость">
+                <Row label={t("booking.pay.guest")}>
                   {booking.last_name} {booking.first_name}
                 </Row>
-                <Row label="Номер">{booking.room_name}</Row>
-                <Row label="Заезд">
-                  {format(parseISO(booking.check_in), "d MMM yyyy", { locale: ru })}
+                <Row label={t("booking.pay.room")}>{booking.room_name}</Row>
+                <Row label={t("booking.pay.checkIn")}>
+                  {format(parseISO(booking.check_in), "d MMM yyyy", { locale: loc })}
                 </Row>
-                <Row label="Выезд">
-                  {format(parseISO(booking.check_out), "d MMM yyyy", { locale: ru })}
+                <Row label={t("booking.pay.checkOut")}>
+                  {format(parseISO(booking.check_out), "d MMM yyyy", { locale: loc })}
                 </Row>
-                <Row label="Ночей">{booking.nights}</Row>
-                <Row label="Гости">
-                  {booking.adults} взр.
-                  {booking.children > 0 && ` + ${booking.children} дет.`}
+                <Row label={t("booking.pay.nights")}>{booking.nights}</Row>
+                <Row label={t("booking.pay.guests")}>
+                  {t("booking.pay.adultsShort", { n: booking.adults })}
+                  {booking.children > 0 && t("booking.pay.childrenShort", { n: booking.children })}
                 </Row>
               </dl>
 
               <div className="mt-6 space-y-2 border-t border-border pt-4 text-sm">
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Итого за проживание</span>
+                  <span>{t("booking.pay.totalStay")}</span>
                   <span>{fmtRub(booking.total_price)}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
-                  <span>К доплате при заезде</span>
+                  <span>{t("booking.pay.remaining")}</span>
                   <span>{fmtRub(booking.remaining_amount)}</span>
                 </div>
                 <div className="mt-2 flex items-baseline justify-between border-t border-border pt-3 text-navy">
                   <span className="text-[11px] uppercase tracking-widest">
-                    К оплате сейчас
+                    {t("booking.pay.payNow")}
                   </span>
                   <span className="font-serif text-2xl">
                     {fmtRub(booking.prepayment_amount)}
