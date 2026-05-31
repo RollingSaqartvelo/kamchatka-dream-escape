@@ -739,6 +739,12 @@ const en: typeof ru = {
     ctaText:
       "Our concierge will plan your route — from a volcano climb to a dinner overlooking the bay.",
     ctaBtn: "Book a room",
+    backAll: "Back to all articles",
+    author: "Author",
+    source: "Source",
+    notFoundTitle: "Article not found",
+    loadError: "Could not load the article",
+    retry: "Retry",
   },
   booking: {
     progress: {
