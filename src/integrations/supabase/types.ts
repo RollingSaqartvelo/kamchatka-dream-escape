@@ -279,6 +279,68 @@ export type Database = {
         }
         Relationships: []
       }
+      room_blocks: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          date: string
+          id: string
+          reason: string | null
+          room_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          date: string
+          id?: string
+          reason?: string | null
+          room_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          id?: string
+          reason?: string | null
+          room_id?: string
+        }
+        Relationships: []
+      }
+      telegram_subscribers: {
+        Row: {
+          booking_id: string | null
+          chat_id: number
+          first_name: string | null
+          id: string
+          subscribed_at: string | null
+          username: string | null
+        }
+        Insert: {
+          booking_id?: string | null
+          chat_id: number
+          first_name?: string | null
+          id?: string
+          subscribed_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          booking_id?: string | null
+          chat_id?: number
+          first_name?: string | null
+          id?: string
+          subscribed_at?: string | null
+          username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telegram_subscribers_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
