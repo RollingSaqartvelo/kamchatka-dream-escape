@@ -232,6 +232,8 @@ function RoomBookingCard({
             <img
               src={cover}
               alt={room.name_ru}
+              loading="lazy"
+              decoding="async"
               className={cn("h-full w-full object-cover", soldOut && "grayscale")}
             />
           ) : (

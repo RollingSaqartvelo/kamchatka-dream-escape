@@ -50,6 +50,7 @@ function PhotoTile({
           src={src}
           alt={alt ?? label ?? ""}
           loading="lazy"
+          decoding="async"
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
       ) : (
@@ -284,6 +285,7 @@ export function RoomModal({
             <img
               src={photos[lightbox]}
               alt={`${room.name_ru} — ${lightbox + 1}`}
+              decoding="async"
               className="max-h-[88vh] max-w-[92vw] object-contain"
               onClick={(e) => e.stopPropagation()}
             />
