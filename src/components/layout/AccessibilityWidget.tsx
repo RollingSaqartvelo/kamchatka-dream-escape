@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Eye } from "lucide-react";
 
 type FontSize = "normal" | "large" | "xlarge";
 type Theme = "normal" | "contrast";
@@ -54,7 +55,7 @@ export function AccessibilityWidget() {
         className="fixed bottom-6 left-6 z-50 grid h-12 w-12 place-items-center bg-navy text-cream shadow-lg ring-2 ring-gold/30 transition-transform hover:scale-105"
         style={{ borderRadius: "999px" }}
       >
-        <span className="text-lg" aria-hidden>♿</span>
+        <Eye className="h-5 w-5" strokeWidth={1.75} aria-hidden />
       </button>
 
       {/* Панель */}
