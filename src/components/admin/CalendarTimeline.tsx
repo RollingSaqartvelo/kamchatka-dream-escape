@@ -43,7 +43,9 @@ const SOURCE_ICON: Record<string, string> = {
 const DAY_W = 44;
 const LANE_H = 26;
 const HOSTEL_ROW_H = 56;
-const LABEL_W = 184;
+const LABEL_W = 210;
+// Minimum row height so a 2-line room name + price never overlaps the next row.
+const MIN_ROW_H = 62;
 
 type Room = { id: string; name_ru: string; price_from_rub: number };
 
@@ -98,6 +100,22 @@ export function CalendarTimeline({
   const dayIndex = (d: Date) => differenceInCalendarDays(d, days[0]);
   const clampIdx = (i: number) => Math.max(0, Math.min(len, i));
 
+  // Stretch day columns to fill the container (so week view fills the same
+  // width as month, no empty white area); never narrower than DAY_W so month
+  // view still scrolls horizontally.
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [wrapW, setWrapW] = useState(0);
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const measure = () => setWrapW(el.clientWidth);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const dayW = wrapW > 0 ? Math.max(DAY_W, Math.floor((wrapW - LABEL_W) / Math.max(1, len))) : DAY_W;
+
   // Apply the live drag preview to the dragged booking so the bar re-lays-out
   // in its target room/date as you drag — no separate ghost geometry needed.
   const effBookings = useMemo(() => {
@@ -142,7 +160,7 @@ export function CalendarTimeline({
       if (!hostel)
         for (const p of placed) p.conflict = placed.some((q) => q !== p && q.s < p.e && p.s < q.e);
       const lanes = Math.max(1, laneEnds.length);
-      const height = hostel ? HOSTEL_ROW_H : lanes * LANE_H + 6;
+      const height = hostel ? HOSTEL_ROW_H : Math.max(MIN_ROW_H, lanes * LANE_H + 6);
       const r = { room, hostel, list, placed, height, top };
       top += height;
       return r;
@@ -156,7 +174,7 @@ export function CalendarTimeline({
   useEffect(() => {
     if (!drag) return;
     const onMoveEvt = (e: PointerEvent) => {
-      const dd = Math.round((e.clientX - drag.startX) / DAY_W);
+      const dd = Math.round((e.clientX - drag.startX) / dayW);
       let roomId = drag.booking.room_id;
       let ci = drag.startCi;
       let co = drag.startCo;
@@ -200,7 +218,7 @@ export function CalendarTimeline({
       document.body.style.userSelect = "";
       document.body.style.cursor = "";
     };
-  }, [drag, onMove, onOpen]);
+  }, [drag, onMove, onOpen, dayW]);
 
   function startDrag(e: React.PointerEvent, b: TBk, mode: DragMode) {
     if (e.button !== 0) return;
@@ -216,10 +234,10 @@ export function CalendarTimeline({
     });
   }
 
-  const fullWidth = LABEL_W + len * DAY_W;
+  const fullWidth = LABEL_W + len * dayW;
 
   return (
-    <div className="mt-6 overflow-x-auto border border-border bg-background text-xs">
+    <div ref={wrapRef} className="mt-6 overflow-x-auto border border-border bg-background text-xs">
       <div style={{ width: fullWidth }}>
         {/* Header */}
         <div className="sticky top-0 z-20 flex bg-cream/70">
@@ -236,7 +254,7 @@ export function CalendarTimeline({
                 "shrink-0 border-b border-border py-2 text-center text-[10px]",
                 isSameDay(d, today) ? "bg-[#C9A96E]/20 text-navy" : "text-muted-foreground",
               )}
-              style={{ width: DAY_W }}
+              style={{ width: dayW }}
             >
               <div>{format(d, "EEE", { locale: ru })}</div>
               <div className="font-mono text-sm text-navy">{format(d, "d")}</div>
@@ -258,7 +276,7 @@ export function CalendarTimeline({
               </div>
 
               {/* Track */}
-              <div className="relative" style={{ width: len * DAY_W }}>
+              <div className="relative" style={{ width: len * dayW }}>
                 {/* Background day cells (create / block / today) */}
                 <div className="absolute inset-0 flex">
                   {days.map((d) => {
@@ -270,7 +288,7 @@ export function CalendarTimeline({
                           "h-full shrink-0 border-r border-border/70",
                           isSameDay(d, today) ? "bg-[#C9A96E]/10" : "hover:bg-cream/40",
                         )}
-                        style={{ width: DAY_W }}
+                        style={{ width: dayW }}
                         onClick={() => !r.hostel && onCreate(r.room.id, d)}
                         onContextMenu={(e) => {
                           if (r.hostel) return;
@@ -314,7 +332,7 @@ export function CalendarTimeline({
                       <div
                         key={d.toISOString()}
                         className="absolute top-0 flex h-full flex-col items-center justify-center overflow-hidden"
-                        style={{ left: clampIdx(dayIndex(d)) * DAY_W, width: DAY_W }}
+                        style={{ left: clampIdx(dayIndex(d)) * dayW, width: dayW }}
                       >
                         <div className={cn("absolute bottom-0 left-0 w-full", hostelBg(ratio))} style={{ height: `${pct}%` }} />
                         <span className={cn("relative z-10 text-[11px] font-bold", hostelText(ratio))}>
@@ -327,9 +345,9 @@ export function CalendarTimeline({
                 {/* Regular room: booking bars */}
                 {!r.hostel &&
                   r.placed.map(({ b, lane, conflict }) => {
-                    const left = clampIdx(dayIndex(parseISO(b.check_in))) * DAY_W;
+                    const left = clampIdx(dayIndex(parseISO(b.check_in))) * dayW;
                     const span = clampIdx(dayIndex(parseISO(b.check_out))) - clampIdx(dayIndex(parseISO(b.check_in)));
-                    const width = Math.max(0.5, span) * DAY_W - 3;
+                    const width = Math.max(0.5, span) * dayW - 3;
                     const dragging = drag?.booking.id === b.id && drag.moved;
                     return (
                       <div
@@ -400,7 +418,7 @@ export function CalendarTimeline({
                 <div
                   key={d.toISOString()}
                   className={cn("shrink-0 border-r border-border py-2 text-center text-[10px] font-bold", bg, txt)}
-                  style={{ width: DAY_W }}
+                  style={{ width: dayW }}
                   title={`${occupied} из ${rooms.length} номеров занято`}
                 >
                   {occupied > 0 ? `${pct}%` : ""}
