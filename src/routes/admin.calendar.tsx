@@ -3,10 +3,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   addDays,
   addMonths,
+  differenceInCalendarDays,
   eachDayOfInterval,
   endOfMonth,
   format,
-  isSameDay,
   parseISO,
   startOfMonth,
   subMonths,
@@ -17,6 +17,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { ROOMS } from "@/data/rooms";
 import { OfflineBookingModal } from "@/components/admin/OfflineBookingModal";
+import { CalendarTimeline } from "@/components/admin/CalendarTimeline";
 import { syncTravellineReservations } from "@/lib/travelline-sync.functions";
 import { sendTestEmail } from "@/lib/email.functions";
 import { sendTelegramTest } from "@/lib/telegram.functions";
@@ -53,14 +54,6 @@ const STATUS_BG: Record<string, string> = {
   paid:      "bg-emerald-500",
   cancelled: "bg-rose-400 opacity-50",
   completed: "bg-zinc-400",
-};
-
-const STATUS_TEXT: Record<string, string> = {
-  pending:   "text-amber-950",
-  confirmed: "text-white",
-  paid:      "text-white",
-  cancelled: "text-white line-through",
-  completed: "text-white",
 };
 
 const STATUS_COLOR: Record<string, string> = {
@@ -292,6 +285,34 @@ function AdminCalendarPage() {
     return idx;
   }, [bookings, statusFilter]);
 
+  // Status-filtered list for the timeline (bars compute their own positions).
+  const visibleBookings = useMemo(
+    () => bookings.filter((b) => statusFilter.has(b.payment_status)),
+    [bookings, statusFilter],
+  );
+
+  // Persist a drag-move / resize: new room and/or dates, recompute nights.
+  async function moveBooking(b: Bk, roomId: string, checkIn: string, checkOut: string) {
+    if (b.room_id === roomId && b.check_in === checkIn && b.check_out === checkOut) return;
+    const roomName = ROOMS.find((r) => r.id === roomId)?.name_ru ?? b.room_name;
+    const nights = Math.max(1, differenceInCalendarDays(parseISO(checkOut), parseISO(checkIn)));
+    setBookings((prev) =>
+      prev.map((x) =>
+        x.id === b.id ? { ...x, room_id: roomId, room_name: roomName, check_in: checkIn, check_out: checkOut } : x,
+      ),
+    );
+    const { error } = await supabase
+      .from("bookings")
+      .update({ room_id: roomId, room_name: roomName, check_in: checkIn, check_out: checkOut, nights })
+      .eq("id", b.id);
+    if (error) {
+      toast.error("Не удалось переместить бронь");
+      void load();
+    } else {
+      toast.success("Бронь обновлена");
+    }
+  }
+
   const EMPTY = useMemo<Bk[]>(() => [], []);
   const bookingsForCell = useCallback(
     (roomId: string, day: Date) =>
@@ -479,177 +500,37 @@ function AdminCalendarPage() {
           <span className="ml-2 self-center text-[10px] text-muted-foreground">← кликни чтобы скрыть</span>
         </div>
 
-        {/* Grid */}
-        <div className="mt-6 overflow-x-auto border border-border bg-background">
-          <table className="min-w-full border-collapse text-xs">
-            <thead className="sticky top-0 bg-cream/60">
-              <tr>
-                <th className="sticky left-0 z-10 border-b border-r border-border bg-cream/80 px-3 py-2 text-left text-[10px] uppercase tracking-widest text-navy">
-                  Номер
-                </th>
-                {monthDays.map((d) => (
-                  <th
-                    key={d.toISOString()}
-                    className={`border-b border-border px-1 py-2 text-center text-[10px] ${
-                      isSameDay(d, new Date()) ? "bg-[#C9A96E]/20 text-navy" : "text-muted-foreground"
-                    }`}
-                  >
-                    <div>{format(d, "EEE", { locale: ru })}</div>
-                    <div className="font-mono text-sm text-navy">{format(d, "d")}</div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {loading && (
-                <tr>
-                  <td colSpan={monthDays.length + 1} className="px-4 py-12 text-center text-muted-foreground">
-                    Загрузка…
-                  </td>
-                </tr>
-              )}
-              {!loading &&
-                ROOMS.map((room) => (
-                  <tr key={room.id} className="border-b border-border last:border-b-0">
-                    <td className="sticky left-0 z-10 border-r border-border bg-background px-3 py-2 align-top text-navy">
-                      <div className="line-clamp-2 max-w-[180px] text-xs">{room.name_ru}</div>
-                      <div className="mt-1 text-[10px] text-muted-foreground">
-                        от {room.price_from_rub} ₽
-                      </div>
-                    </td>
-                    {monthDays.map((d) => {
-                      const cellBookings = bookingsForCell(room.id, d);
-                      return (
-                        <td
-                          key={d.toISOString()}
-                          className={`relative min-w-[40px] cursor-pointer border-r border-border p-0 ${
-                            HOSTEL_CAPACITY[room.id]
-                              ? "h-14"
-                              : "h-14"
-                          } ${
-                            !HOSTEL_CAPACITY[room.id] && cellBookings[0]
-                              ? (STATUS_BG[cellBookings[0].payment_status] ?? STATUS_BG.pending)
-                              : !HOSTEL_CAPACITY[room.id] && isSameDay(d, new Date())
-                              ? "bg-[#C9A96E]/10 hover:bg-[#C9A96E]/20"
-                              : !HOSTEL_CAPACITY[room.id]
-                              ? "hover:bg-cream/40"
-                              : ""
-                          } ${
-                            !HOSTEL_CAPACITY[room.id] && cellBookings.length > 1
-                              ? "z-10 ring-2 ring-inset ring-red-600"
-                              : ""
-                          }`}
-                          onClick={() => {
-                            if (cellBookings[0]) setSelected(cellBookings[0]);
-                            else { setModalRoom(room.id); setModalDate(d); }
-                          }}
-                          onContextMenu={(e) => {
-                            e.preventDefault();
-                            if (cellBookings[0]) {
-                              setCtxMenu({ booking: cellBookings[0], x: e.clientX, y: e.clientY });
-                            } else {
-                              toggleBlock(room.id, format(d, "yyyy-MM-dd"));
-                            }
-                          }}
-                        >
-                          {/* Блокировка техобслуживания */}
-                          {isBlocked(room.id, d) && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-zinc-200"
-                              style={{ backgroundImage: "repeating-linear-gradient(45deg,transparent,transparent 4px,rgba(0,0,0,0.08) 4px,rgba(0,0,0,0.08) 8px)" }}
-                              title="Заблокировано — техобслуживание">
-                              <span className="text-[11px]">🚫</span>
-                            </div>
-                          )}
-
-                          {/* Обычный номер — полная заливка */}
-                          {!HOSTEL_CAPACITY[room.id] && cellBookings[0] && !isBlocked(room.id, d) && (
-                            <div
-                              className={`flex h-full w-full flex-col items-center justify-center px-1 ${STATUS_TEXT[cellBookings[0].payment_status] ?? "text-white"}`}
-                              onMouseEnter={(e) => setTooltip({ booking: cellBookings[0] as any, x: e.clientX, y: e.clientY })}
-                              onMouseLeave={() => setTooltip(null)}
-                            >
-                              {cellBookings[0].last_name && cellBookings[0].last_name !== "—" && (
-                                <span className="w-full truncate text-center text-[10px] font-bold leading-tight">
-                                  {cellBookings[0].last_name}
-                                </span>
-                              )}
-                              <span className="text-[9px] opacity-70">
-                                {SOURCE_ICON[(cellBookings[0] as any).source ?? "manual"] ?? "✏️"}
-                              </span>
-                              {cellBookings.length > 1 && (
-                                <span
-                                  className="absolute right-0 top-0 bg-red-600 px-1 text-[9px] font-bold leading-tight text-white"
-                                  title={`Двойная бронь: ${cellBookings.length} брони на эту дату`}
-                                >
-                                  ⚠{cellBookings.length}
-                                </span>
-                              )}
-                            </div>
-                          )}
-
-                          {/* Хостел — счётчик мест */}
-                          {HOSTEL_CAPACITY[room.id] && (() => {
-                            const cap = HOSTEL_CAPACITY[room.id];
-                            const occupied = cellBookings.reduce((s, b) => s + Math.max(1, b.adults ?? 1), 0);
-                            const ratio = Math.min(occupied / cap, 1);
-                            const bgCls = hostelOccupancyBg(ratio);
-                            const txtCls = hostelOccupancyText(ratio);
-                            const pct = Math.round(ratio * 100);
-                            return (
-                              <div
-                                className={`relative flex h-full w-full flex-col items-center justify-center overflow-hidden ${isSameDay(d, new Date()) ? "ring-1 ring-inset ring-[#C9A96E]" : ""}`}
-                                title={cellBookings.map(b => `${b.last_name} ${b.first_name}`).join(", ")}
-                              >
-                                {/* заливка по высоте */}
-                                {ratio > 0 && (
-                                  <div
-                                    className={`absolute bottom-0 left-0 w-full transition-all ${bgCls}`}
-                                    style={{ height: `${pct}%` }}
-                                  />
-                                )}
-                                {/* текст поверх */}
-                                <span className={`relative z-10 text-[11px] font-bold ${occupied > 0 ? txtCls : "text-zinc-300"}`}>
-                                  {occupied > 0 ? `${occupied}/${cap}` : ""}
-                                </span>
-                                {occupied > 0 && (
-                                  <span className={`relative z-10 text-[9px] ${txtCls} opacity-80`}>
-                                    мест
-                                  </span>
-                                )}
-                              </div>
-                            );
-                          })()}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-            </tbody>
-            {/* Строка заполняемости по дням */}
-            <tfoot>
-              <tr className="border-t-2 border-border bg-cream/40">
-                <td className="sticky left-0 z-10 border-r border-border bg-cream/80 px-3 py-2 text-[10px] uppercase tracking-widest text-navy">
-                  Занято
-                </td>
-                {monthDays.map((d) => {
-                  const occupied = ROOMS.filter((r) => bookingsForCell(r.id, d).length > 0).length;
-                  const pct = Math.round((occupied / ROOMS.length) * 100);
-                  const bg = pct === 0 ? "" : pct < 40 ? "bg-sky-200" : pct < 70 ? "bg-blue-400" : pct < 90 ? "bg-orange-400" : "bg-red-500";
-                  const txt = pct > 50 ? "text-white" : "text-navy";
-                  return (
-                    <td
-                      key={d.toISOString()}
-                      className={`border-r border-border px-1 py-2 text-center text-[10px] font-bold ${bg} ${txt}`}
-                      title={`${occupied} из ${ROOMS.length} номеров занято`}
-                    >
-                      {occupied > 0 ? `${pct}%` : ""}
-                    </td>
-                  );
-                })}
-              </tr>
-            </tfoot>
-          </table>
-        </div>
+        {/* Grid — таймлайн с перетаскиванием и ресайзом */}
+        {loading ? (
+          <div className="mt-6 border border-border bg-background px-4 py-12 text-center text-muted-foreground">
+            Загрузка…
+          </div>
+        ) : (
+          <>
+            <p className="mt-4 text-[11px] text-muted-foreground">
+              Перетащите бронь, чтобы сменить номер или даты · потяните за край — изменить срок ·
+              клик по пустой ячейке — новая бронь · правый клик — статус / блокировка
+            </p>
+            <CalendarTimeline
+              rooms={ROOMS}
+              days={monthDays}
+              bookings={visibleBookings}
+              hostelCapacity={HOSTEL_CAPACITY}
+              hostelBg={hostelOccupancyBg}
+              hostelText={hostelOccupancyText}
+              isBlocked={isBlocked}
+              onToggleBlock={toggleBlock}
+              onCreate={(roomId, day) => {
+                setModalRoom(roomId);
+                setModalDate(day);
+              }}
+              onOpen={(b) => setSelected(b)}
+              onContext={(b, x, y) => setCtxMenu({ booking: b, x, y })}
+              onTooltip={(t) => setTooltip(t as TooltipData | null)}
+              onMove={moveBooking}
+            />
+          </>
+        )}
       </div>
 
       <OfflineBookingModal
