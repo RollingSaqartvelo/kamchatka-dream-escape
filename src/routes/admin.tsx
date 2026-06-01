@@ -19,6 +19,7 @@ export const Route = createFileRoute("/admin")({
 });
 
 const NAV = [
+  { to: "/admin", label: "Дашборд", icon: "📊" },
   { to: "/admin/bookings", label: "Бронирования", icon: "📋" },
   { to: "/admin/calendar", label: "Календарь", icon: "📅" },
   { to: "/admin/inbox", label: "Инбокс", icon: "💬" },
@@ -62,13 +63,6 @@ function AdminLayout() {
     if (!user) navigate({ to: "/login" });
   }, [loading, user, navigate]);
 
-  // Redirect bare /admin to /admin/bookings
-  useEffect(() => {
-    if (pathname === "/admin" || pathname === "/admin/") {
-      navigate({ to: "/admin/bookings", replace: true });
-    }
-  }, [pathname, navigate]);
-
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
@@ -110,7 +104,10 @@ function AdminLayout() {
 
         <nav className="flex-1 px-3 py-4">
           {NAV.map((n) => {
-            const active = pathname.startsWith(n.to);
+            const active =
+              n.to === "/admin"
+                ? pathname === "/admin" || pathname === "/admin/"
+                : pathname.startsWith(n.to);
             return (
               <Link
                 key={n.to}
@@ -145,7 +142,11 @@ function AdminLayout() {
           Полуостров
         </Link>
         <select
-          value={NAV.find((n) => pathname.startsWith(n.to))?.to ?? "/admin/bookings"}
+          value={
+            NAV.find((n) =>
+              n.to === "/admin" ? pathname === "/admin" || pathname === "/admin/" : pathname.startsWith(n.to),
+            )?.to ?? "/admin"
+          }
           onChange={(e) => navigate({ to: e.target.value as any })}
           className="border border-border bg-background px-2 py-1 text-xs"
         >
