@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { format, parseISO } from "date-fns";
 import { ru } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
+import { sourceLabel } from "@/lib/channels";
 
 export const Route = createFileRoute("/admin/guests")({ component: GuestsPage });
 
@@ -38,7 +39,6 @@ export type Guest = {
 };
 
 const fmtRub = (n: number) => "₽ " + new Intl.NumberFormat("ru-RU").format(Math.round(n));
-const SRC: Record<string, string> = { website: "Сайт", site: "Сайт", travelline: "TravelLine", manual: "Вручную", offline: "Вручную" };
 const PLACEHOLDER_EMAILS = new Set(["tl@noemail.invalid", ""]);
 
 const normEmail = (e: string) => (e ?? "").trim().toLowerCase();
@@ -75,7 +75,7 @@ export function aggregateGuests(rows: GBk[]): Guest[] {
     const latest = sorted[0];
     const ltv = active.reduce((s, b) => s + (b.total_price || 0), 0);
     const nights = active.reduce((s, b) => s + (b.nights || 0), 0);
-    const sources = [...new Set(sorted.map((b) => SRC[b.source ?? "manual"] ?? b.source ?? "—"))];
+    const sources = [...new Set(sorted.map((b) => sourceLabel(b.source ?? "manual")))];
     const tags: string[] = [];
     if (active.length >= 2) tags.push("Постоянный");
     if (ltv >= 100000 || active.length >= 3) tags.push("VIP");
@@ -262,7 +262,7 @@ export function GuestsView({ guests, loading }: { guests: Guest[]; loading: bool
                   </div>
                   <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
                     <span className="truncate">{b.room_name}</span>
-                    <span>{SRC[b.source ?? "manual"] ?? b.source} · {b.payment_status}</span>
+                    <span>{sourceLabel(b.source ?? "manual")} · {b.payment_status}</span>
                   </div>
                 </div>
               ))}

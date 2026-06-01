@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ROOMS } from "@/data/rooms";
 import { OfflineBookingModal } from "@/components/admin/OfflineBookingModal";
 import { CalendarTimeline } from "@/components/admin/CalendarTimeline";
+import { sourceIcon, sourceLabel } from "@/lib/channels";
 import { syncTravellineReservations } from "@/lib/travelline-sync.functions";
 import { sendTestEmail } from "@/lib/email.functions";
 import { sendTelegramTest } from "@/lib/telegram.functions";
@@ -630,7 +631,7 @@ function AdminCalendarPage() {
             <p>📅 {format(parseISO(tooltip.booking.check_in), "d MMM", { locale: ru })} — {format(parseISO(tooltip.booking.check_out), "d MMM", { locale: ru })}</p>
             {(tooltip.booking as any).phone && <p>📞 {(tooltip.booking as any).phone}</p>}
             <p>💰 ₽ {new Intl.NumberFormat("ru-RU").format(tooltip.booking.total_price)}</p>
-            <p>{SOURCE_ICON[(tooltip.booking as any).source ?? "manual"]} {(tooltip.booking as any).source === "travelline" ? "TravelLine" : (tooltip.booking as any).source === "website" ? "Сайт" : "Вручную"}</p>
+            <p>{sourceIcon((tooltip.booking as any).source ?? "manual")} {sourceLabel((tooltip.booking as any).source ?? "manual")}</p>
             <p className="font-mono text-[10px] text-zinc-400">{tooltip.booking.booking_number}</p>
           </div>
         </div>

@@ -85,7 +85,7 @@ export function BookingsCalendar() {
       const res = await syncFn({ data: { from, to } });
       if (res.ok) {
         toast.success(
-          `Travelline синхронизирован: ${res.synced} брон.${res.note ? ` (${res.note})` : ""}`,
+          `Travelline синхронизирован: ${res.synced} брон.${res.hasMore ? " (есть ещё — повторите)" : ""}`,
         );
       } else {
         toast.error(`Travelline: ${res.error?.slice(0, 200) ?? "ошибка"}`);

@@ -25,6 +25,7 @@ import {
 } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { ROOMS } from "@/data/rooms";
+import { sourceLabel, sourceColor } from "@/lib/channels";
 
 export const Route = createFileRoute("/admin/")({ component: Dashboard });
 
@@ -57,14 +58,6 @@ export type Metrics = {
 
 const ROOM_COUNT = ROOMS.length;
 const fmtRub = (n: number) => "₽ " + new Intl.NumberFormat("ru-RU").format(Math.round(n));
-const SOURCE_LABEL: Record<string, string> = {
-  website: "Сайт",
-  travelline: "TravelLine",
-  manual: "Вручную",
-  offline: "Вручную",
-  site: "Сайт",
-};
-const PIE_COLORS = ["#1a1a2e", "#C9A96E", "#3b82f6", "#10b981", "#f59e0b"];
 
 export function computeMetrics(bookings: Bk[], monthStart: Date, monthEnd: Date, days: Date[]): Metrics {
   const inMonth = (d: Date) => d >= monthStart && d <= monthEnd;
@@ -137,7 +130,7 @@ export function computeMetrics(bookings: Bk[], monthStart: Date, monthEnd: Date,
       pct: Math.round(((dayOcc.get(dayKey(d)) ?? 0) / ROOM_COUNT) * 100),
     })),
     channels: [...channel.entries()]
-      .map(([src, v]) => ({ src, label: SOURCE_LABEL[src] ?? src, ...v }))
+      .map(([src, v]) => ({ src, label: sourceLabel(src), ...v }))
       .sort((a, b) => b.count - a.count),
   };
 }
@@ -264,8 +257,8 @@ export function DashboardView({
                     <ResponsiveContainer width="100%" height={180}>
                       <PieChart>
                         <Pie data={m.channels} dataKey="count" nameKey="label" innerRadius={45} outerRadius={70} paddingAngle={2}>
-                          {m.channels.map((_, i) => (
-                            <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                          {m.channels.map((c, i) => (
+                            <Cell key={c.src} fill={sourceColor(c.src, i)} />
                           ))}
                         </Pie>
                         <RTooltip formatter={(v: number, _n, p: any) => [`${v} (${fmtRub(p.payload.revenue)})`, p.payload.label]} />
@@ -275,7 +268,7 @@ export function DashboardView({
                       {m.channels.map((c, i) => (
                         <div key={c.src} className="flex items-center justify-between text-xs">
                           <span className="flex items-center gap-2 text-navy">
-                            <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                            <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: sourceColor(c.src, i) }} />
                             {c.label}
                           </span>
                           <span className="text-muted-foreground">{c.count} · {fmtRub(c.revenue)}</span>

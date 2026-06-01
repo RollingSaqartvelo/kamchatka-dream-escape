@@ -20,6 +20,7 @@ export const Route = createFileRoute("/admin")({
 
 const NAV = [
   { to: "/admin", label: "Дашборд", icon: "📊" },
+  { to: "/admin/analytics", label: "Аналитика", icon: "📈" },
   { to: "/admin/bookings", label: "Бронирования", icon: "📋" },
   { to: "/admin/guests", label: "Гости", icon: "👤" },
   { to: "/admin/calendar", label: "Календарь", icon: "📅" },
