@@ -4,7 +4,9 @@ import { createClient } from "@supabase/supabase-js";
 import { ROOM_ID_TO_TL } from "@/lib/travelline.functions";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-// Обратный маппинг TL roomTypeId → наш room_id
+const TL_API = "https://partner.tlintegration.com";
+
+// TL roomTypeId → наш room_id
 const TL_TO_ROOM_ID: Record<number, string> = Object.entries(ROOM_ID_TO_TL).reduce(
   (acc, [ourId, tlId]) => {
     acc[tlId] = ourId;
@@ -20,17 +22,14 @@ async function getToken(): Promise<string> {
   const now = Date.now();
   if (cachedToken && cachedToken.expiresAt > now + 30_000) return cachedToken.token;
 
-  const baseUrl = process.env.TRAVELLINE_API_BASE_URL!;
   const clientId = process.env.TRAVELLINE_CLIENT_ID!;
   const clientSecret = process.env.TRAVELLINE_CLIENT_SECRET!;
-
   const body = new URLSearchParams({
     grant_type: "client_credentials",
     client_id: clientId,
     client_secret: clientSecret,
   });
-
-  const res = await fetch(`https://partner.tlintegration.com/auth/token`, {
+  const res = await fetch(`${TL_API}/auth/token`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,
@@ -40,220 +39,157 @@ async function getToken(): Promise<string> {
     throw new Error(`Travelline auth ${res.status}: ${txt.slice(0, 200)}`);
   }
   const json = (await res.json()) as { access_token: string; expires_in: number };
-  cachedToken = {
-    token: json.access_token,
-    expiresAt: now + (json.expires_in ?? 900) * 1000,
-  };
+  cachedToken = { token: json.access_token, expiresAt: now + (json.expires_in ?? 900) * 1000 };
   return cachedToken.token;
 }
 
-// Получаем список объектов через Reference API чтобы найти правильный propertyId
-async function discoverPropertyId(token: string): Promise<{ id: any; debug: string }> {
-  const TL_API = "https://partner.tlintegration.com";
-  const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
-
-  const urls = [
-    `${TL_API}/api/reference/v1/properties`,
-    `${TL_API}/api/reference/v1/hotels`,
-    `${TL_API}/api/content/v1/properties`,
-    `${TL_API}/api/content/v1/hotels`,
-  ];
-
-  const results: string[] = [];
-  for (const url of urls) {
-    try {
-      const res = await fetch(url, { headers });
-      const txt = await res.text().catch(() => "");
-      results.push(`${url} → ${res.status}: ${txt.slice(0, 200)}`);
-      if (res.ok) {
-        const json = JSON.parse(txt);
-        const arr = Array.isArray(json) ? json : json?.items ?? json?.properties ?? json?.hotels ?? [];
-        if (arr.length > 0) {
-          const firstId = arr[0]?.id ?? arr[0]?.propertyId ?? arr[0]?.hotelId;
-          return { id: firstId, debug: `Found via ${url}: ${JSON.stringify(arr[0]).slice(0, 200)}` };
-        }
-      }
-    } catch (e) {
-      results.push(`${url} → exception: ${(e as Error).message}`);
-    }
-  }
-  return { id: null, debug: results.join(" | ") };
+function mapStatus(tl: string): string {
+  if (tl === "Cancelled") return "cancelled";
+  if (tl === "Unconfirmed") return "pending";
+  return "confirmed"; // Active
 }
 
-// Загружаем брони через Reservation API
-async function fetchReservations(
-  token: string,
-  baseUrl: string,
-  propertyId: string,
-  from: string,
-  to: string,
-): Promise<{ data: any; endpoint: string } | { error: string }> {
-  const TL_API = "https://partner.tlintegration.com";
-  const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
+// Map a Read-Reservation booking detail → our `bookings` row.
+function mapBooking(detail: any) {
+  const bk = detail?.booking;
+  if (!bk) return null;
+  const rs = bk.roomStays?.[0] ?? {};
+  const checkIn = String(rs.stayDates?.arrivalDateTime ?? "").slice(0, 10);
+  const checkOut = String(rs.stayDates?.departureDateTime ?? "").slice(0, 10);
+  if (!checkIn || !checkOut) return null;
 
-  // Сначала пробуем найти правильный propertyId через Reference API
-  const discovered = await discoverPropertyId(token);
-  const effectiveId = discovered.id ?? propertyId;
+  const nights = Math.max(1, Math.round((+new Date(checkOut) - +new Date(checkIn)) / 86400000));
+  const tlRoomTypeId = Number(rs.roomType?.id);
+  const roomId = TL_TO_ROOM_ID[tlRoomTypeId] ?? "unknown";
+  const roomRevenue = (bk.roomStays ?? []).reduce(
+    (s: number, r: any) => s + (r.total?.priceAfterTax ?? 0),
+    0,
+  );
+  // Guest PII is masked by the API ("*****"); store a neutral label.
+  const masked = (v: any) => !v || String(v).includes("*");
+  const firstName = masked(bk.customer?.firstName) ? "" : String(bk.customer.firstName);
+  const lastName = masked(bk.customer?.lastName) ? "Бронь TL" : String(bk.customer.lastName);
 
-  const attempts: Array<{ url: string; method: "GET" | "POST"; body?: string }> = [
-    // v1 reservations (не bookings!)
-    { url: `${TL_API}/api/reservation/v1/properties/${effectiveId}/reservations?from=${from}&to=${to}`, method: "GET" },
-    { url: `${TL_API}/api/reservation/v1/properties/${effectiveId}/reservations`, method: "GET" },
-    // С датами в query
-    { url: `${TL_API}/api/reservation/v1/properties/${effectiveId}/reservations?arrivalFrom=${from}&arrivalTo=${to}`, method: "GET" },
-    { url: `${TL_API}/api/reservation/v1/properties/${effectiveId}/reservations?dateFrom=${from}&dateTo=${to}`, method: "GET" },
-    // v1 bookings (пробовали, но вдруг с другим propertyId работает)
-    { url: `${TL_API}/api/reservation/v1/properties/${effectiveId}/bookings?from=${from}&to=${to}`, method: "GET" },
-    // v2
-    { url: `${TL_API}/api/reservation/v2/properties/${effectiveId}/reservations?from=${from}&to=${to}`, method: "GET" },
-    { url: `${TL_API}/api/reservation/v2/properties/${effectiveId}/bookings?from=${from}&to=${to}`, method: "GET" },
-  ];
-
-  const errors: string[] = [`Discovery: ${discovered.debug}`];
-  for (const a of attempts) {
-    try {
-      const res = await fetch(a.url, { method: a.method, headers, body: a.body });
-      if (res.ok) {
-        const data = await res.json();
-        return { data, endpoint: `${a.method} ${a.url}` };
-      }
-      const txt = await res.text().catch(() => "");
-      errors.push(`${a.method} ${a.url} → ${res.status} ${txt.slice(0, 120)}`);
-    } catch (e) {
-      errors.push(`${a.method} ${a.url} → exception ${(e as Error).message}`);
-    }
-  }
-  return { error: errors.join(" || ") };
-}
-
-function extractReservationsArray(payload: any): any[] {
-  if (Array.isArray(payload)) return payload;
-  for (const key of ["reservations", "items", "data", "list", "results"]) {
-    if (Array.isArray(payload?.[key])) return payload[key];
-  }
-  return [];
-}
-
-function mapTlStatus(tl: any): string {
-  const s = String(tl?.status ?? tl?.state ?? "").toLowerCase();
-  if (s.includes("cancel")) return "cancelled";
-  if (s.includes("checkout") || s.includes("completed")) return "completed";
-  if (s.includes("checkin") || s.includes("inhouse")) return "confirmed";
-  if (s.includes("paid")) return "paid";
-  if (s.includes("confirm")) return "confirmed";
-  return "confirmed";
-}
-
-function getField(o: any, ...keys: string[]): any {
-  for (const k of keys) {
-    const v = k.split(".").reduce((acc, kk) => acc?.[kk], o);
-    if (v != null && v !== "") return v;
-  }
-  return null;
+  return {
+    tl_reservation_id: String(bk.number),
+    source: "travelline",
+    first_name: firstName || "—",
+    last_name: lastName,
+    phone: "",
+    email: "tl@noemail.invalid",
+    room_id: roomId,
+    room_name: String(rs.roomType?.name ?? roomId),
+    check_in: checkIn,
+    check_out: checkOut,
+    nights,
+    adults: Number(rs.guestCount?.adultCount ?? 2),
+    children: (rs.guestCount?.childAges ?? []).length,
+    meal_plan: "room_only",
+    room_price_total: Math.round(roomRevenue),
+    total_price: Math.round(bk.total?.priceAfterTax ?? roomRevenue),
+    payment_status: mapStatus(String(bk.status)),
+    id_consent: true,
+    terms_consent: true,
+    special_requests: [],
+  };
 }
 
 export const syncTravellineReservations = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
     z.object({
+      // bookings modified since this date are pulled (incremental sync)
       from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-      to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     }),
   )
   .handler(async ({ data }) => {
-    const baseUrl = process.env.TRAVELLINE_API_BASE_URL;
     const propertyId = process.env.TRAVELLINE_PROPERTY_ID;
-    if (!baseUrl || !propertyId) {
-      return { ok: false, error: "Travelline env vars missing" };
+    if (!propertyId) return { ok: false, error: "TRAVELLINE_PROPERTY_ID missing", synced: 0 };
+
+    let token: string;
+    try {
+      token = await getToken();
+    } catch (e) {
+      return { ok: false, error: (e as Error).message, synced: 0 };
+    }
+    const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
+    const base = `${TL_API}/api/read-reservation/v1/properties/${propertyId}/bookings`;
+    const lastModification = `${data.from}T00:00:00Z`;
+
+    // Cap per run to stay within Worker subrequest/time limits; the 15-min cron
+    // keeps catching up incrementally.
+    const MAX_DETAILS = 80;
+    const BATCH = 8;
+
+    // 1) collect booking numbers from paginated summaries (modified since `from`)
+    const numbers: string[] = [];
+    let continueToken: string | null = null;
+    let guard = 0;
+    try {
+      do {
+        const url = new URL(base);
+        url.searchParams.set("lastModification", lastModification);
+        url.searchParams.set("count", "1000");
+        if (continueToken) url.searchParams.set("continueToken", continueToken);
+        const res = await fetch(url, { headers });
+        if (!res.ok) {
+          const txt = await res.text().catch(() => "");
+          return { ok: false, error: `summaries ${res.status}: ${txt.slice(0, 160)}`, synced: 0 };
+        }
+        const j: any = await res.json();
+        for (const s of j.bookingSummaries ?? []) {
+          if (numbers.length >= MAX_DETAILS) break;
+          numbers.push(String(s.number));
+        }
+        continueToken = j.hasMoreData ? j.continueToken : null;
+        guard++;
+      } while (continueToken && numbers.length < MAX_DETAILS && guard < 5);
+    } catch (e) {
+      return { ok: false, error: `summaries exception: ${(e as Error).message}`, synced: 0 };
     }
 
-    const token = await getToken();
-    const result = await fetchReservations(token, baseUrl, propertyId, data.from, data.to);
-    if ("error" in result) {
-      return { ok: false, error: result.error, synced: 0 };
+    if (numbers.length === 0) {
+      return { ok: true, synced: 0, note: "Нет броней, изменённых с указанной даты" };
     }
 
-    const list = extractReservationsArray(result.data);
-    if (list.length === 0) {
-      return {
-        ok: true,
-        synced: 0,
-        endpoint: result.endpoint,
-        note: "Travelline вернул пустой список броней за период",
-        sample: result.data,
-      };
+    // 2) fetch details in parallel batches and map
+    const rows: any[] = [];
+    for (let i = 0; i < numbers.length; i += BATCH) {
+      const slice = numbers.slice(i, i + BATCH);
+      const details = await Promise.all(
+        slice.map(async (num) => {
+          try {
+            const r = await fetch(`${base}/${num}`, { headers });
+            if (!r.ok) return null;
+            return await r.json();
+          } catch {
+            return null;
+          }
+        }),
+      );
+      for (const d of details) {
+        const row = mapBooking(d);
+        if (row) rows.push(row);
+      }
+    }
+
+    if (rows.length === 0) {
+      return { ok: true, synced: 0, note: "Брони получены, но не удалось распарсить детали" };
     }
 
     const supabaseAdmin = createClient(
       process.env.SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
     );
-
-    const rows = list
-      .map((r: any) => {
-        const tlRoomTypeId = Number(
-          getField(r, "roomTypeId", "rooms.0.roomTypeId", "roomStays.0.roomTypeId"),
-        );
-        const ourRoomId = TL_TO_ROOM_ID[tlRoomTypeId] ?? "unknown";
-        const checkIn = String(
-          getField(r, "arrival", "checkIn", "arrivalDate", "period.from") ?? "",
-        ).slice(0, 10);
-        const checkOut = String(
-          getField(r, "departure", "checkOut", "departureDate", "period.to") ?? "",
-        ).slice(0, 10);
-        if (!checkIn || !checkOut) return null;
-        const nights = Math.max(
-          1,
-          Math.round(
-            (new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400_000,
-          ),
-        );
-        return {
-          tl_reservation_id: String(
-            getField(r, "id", "reservationId", "uuid", "number") ?? "",
-          ),
-          source: "travelline",
-          first_name: String(getField(r, "guest.firstName", "customer.firstName") ?? "—"),
-          last_name: String(
-            getField(r, "guest.lastName", "customer.lastName", "guestName") ?? "TL",
-          ),
-          phone: String(getField(r, "guest.phone", "customer.phone") ?? ""),
-          email: String(getField(r, "guest.email", "customer.email") ?? "tl@noemail.invalid"),
-          room_id: ourRoomId,
-          room_name: String(getField(r, "roomTypeName", "rooms.0.roomTypeName") ?? ourRoomId),
-          check_in: checkIn,
-          check_out: checkOut,
-          nights,
-          adults: Number(getField(r, "adults", "guests.adults") ?? 2),
-          children: Number(getField(r, "children", "guests.children") ?? 0),
-          meal_plan: "room_only",
-          total_price: Math.round(
-            Number(getField(r, "total.amount", "totalPrice", "amount") ?? 0),
-          ),
-          payment_status: mapTlStatus(r),
-          id_consent: true,
-          terms_consent: true,
-          special_requests: [],
-        };
-      })
-      .filter((x): x is NonNullable<typeof x> => x !== null && !!x.tl_reservation_id);
-
-    if (rows.length === 0) {
-      return {
-        ok: true,
-        synced: 0,
-        endpoint: result.endpoint,
-        note: "Брони получены, но не удалось распарсить",
-        sample: list[0],
-      };
-    }
-
     const { error } = await supabaseAdmin
       .from("bookings")
       .upsert(rows, { onConflict: "tl_reservation_id" });
+    if (error) return { ok: false, error: error.message, synced: 0 };
 
-    if (error) {
-      return { ok: false, error: error.message, synced: 0 };
-    }
-    return { ok: true, synced: rows.length, endpoint: result.endpoint };
+    return {
+      ok: true,
+      synced: rows.length,
+      hasMore: numbers.length >= MAX_DETAILS,
+    };
   });
