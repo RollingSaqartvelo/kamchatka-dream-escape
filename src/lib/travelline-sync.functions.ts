@@ -218,6 +218,7 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
     let minCi = "";
     let maxCi = "";
     let lastMod = "";
+    const failedNumbers: string[] = []; // брони, чья деталь не догрузилась (rate-limit)
 
     for (let page = 0; page < MAX_PAGES; page++) {
       try {
@@ -236,7 +237,6 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
         if (summaries.length) lastMod = summaries[summaries.length - 1]?.modifiedDateTime ?? lastMod;
 
         if (summaries.length > 0) {
-          let failed = 0;
           // Грузим детали с ограниченной параллельностью (воркеры берут из общей
           // очереди), чтобы не упереться в лимит подзапросов / rate-limit TL.
           const details: any[] = new Array(summaries.length).fill(null);
@@ -246,7 +246,7 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
               const idx = next++;
               const d = await fetchDetail(`${base}/${summaries[idx].number}`, headers);
               if (d) details[idx] = d;
-              else failed++;
+              else if (summaries[idx]?.number) failedNumbers.push(String(summaries[idx].number));
             }
           };
           await Promise.all(
@@ -287,15 +287,11 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
               await supabaseAdmin.from("bookings").delete().in("tl_reservation_id", numbers);
             }
           }
-          // Если хоть одна деталь не догрузилась — НЕ двигаем курсор: повторим
-          // эту же страницу в следующий прогон (потерь нет, апсерт идемпотентен).
-          if (failed > 0) {
-            firstError = `детали недогрузились (${failed}/${summaries.length}) — повторите ↻ (докачается)`;
-            break;
-          }
         }
 
-        // advance + persist cursor только при полностью успешной странице
+        // ВСЕГДА двигаем курсор вперёд — не застреваем на сбойной брони.
+        // Сбойные (rate-limit/таймаут) собираем в failedNumbers и докачиваем
+        // отдельным проходом в конце; если так и не вышло — показываем их.
         cursor = j.continueToken ?? cursor;
         await supabaseAdmin
           .from("tl_sync_state")
@@ -311,7 +307,41 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
       }
     }
 
-    const diag = { unknown, minCi, maxCi, lastMod: lastMod.slice(0, 16) };
+    // Докачиваем сбойные брони отдельным мягким проходом (rate-limit обычно уже
+    // спал). Что так и не вышло — показываем в ответе, но синк не блокируем.
+    const stillFailed: string[] = [];
+    const uniqFailed = [...new Set(failedNumbers)];
+    for (const num of uniqFailed) {
+      const d = await fetchDetail(`${base}/${num}`, headers);
+      if (!d) {
+        stillFailed.push(num);
+        continue;
+      }
+      let r = mapBookingRows(d);
+      if (data.stayFrom || data.stayTo) {
+        const lo = data.stayFrom ?? "0000-01-01";
+        const hi = data.stayTo ?? "9999-12-31";
+        r = r.filter((row) => row.check_out > lo && row.check_in <= hi);
+      }
+      if (r.length) {
+        const { error } = await supabaseAdmin
+          .from("bookings")
+          .upsert(r, { onConflict: "tl_reservation_id" });
+        if (!error) {
+          totalSynced += r.length;
+          await supabaseAdmin.from("bookings").delete().in("tl_reservation_id", [num]);
+        } else stillFailed.push(num);
+      }
+    }
+
+    const diag = {
+      unknown,
+      minCi,
+      maxCi,
+      lastMod: lastMod.slice(0, 16),
+      skipped: stillFailed.length,
+      skippedSample: stillFailed.slice(0, 5),
+    };
     if (firstError && totalSynced === 0) {
       return { ok: false, error: firstError, synced: 0, ...diag };
     }

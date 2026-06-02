@@ -266,12 +266,15 @@ function AdminCalendarPage() {
       const stayFrom = format(startOfMonth(subMonths(anchor, 1)), "yyyy-MM-dd");
       const stayTo = format(endOfMonth(addMonths(anchor, 2)), "yyyy-MM-dd");
       const res = await syncFn({ data: { stayFrom, stayTo, ...(full ? { reset: true } : {}) } });
-      const r = res as typeof res & { lastMod?: string; minCi?: string; maxCi?: string; unknown?: number };
+      const r = res as typeof res & {
+        lastMod?: string; minCi?: string; maxCi?: string; unknown?: number;
+        skipped?: number; skippedSample?: string[];
+      };
       console.log("TL sync:", r);
       if (res.ok) {
         toast.success(
-          `+${res.synced} номеров · курсор до модификации ${r.lastMod || "?"} · заезды ${r.minCi || "—"}…${r.maxCi || "—"}${r.unknown ? ` · без карты: ${r.unknown}` : ""}${res.hasMore ? " · ещё есть" : " · сезон подтянут ✓"}`,
-          { duration: 8000 },
+          `+${res.synced} номеров · курсор ${r.lastMod || "?"} · заезды ${r.minCi || "—"}…${r.maxCi || "—"}${r.unknown ? ` · без карты: ${r.unknown}` : ""}${r.skipped ? ` · ⚠ пропущено ${r.skipped}: ${(r.skippedSample || []).join(", ")}` : ""}${res.hasMore ? " · ещё есть" : " · сезон подтянут ✓"}`,
+          { duration: 9000 },
         );
         void load();
       } else {
