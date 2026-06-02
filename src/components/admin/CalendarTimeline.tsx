@@ -42,12 +42,22 @@ const SOURCE_ICON: Record<string, string> = {
 
 const DAY_W = 44;
 const LANE_H = 26;
-const HOSTEL_ROW_H = 56;
+const GROUP_H = 40; // высота строки-заголовка типа (с занятостью по дням)
 const LABEL_W = 210;
-// Minimum row height so a 2-line room name + price never overlaps the next row.
-const MIN_ROW_H = 62;
+// Minimum row height so a booking bar never overlaps the next row.
+const MIN_ROW_H = 36;
 
-type Room = { id: string; name_ru: string; price_from_rub: number };
+// Юнит = физическая комната или койка. Несколько юнитов одного типа образуют
+// сворачиваемую группу.
+type Room = {
+  id: string;
+  typeId: string;
+  groupName: string; // имя типа — заголовок группы
+  unitLabel: string; // подпись строки: «№ 12» | «Кровать №1» | имя одиночного типа
+  price_from_rub: number;
+};
+
+type Group = { typeId: string; groupName: string; price: number; units: Room[]; single: boolean };
 
 type DragMode = "move" | "resize-l" | "resize-r";
 type DragState = {
@@ -63,8 +73,8 @@ type DragState = {
 type Props = {
   rooms: Room[];
   days: Date[];
-  bookings: TBk[]; // already status-filtered
-  hostelCapacity: Record<string, number>;
+  bookings: TBk[]; // already status-filtered and assigned to unit ids
+  defaultCollapsed?: string[]; // typeIds свёрнутые по умолчанию (хостелы)
   hostelBg: (ratio: number) => string;
   hostelText: (ratio: number) => string;
   isBlocked: (roomId: string, day: Date) => boolean;
@@ -80,7 +90,7 @@ export function CalendarTimeline({
   rooms,
   days,
   bookings,
-  hostelCapacity,
+  defaultCollapsed,
   hostelBg,
   hostelText,
   isBlocked,
@@ -92,17 +102,23 @@ export function CalendarTimeline({
   onMove,
 }: Props) {
   const bodyRef = useRef<HTMLDivElement>(null);
-  const rowLayoutRef = useRef<{ roomId: string; top: number; height: number; hostel: boolean }[]>([]);
+  const rowLayoutRef = useRef<{ roomId: string; top: number; height: number }[]>([]);
   const [drag, setDrag] = useState<DragState | null>(null);
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(defaultCollapsed ?? []));
+  const toggleGroup = (typeId: string) =>
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      next.has(typeId) ? next.delete(typeId) : next.add(typeId);
+      return next;
+    });
 
   const len = days.length;
   const today = new Date();
   const dayIndex = (d: Date) => differenceInCalendarDays(d, days[0]);
   const clampIdx = (i: number) => Math.max(0, Math.min(len, i));
 
-  // Stretch day columns to fill the container (so week view fills the same
-  // width as month, no empty white area); never narrower than DAY_W so month
-  // view still scrolls horizontally.
+  // Stretch day columns to fill the container (week view fills same width as
+  // month); never narrower than DAY_W so month view still scrolls.
   const wrapRef = useRef<HTMLDivElement>(null);
   const [wrapW, setWrapW] = useState(0);
   useEffect(() => {
@@ -116,8 +132,7 @@ export function CalendarTimeline({
   }, []);
   const dayW = wrapW > 0 ? Math.max(DAY_W, Math.floor((wrapW - LABEL_W) / Math.max(1, len))) : DAY_W;
 
-  // Apply the live drag preview to the dragged booking so the bar re-lays-out
-  // in its target room/date as you drag — no separate ghost geometry needed.
+  // Apply live drag preview to the dragged booking so it re-lays-out as you drag.
   const effBookings = useMemo(() => {
     if (!drag?.moved) return bookings;
     const p = drag.preview;
@@ -138,37 +153,93 @@ export function CalendarTimeline({
     return m;
   }, [effBookings]);
 
-  // Per-room lane assignment (so overlapping bookings stack and stay visible).
-  const rows = useMemo(() => {
-    let top = 0;
-    const out = rooms.map((room) => {
-      const hostel = Boolean(hostelCapacity[room.id]);
-      const list = byRoom.get(room.id) ?? [];
-      const sorted = [...list].sort((a, b) => (a.check_in < b.check_in ? -1 : a.check_in > b.check_in ? 1 : 0));
-      const laneEnds: number[] = [];
-      const placed = sorted.map((b) => {
+  // Группы типов (в порядке rooms).
+  const groups = useMemo<Group[]>(() => {
+    const out: Group[] = [];
+    let cur: Group | null = null;
+    for (const r of rooms) {
+      if (!cur || cur.typeId !== r.typeId) {
+        cur = { typeId: r.typeId, groupName: r.groupName, price: r.price_from_rub, units: [], single: false };
+        out.push(cur);
+      }
+      cur.units.push(r);
+    }
+    for (const g of out) g.single = g.units.length === 1 && g.units[0].id === g.typeId;
+    return out;
+  }, [rooms]);
+
+  // Занятость каждого юнита по дням (битовая маска длиной len).
+  const occByUnit = useMemo(() => {
+    const m = new Map<string, Uint8Array>();
+    for (const r of rooms) {
+      const arr = new Uint8Array(len);
+      for (const b of byRoom.get(r.id) ?? []) {
         const s = dayIndex(parseISO(b.check_in));
-        const e = dayIndex(parseISO(b.check_out)); // checkout day (exclusive of stay)
-        let lane = laneEnds.findIndex((end) => end <= s);
-        if (lane === -1) {
-          lane = laneEnds.length;
-          laneEnds.push(e);
-        } else laneEnds[lane] = e;
-        return { b, s, e, lane, conflict: false };
-      });
-      // conflict = overlaps any other bar in the same (regular) room
-      if (!hostel)
+        const e = dayIndex(parseISO(b.check_out)); // checkout day exclusive
+        for (let i = Math.max(0, s); i < e && i < len; i++) arr[i] = 1;
+      }
+      m.set(r.id, arr);
+    }
+    return m;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [byRoom, rooms, len, days]);
+
+  // Раскладка строк: заголовок группы + (если развёрнута) строки-юниты с
+  // распределением по дорожкам (overlap stacking). Считаем top для drag-drop.
+  type Item =
+    | { kind: "header"; group: Group; occ: Uint16Array; top: number; height: number }
+    | {
+        kind: "row";
+        room: Room;
+        placed: { b: TBk; lane: number; conflict: boolean }[];
+        top: number;
+        height: number;
+      };
+  const items = useMemo<Item[]>(() => {
+    let top = 0;
+    const out: Item[] = [];
+    for (const g of groups) {
+      const isCollapsed = collapsed.has(g.typeId);
+      // Одиночный тип рисуем как обычную строку без заголовка.
+      if (!g.single) {
+        const occ = new Uint16Array(len);
+        for (const u of g.units) {
+          const ob = occByUnit.get(u.id);
+          if (ob) for (let i = 0; i < len; i++) occ[i] += ob[i];
+        }
+        out.push({ kind: "header", group: g, occ, top, height: GROUP_H });
+        top += GROUP_H;
+        if (isCollapsed) continue;
+      }
+      for (const room of g.units) {
+        const list = byRoom.get(room.id) ?? [];
+        const sorted = [...list].sort((a, b) =>
+          a.check_in < b.check_in ? -1 : a.check_in > b.check_in ? 1 : 0,
+        );
+        const laneEnds: number[] = [];
+        const placed = sorted.map((b) => {
+          const s = dayIndex(parseISO(b.check_in));
+          const e = dayIndex(parseISO(b.check_out));
+          let lane = laneEnds.findIndex((end) => end <= s);
+          if (lane === -1) {
+            lane = laneEnds.length;
+            laneEnds.push(e);
+          } else laneEnds[lane] = e;
+          return { b, s, e, lane, conflict: false };
+        });
         for (const p of placed) p.conflict = placed.some((q) => q !== p && q.s < p.e && p.s < q.e);
-      const lanes = Math.max(1, laneEnds.length);
-      const height = hostel ? HOSTEL_ROW_H : Math.max(MIN_ROW_H, lanes * LANE_H + 6);
-      const r = { room, hostel, list, placed, height, top };
-      top += height;
-      return r;
-    });
-    rowLayoutRef.current = out.map((r) => ({ roomId: r.room.id, top: r.top, height: r.height, hostel: r.hostel }));
+        const lanes = Math.max(1, laneEnds.length);
+        const height = Math.max(MIN_ROW_H, lanes * LANE_H + 6);
+        out.push({ kind: "row", room, placed: placed.map(({ b, lane, conflict }) => ({ b, lane, conflict })), top, height });
+        top += height;
+      }
+    }
+    rowLayoutRef.current = out
+      .filter((i): i is Extract<Item, { kind: "row" }> => i.kind === "row")
+      .map((r) => ({ roomId: r.room.id, top: r.top, height: r.height }));
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [byRoom, rooms, days, hostelCapacity]);
+  }, [groups, collapsed, byRoom, occByUnit, days, len]);
 
   // Drag handling via window listeners while a drag is active.
   useEffect(() => {
@@ -184,7 +255,7 @@ export function CalendarTimeline({
         const rect = bodyRef.current?.getBoundingClientRect();
         if (rect) {
           const y = e.clientY - rect.top;
-          const row = rowLayoutRef.current.find((r) => y >= r.top && y < r.top + r.height && !r.hostel);
+          const row = rowLayoutRef.current.find((r) => y >= r.top && y < r.top + r.height);
           if (row) roomId = row.roomId;
         }
       } else if (drag.mode === "resize-l") {
@@ -264,89 +335,118 @@ export function CalendarTimeline({
 
         {/* Body */}
         <div ref={bodyRef} className="relative">
-          {rows.map((r) => (
-            <div key={r.room.id} className="flex border-b border-border" style={{ height: r.height }}>
-              {/* Room label */}
-              <div
-                className="sticky left-0 z-10 shrink-0 border-r border-border bg-background px-3 py-1.5 align-top text-navy"
-                style={{ width: LABEL_W }}
-              >
-                <div className="line-clamp-2 text-xs">{r.room.name_ru}</div>
-                <div className="mt-0.5 text-[10px] text-muted-foreground">от {r.room.price_from_rub} ₽</div>
-              </div>
+          {items.map((item) => {
+            if (item.kind === "header") {
+              const g = item.group;
+              const total = g.units.length;
+              const isCollapsed = collapsed.has(g.typeId);
+              return (
+                <div key={`h-${g.typeId}`} className="flex border-b border-border bg-cream/40" style={{ height: GROUP_H }}>
+                  <button
+                    type="button"
+                    onClick={() => toggleGroup(g.typeId)}
+                    className="sticky left-0 z-10 flex shrink-0 items-center gap-1.5 border-r border-border bg-cream/70 px-3 text-left text-navy hover:bg-cream"
+                    style={{ width: LABEL_W }}
+                    title={isCollapsed ? "Развернуть номера" : "Свернуть"}
+                  >
+                    <span className="text-[10px] text-muted-foreground">{isCollapsed ? "▸" : "▾"}</span>
+                    <span className="line-clamp-2 text-[11px] font-semibold leading-tight">{g.groupName}</span>
+                    <span className="ml-auto shrink-0 rounded bg-navy/10 px-1.5 py-0.5 text-[10px] font-bold text-navy">
+                      {total}
+                    </span>
+                  </button>
+                  <div className="relative flex" style={{ width: len * dayW }}>
+                    {days.map((d) => {
+                      const di = dayIndex(d);
+                      const occ = item.occ[di] ?? 0;
+                      const ratio = total > 0 ? Math.min(occ / total, 1) : 0;
+                      return (
+                        <div
+                          key={d.toISOString()}
+                          className={cn(
+                            "relative flex h-full shrink-0 items-center justify-center overflow-hidden border-r border-border/60",
+                            isSameDay(d, today) && "bg-[#C9A96E]/10",
+                          )}
+                          style={{ width: dayW }}
+                          title={`${occ}/${total} занято`}
+                        >
+                          {occ > 0 && (
+                            <>
+                              <div
+                                className={cn("absolute bottom-0 left-0 w-full", hostelBg(ratio))}
+                                style={{ height: `${Math.round(ratio * 100)}%` }}
+                              />
+                              <span className={cn("relative z-10 text-[10px] font-bold", hostelText(ratio))}>
+                                {occ}/{total}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            }
 
-              {/* Track */}
-              <div className="relative" style={{ width: len * dayW }}>
-                {/* Background day cells (create / block / today) */}
-                <div className="absolute inset-0 flex">
-                  {days.map((d) => {
-                    const blocked = isBlocked(r.room.id, d);
-                    return (
-                      <div
-                        key={d.toISOString()}
-                        className={cn(
-                          "h-full shrink-0 border-r border-border/70",
-                          isSameDay(d, today) ? "bg-[#C9A96E]/10" : "hover:bg-cream/40",
-                        )}
-                        style={{ width: dayW }}
-                        onClick={() => !r.hostel && onCreate(r.room.id, d)}
-                        onContextMenu={(e) => {
-                          if (r.hostel) return;
-                          e.preventDefault();
-                          onToggleBlock(r.room.id, format(d, "yyyy-MM-dd"));
-                        }}
-                      >
-                        {blocked && (
-                          <div
-                            className="flex h-full w-full items-center justify-center bg-zinc-200"
-                            style={{
-                              backgroundImage:
-                                "repeating-linear-gradient(45deg,transparent,transparent 4px,rgba(0,0,0,0.08) 4px,rgba(0,0,0,0.08) 8px)",
-                            }}
-                            title="Заблокировано — техобслуживание"
-                          >
-                            <span className="text-[11px]">🚫</span>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+            // Unit row
+            const r = item;
+            return (
+              <div key={r.room.id} className="flex border-b border-border" style={{ height: r.height }}>
+                <div
+                  className={cn(
+                    "sticky left-0 z-10 flex shrink-0 flex-col justify-center border-r border-border bg-background px-3 text-navy",
+                    r.room.id !== r.room.typeId && "pl-7", // отступ для юнитов внутри группы
+                  )}
+                  style={{ width: LABEL_W }}
+                >
+                  <div className="line-clamp-2 text-xs">{r.room.unitLabel}</div>
+                  {r.room.unitLabel === r.room.groupName && r.room.price_from_rub > 0 && (
+                    <div className="mt-0.5 text-[10px] text-muted-foreground">от {r.room.price_from_rub} ₽</div>
+                  )}
                 </div>
 
-                {/* Hostel: per-day bed counters */}
-                {r.hostel &&
-                  days.map((d) => {
-                    const cap = hostelCapacity[r.room.id];
-                    const occ = r.list
-                      .filter((b) => {
-                        const s = dayIndex(parseISO(b.check_in));
-                        const e = dayIndex(parseISO(b.check_out));
-                        const di = dayIndex(d);
-                        return di >= s && di < e;
-                      })
-                      .reduce((sum, b) => sum + Math.max(1, b.adults ?? 1), 0);
-                    if (occ === 0) return null;
-                    const ratio = Math.min(occ / cap, 1);
-                    const pct = Math.round(ratio * 100);
-                    return (
-                      <div
-                        key={d.toISOString()}
-                        className="absolute top-0 flex h-full flex-col items-center justify-center overflow-hidden"
-                        style={{ left: clampIdx(dayIndex(d)) * dayW, width: dayW }}
-                      >
-                        <div className={cn("absolute bottom-0 left-0 w-full", hostelBg(ratio))} style={{ height: `${pct}%` }} />
-                        <span className={cn("relative z-10 text-[11px] font-bold", hostelText(ratio))}>
-                          {occ}/{cap}
-                        </span>
-                      </div>
-                    );
-                  })}
+                {/* Track */}
+                <div className="relative" style={{ width: len * dayW }}>
+                  <div className="absolute inset-0 flex">
+                    {days.map((d) => {
+                      const blocked = isBlocked(r.room.id, d);
+                      return (
+                        <div
+                          key={d.toISOString()}
+                          className={cn(
+                            "h-full shrink-0 border-r border-border/70",
+                            isSameDay(d, today) ? "bg-[#C9A96E]/10" : "hover:bg-cream/40",
+                          )}
+                          style={{ width: dayW }}
+                          onClick={() => onCreate(r.room.id, d)}
+                          onContextMenu={(e) => {
+                            e.preventDefault();
+                            onToggleBlock(r.room.id, format(d, "yyyy-MM-dd"));
+                          }}
+                        >
+                          {blocked && (
+                            <div
+                              className="flex h-full w-full items-center justify-center bg-zinc-200"
+                              style={{
+                                backgroundImage:
+                                  "repeating-linear-gradient(45deg,transparent,transparent 4px,rgba(0,0,0,0.08) 4px,rgba(0,0,0,0.08) 8px)",
+                              }}
+                              title="Заблокировано — техобслуживание"
+                            >
+                              <span className="text-[11px]">🚫</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
 
-                {/* Regular room: booking bars */}
-                {!r.hostel &&
-                  r.placed.map(({ b, lane, conflict }) => {
+                  {/* Booking bars */}
+                  {r.placed.map(({ b, lane, conflict }) => {
                     const left = clampIdx(dayIndex(parseISO(b.check_in))) * dayW;
-                    const span = clampIdx(dayIndex(parseISO(b.check_out))) - clampIdx(dayIndex(parseISO(b.check_in)));
+                    const span =
+                      clampIdx(dayIndex(parseISO(b.check_out))) - clampIdx(dayIndex(parseISO(b.check_in)));
                     const width = Math.max(0.5, span) * dayW - 3;
                     const dragging = drag?.booking.id === b.id && drag.moved;
                     return (
@@ -369,7 +469,6 @@ export function CalendarTimeline({
                         onMouseEnter={(e) => onTooltip({ booking: b, x: e.clientX, y: e.clientY })}
                         onMouseLeave={() => onTooltip(null)}
                       >
-                        {/* Left resize handle */}
                         <span
                           className="absolute left-0 top-0 h-full w-1.5 cursor-ew-resize bg-black/0 hover:bg-black/20"
                           onPointerDown={(e) => startDrag(e, b, "resize-l")}
@@ -381,7 +480,6 @@ export function CalendarTimeline({
                         <span className="ml-auto shrink-0 text-[9px] opacity-70">
                           {SOURCE_ICON[b.source ?? "manual"] ?? "✏️"}
                         </span>
-                        {/* Right resize handle */}
                         <span
                           className="absolute right-0 top-0 h-full w-1.5 cursor-ew-resize bg-black/0 hover:bg-black/20"
                           onPointerDown={(e) => startDrag(e, b, "resize-r")}
@@ -389,9 +487,10 @@ export function CalendarTimeline({
                       </div>
                     );
                   })}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {/* Occupancy footer */}
           <div className="flex border-t-2 border-border bg-cream/40">
@@ -403,14 +502,8 @@ export function CalendarTimeline({
             </div>
             {days.map((d) => {
               const di = dayIndex(d);
-              const occupied = rooms.filter((room) =>
-                (byRoom.get(room.id) ?? []).some((b) => {
-                  const s = dayIndex(parseISO(b.check_in));
-                  const e = dayIndex(parseISO(b.check_out));
-                  return di >= s && di < e;
-                }),
-              ).length;
-              const pct = Math.round((occupied / rooms.length) * 100);
+              const occupied = rooms.filter((room) => (occByUnit.get(room.id)?.[di] ?? 0) > 0).length;
+              const pct = rooms.length ? Math.round((occupied / rooms.length) * 100) : 0;
               const bg =
                 pct === 0 ? "" : pct < 40 ? "bg-sky-200" : pct < 70 ? "bg-blue-400" : pct < 90 ? "bg-orange-400" : "bg-red-500";
               const txt = pct > 50 ? "text-white" : "text-navy";
@@ -419,7 +512,7 @@ export function CalendarTimeline({
                   key={d.toISOString()}
                   className={cn("shrink-0 border-r border-border py-2 text-center text-[10px] font-bold", bg, txt)}
                   style={{ width: dayW }}
-                  title={`${occupied} из ${rooms.length} номеров занято`}
+                  title={`${occupied} из ${rooms.length} занято`}
                 >
                   {occupied > 0 ? `${pct}%` : ""}
                 </div>

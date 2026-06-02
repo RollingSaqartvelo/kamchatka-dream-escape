@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { ROOMS } from "@/data/rooms";
+import { ROOM_UNITS, assignToUnits, unitTypeId, realBookingId } from "@/data/room-units";
 import { OfflineBookingModal } from "@/components/admin/OfflineBookingModal";
 import { CalendarTimeline } from "@/components/admin/CalendarTimeline";
 import { sourceIcon, sourceLabel } from "@/lib/channels";
@@ -265,13 +266,21 @@ function AdminCalendarPage() {
     setLoading(false);
   }
 
-  // Индекс «комната|дата → брони»: строится один раз за изменение
-  // bookings/фильтра, а не фильтрует весь массив в каждой из ~650 ячеек.
-  // parseISO для каждой брони вызывается единожды (а не на каждую ячейку).
+  // Status-filtered list for the timeline (bars compute their own positions).
+  const visibleBookings = useMemo(
+    () => bookings.filter((b) => statusFilter.has(b.payment_status)),
+    [bookings, statusFilter],
+  );
+
+  // Брони, разложенные по физическим комнатам/койкам (room_id → id юнита).
+  // Хостельные брони реплицируются по койкам с ключами `id__bK`.
+  const assignedBookings = useMemo(() => assignToUnits(visibleBookings), [visibleBookings]);
+
+  // Индекс «юнит|дата → брони»: строится один раз за изменение
+  // assignedBookings, а не фильтрует весь массив в каждой из ~1800 ячеек.
   const cellIndex = useMemo(() => {
     const idx = new Map<string, Bk[]>();
-    for (const b of bookings) {
-      if (!statusFilter.has(b.payment_status)) continue;
+    for (const b of assignedBookings) {
       const ci = parseISO(b.check_in);
       const co = parseISO(b.check_out);
       // Бронь занимает ночи [check_in, check_out-1]; как минимум день заезда.
@@ -284,28 +293,28 @@ function AdminCalendarPage() {
       }
     }
     return idx;
-  }, [bookings, statusFilter]);
+  }, [assignedBookings]);
 
-  // Status-filtered list for the timeline (bars compute their own positions).
-  const visibleBookings = useMemo(
-    () => bookings.filter((b) => statusFilter.has(b.payment_status)),
-    [bookings, statusFilter],
-  );
-
-  // Persist a drag-move / resize: new room and/or dates, recompute nights.
-  async function moveBooking(b: Bk, roomId: string, checkIn: string, checkOut: string) {
-    if (b.room_id === roomId && b.check_in === checkIn && b.check_out === checkOut) return;
-    const roomName = ROOMS.find((r) => r.id === roomId)?.name_ru ?? b.room_name;
+  // Persist a drag-move / resize. `b` — это разложенная по юниту копия, а
+  // `unitId` — id физической комнаты; в БД пишем тип (room_id типа), привязку
+  // к конкретной комнате (room_unit) сохраним отдельным шагом.
+  async function moveBooking(b: Bk, unitId: string, checkIn: string, checkOut: string) {
+    const realId = realBookingId(b.id);
+    const typeId = unitTypeId(unitId);
+    const orig = bookings.find((x) => x.id === realId);
+    if (!orig) return;
+    if (orig.room_id === typeId && orig.check_in === checkIn && orig.check_out === checkOut) return;
+    const roomName = ROOMS.find((r) => r.id === typeId)?.name_ru ?? orig.room_name;
     const nights = Math.max(1, differenceInCalendarDays(parseISO(checkOut), parseISO(checkIn)));
     setBookings((prev) =>
       prev.map((x) =>
-        x.id === b.id ? { ...x, room_id: roomId, room_name: roomName, check_in: checkIn, check_out: checkOut } : x,
+        x.id === realId ? { ...x, room_id: typeId, room_name: roomName, check_in: checkIn, check_out: checkOut } : x,
       ),
     );
     const { error } = await supabase
       .from("bookings")
-      .update({ room_id: roomId, room_name: roomName, check_in: checkIn, check_out: checkOut, nights })
-      .eq("id", b.id);
+      .update({ room_id: typeId, room_name: roomName, check_in: checkIn, check_out: checkOut, nights })
+      .eq("id", realId);
     if (error) {
       toast.error("Не удалось переместить бронь");
       void load();
@@ -321,13 +330,11 @@ function AdminCalendarPage() {
     [cellIndex, EMPTY],
   );
 
-  // Двойные брони: обычный (не хостел) номер с >1 бронью в одной ячейке.
+  // Овербукинг: физическая комната/койка с >1 бронью в одной ячейке —
+  // больше броней, чем реально вмещает тип (greedy-раскладка не нашла места).
   const conflictCount = useMemo(() => {
     let n = 0;
-    for (const [key, arr] of cellIndex) {
-      const roomId = key.slice(0, key.indexOf("|"));
-      if (!HOSTEL_CAPACITY[roomId] && arr.length > 1) n++;
-    }
+    for (const arr of cellIndex.values()) if (arr.length > 1) n++;
     return n;
   }, [cellIndex]);
 
@@ -344,24 +351,23 @@ function AdminCalendarPage() {
     return { arrivals: arr, departures: dep };
   }, [bookings, statusFilter, todayStr]);
 
-  // Итоги месяца — считаем только то что реально видно в календаре
+  // Итоги месяца — по физическим комнатам/койкам (точная заполняемость).
   const monthStats = useMemo(() => {
-    const validRoomIds = new Set(ROOMS.map(r => r.id));
-    const totalRoomNights = ROOMS.length * monthDays.length;
+    const totalRoomNights = ROOM_UNITS.length * monthDays.length;
     let occupiedNights = 0;
     let revenue = 0;
     const uniqueBookings = new Set<string>();
 
-    ROOMS.forEach((room) => {
+    ROOM_UNITS.forEach((unit) => {
       monthDays.forEach((d) => {
-        const cell = bookingsForCell(room.id, d);
+        const cell = bookingsForCell(unit.id, d);
         cell.forEach((b) => {
-          if (!uniqueBookings.has(b.id)) {
-            uniqueBookings.add(b.id);
+          const realId = realBookingId(b.id);
+          if (!uniqueBookings.has(realId)) {
+            uniqueBookings.add(realId);
             revenue += b.total_price ?? 0;
           }
-          // хостел считаем как 1 ночь за ячейку (не по местам)
-          occupiedNights++;
+          occupiedNights++; // комната/койка-ночь
         });
       });
     });
@@ -513,20 +519,22 @@ function AdminCalendarPage() {
               клик по пустой ячейке — новая бронь · правый клик — статус / блокировка
             </p>
             <CalendarTimeline
-              rooms={ROOMS}
+              rooms={ROOM_UNITS}
               days={monthDays}
-              bookings={visibleBookings}
-              hostelCapacity={HOSTEL_CAPACITY}
+              bookings={assignedBookings}
+              defaultCollapsed={Object.keys(HOSTEL_CAPACITY)}
               hostelBg={hostelOccupancyBg}
               hostelText={hostelOccupancyText}
-              isBlocked={isBlocked}
-              onToggleBlock={toggleBlock}
+              isBlocked={(roomId, day) => isBlocked(unitTypeId(roomId), day)}
+              onToggleBlock={(roomId, date) => toggleBlock(unitTypeId(roomId), date)}
               onCreate={(roomId, day) => {
-                setModalRoom(roomId);
+                setModalRoom(unitTypeId(roomId));
                 setModalDate(day);
               }}
-              onOpen={(b) => setSelected(b)}
-              onContext={(b, x, y) => setCtxMenu({ booking: b, x, y })}
+              onOpen={(b) => setSelected(bookings.find((x) => x.id === realBookingId(b.id)) ?? b)}
+              onContext={(b, x, y) =>
+                setCtxMenu({ booking: bookings.find((x) => x.id === realBookingId(b.id)) ?? b, x, y })
+              }
               onTooltip={(t) => setTooltip(t as TooltipData | null)}
               onMove={moveBooking}
             />
