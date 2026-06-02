@@ -98,6 +98,49 @@ export function unitTypeId(unitId: string): string {
   return i === -1 ? unitId : unitId.slice(0, i);
 }
 
+/**
+ * Ключ обслуживания юнита: для хостельных коек — id типа (ремонт = весь номер
+ * целиком), для остальных — id комнаты. Используется чтобы скрыть из шахматки
+ * номера/койки, помеченные «в ремонте» на странице «Номера».
+ */
+export function unitMaintKey(u: RoomUnit): string {
+  return u.hostelBed ? u.typeId : u.id;
+}
+
+// Физические номера для управления (страница «Номера»). Хостел = 1 номер
+// (а не N коек), т.к. в ремонт ставится весь номер целиком.
+export type ManagedRoom = {
+  key: string; // == unitMaintKey
+  typeId: string;
+  groupName: string;
+  label: string; // «№ 12» | «Кровать…»→имя типа | имя одиночного типа
+  hostel: boolean;
+  beds?: number;
+};
+
+export const MANAGED_ROOMS: ManagedRoom[] = UNITS_BY_TYPE.flatMap(({ typeId, units }): ManagedRoom[] => {
+  const groupName = units[0]?.groupName ?? typeId;
+  const beds = HOSTEL_BEDS[typeId];
+  if (beds) {
+    return [{ key: typeId, typeId, groupName, label: groupName, hostel: true, beds }];
+  }
+  return units.map((u) => ({
+    key: u.id,
+    typeId,
+    groupName,
+    label: u.unitLabel,
+    hostel: false,
+  }));
+});
+
+// Управляемые номера, сгруппированные по типу (для блочного вывода).
+export const MANAGED_BY_TYPE: { typeId: string; groupName: string; rooms: ManagedRoom[] }[] =
+  ROOMS.map((r) => ({
+    typeId: r.id,
+    groupName: r.name_ru,
+    rooms: MANAGED_ROOMS.filter((m) => m.typeId === r.id),
+  }));
+
 /** Реальный booking id из ключа реплицированной хостельной полосы (`id__bK`). */
 export function realBookingId(id: string): string {
   const i = id.indexOf("__b");

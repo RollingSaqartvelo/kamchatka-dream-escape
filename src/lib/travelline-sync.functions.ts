@@ -41,82 +41,95 @@ function mapStatus(tl: string): string {
   return "confirmed"; // Active
 }
 
-function mapBooking(detail: any) {
+const masked = (v: any) => !v || String(v).includes("*");
+
+// Одна TL-бронь (number) может быть ГРУППОВОЙ — содержать много roomStays
+// (отдельный номер/койка на каждого гостя), каждый со своей ценой, гостями и
+// питанием. Возвращаем строку НА КАЖДЫЙ roomStay, чтобы они корректно
+// разложились по комнатам в шахматке, а цена не вешалась вся на один номер.
+function mapBookingRows(detail: any): any[] {
   const bk = detail?.booking;
-  if (!bk) return null;
+  if (!bk) return [];
   const stays: any[] = bk.roomStays ?? [];
-  const rs = stays[0] ?? {};
-  const arrivalDT = String(rs.stayDates?.arrivalDateTime ?? "");
-  const departureDT = String(rs.stayDates?.departureDateTime ?? "");
-  const checkIn = arrivalDT.slice(0, 10);
-  const checkOut = departureDT.slice(0, 10);
-  if (!checkIn || !checkOut) return null;
+  if (stays.length === 0) return [];
 
-  const nights = Math.max(1, Math.round((+new Date(checkOut) - +new Date(checkIn)) / 86400000));
-  const roomId = TL_TO_ROOM_ID[Number(rs.roomType?.id)] ?? "unknown";
-  const roomRevenue = Math.round(stays.reduce((s: number, r: any) => s + (r.total?.priceAfterTax ?? 0), 0));
-  const total = Math.round(bk.total?.priceAfterTax ?? roomRevenue);
-  const prepaid = Math.round(bk.guaranteeInfo?.totalPrepaid ?? 0);
-  const remaining = Math.max(0, total - prepaid);
-  const servicesTotal = Math.max(0, total - roomRevenue);
-  const adults =
-    stays.reduce((s: number, r: any) => s + Number(r.guestCount?.adultCount ?? 0), 0) ||
-    Number(rs.guestCount?.adultCount ?? 2);
-  const children = stays.reduce((s: number, r: any) => s + (r.guestCount?.childAges?.length ?? 0), 0);
+  const number = String(bk.number);
+  const status = mapStatus(String(bk.status));
+  const source = resolveTlChannel(bk.source);
+  const bookingTotal = Math.round(bk.total?.priceAfterTax ?? 0);
+  const prepaidTotal = Math.round(bk.guaranteeInfo?.totalPrepaid ?? 0);
+  const groupSize = stays.length;
 
-  const masked = (v: any) => !v || String(v).includes("*");
-  // Список гостей (без дублей и маскированных).
-  const guestMap = new Map<string, string>();
-  for (const r of stays)
-    for (const g of r.guests ?? []) {
-      const nm = `${g.lastName ?? ""} ${g.firstName ?? ""}`.trim();
-      if (nm && !masked(nm)) guestMap.set(nm.toLowerCase(), nm);
-    }
-  const guests = [...guestMap.values()];
+  // Заказчик-организатор (на групповой броне один на всех).
+  const orgFirst = masked(bk.customer?.firstName) ? "" : String(bk.customer.firstName);
+  const orgLast = masked(bk.customer?.lastName) ? "" : String(bk.customer.lastName);
+  const organizer = `${orgLast} ${orgFirst}`.trim();
 
-  const firstName = masked(bk.customer?.firstName) ? "" : String(bk.customer.firstName);
-  const lastName = masked(bk.customer?.lastName) ? "Бронь TL" : String(bk.customer.lastName);
+  return stays.map((rs, i) => {
+    const arrivalDT = String(rs.stayDates?.arrivalDateTime ?? "");
+    const departureDT = String(rs.stayDates?.departureDateTime ?? "");
+    const checkIn = arrivalDT.slice(0, 10);
+    const checkOut = departureDT.slice(0, 10);
+    if (!checkIn || !checkOut) return null;
+    const nights = Math.max(1, Math.round((+new Date(checkOut) - +new Date(checkIn)) / 86400000));
+    const roomId = TL_TO_ROOM_ID[Number(rs.roomType?.id)] ?? "unknown";
+    const stayTotal = Math.round(rs.total?.priceAfterTax ?? 0);
+    // Предоплата распределяется по комнатам пропорционально их стоимости.
+    const paidShare = bookingTotal > 0 ? Math.round((prepaidTotal * stayTotal) / bookingTotal) : 0;
+    const servicesTotal = Math.round(
+      (rs.services ?? []).reduce((s: number, x: any) => s + (x.total?.priceAfterTax ?? 0), 0),
+    );
 
-  // Доп. данные TL, которых нет отдельными колонками, кладём в special_requests
-  // (Json). Партнёрский API НЕ отдаёт: комментарий агента, № подтверждения в
-  // канале, телефон гостя, способ гарантии — поэтому их здесь нет.
-  const meta = {
-    kind: "tl",
-    tariff: rs.ratePlans?.[0]?.name ?? "",
-    arrival: arrivalDT, // полная дата-время заезда (…T14:00)
-    departure: departureDT,
-    prepaid,
-    servicesTotal,
-    guests,
-    sourceUrl: bk.source?.sourceUrl ?? "",
-    channelCode: bk.source?.code ?? "",
-    bookedAt: bk.createdDateTime ?? "",
-  };
+    // Гости конкретного номера.
+    const guests = (rs.guests ?? [])
+      .map((g: any) => `${g.lastName ?? ""} ${g.firstName ?? ""}`.trim())
+      .filter((n: string) => n && !masked(n));
+    const occupant = guests[0] || organizer || "Бронь TL";
+    const [oLast, ...oRest] = occupant.split(" ");
 
-  return {
-    tl_reservation_id: String(bk.number),
-    source: resolveTlChannel(bk.source), // specific channel: yandex / ostrovok / tl_desk / …
-    first_name: firstName || "—",
-    last_name: lastName,
-    phone: "",
-    email: "tl@noemail.invalid",
-    room_id: roomId,
-    room_name: String(rs.roomType?.name ?? roomId),
-    check_in: checkIn,
-    check_out: checkOut,
-    nights,
-    adults,
-    children,
-    meal_plan: "room_only",
-    room_price_total: roomRevenue,
-    prepayment_amount: prepaid,
-    remaining_amount: remaining,
-    total_price: total,
-    payment_status: mapStatus(String(bk.status)),
-    id_consent: true,
-    terms_consent: true,
-    special_requests: meta,
-  };
+    const meta = {
+      kind: "tl",
+      tariff: rs.ratePlans?.[0]?.name ?? "",
+      arrival: arrivalDT,
+      departure: departureDT,
+      prepaid: paidShare,
+      servicesTotal,
+      guests,
+      organizer: organizer && organizer !== occupant ? organizer : "",
+      groupSize,
+      roomNo: i + 1,
+      mealPlan: (rs.services ?? []).find((x: any) => x.kind === "Meal")?.name ?? "",
+      sourceUrl: bk.source?.sourceUrl ?? "",
+      channelCode: bk.source?.code ?? "",
+      bookedAt: bk.createdDateTime ?? "",
+    };
+
+    return {
+      // Уникальный ключ на каждый номер группы (index уникален в рамках брони).
+      tl_reservation_id: `${number}#${rs.index ?? i}`,
+      source,
+      first_name: oRest.join(" ") || "—",
+      last_name: oLast || "Бронь TL",
+      phone: "",
+      email: "tl@noemail.invalid",
+      room_id: roomId,
+      room_name: String(rs.roomType?.name ?? roomId),
+      check_in: checkIn,
+      check_out: checkOut,
+      nights,
+      adults: Number(rs.guestCount?.adultCount ?? 1),
+      children: (rs.guestCount?.childAges ?? []).length,
+      meal_plan: "room_only",
+      room_price_total: stayTotal,
+      prepayment_amount: paidShare,
+      remaining_amount: Math.max(0, stayTotal - paidShare),
+      total_price: stayTotal,
+      payment_status: status,
+      id_consent: true,
+      terms_consent: true,
+      special_requests: meta,
+    };
+  }).filter((r): r is NonNullable<typeof r> => r !== null);
 }
 
 export const syncTravellineReservations = createServerFn({ method: "POST" })
@@ -186,9 +199,16 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
               }
             }),
           );
-          const rows = details
-            .map(mapBooking)
-            .filter((r): r is NonNullable<typeof r> => r !== null);
+          const rows: any[] = [];
+          const numbers: string[] = [];
+          for (const d of details) {
+            const r = mapBookingRows(d);
+            if (r.length) {
+              rows.push(...r);
+              const num = d?.booking?.number;
+              if (num) numbers.push(String(num));
+            }
+          }
           if (rows.length) {
             const { error } = await supabaseAdmin
               .from("bookings")
@@ -198,6 +218,11 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
               break;
             }
             totalSynced += rows.length;
+            // Удаляем легаси-строки старого формата (ключ = голый номер без #index),
+            // оставшиеся от прошлой версии синка (1 строка на всю бронь).
+            if (numbers.length) {
+              await supabaseAdmin.from("bookings").delete().in("tl_reservation_id", numbers);
+            }
           }
         }
 

@@ -48,6 +48,10 @@ type TlMeta = {
   prepaid?: number;
   servicesTotal?: number;
   guests?: string[];
+  organizer?: string;
+  groupSize?: number;
+  roomNo?: number;
+  mealPlan?: string;
   sourceUrl?: string;
   channelCode?: string;
   bookedAt?: string;
@@ -142,6 +146,16 @@ export function BookingDetailDrawer({
         </div>
 
         <div className="flex-1 px-6 py-5">
+          {/* Групповая бронь */}
+          {meta?.groupSize && meta.groupSize > 1 && (
+            <div className="mb-5 rounded border border-[#C9A96E]/50 bg-[#C9A96E]/10 px-3 py-2 text-xs text-navy">
+              👥 Групповая бронь · номер {meta.roomNo} из {meta.groupSize}
+              {meta.organizer ? (
+                <div className="mt-0.5 text-muted-foreground">Организатор: {meta.organizer}</div>
+              ) : null}
+            </div>
+          )}
+
           {/* Stay */}
           <Section title="Проживание">
             <Row label="Заезд" value={arrival.date} hint={arrival.time && `${arrival.time}`} />
@@ -150,6 +164,7 @@ export function BookingDetailDrawer({
             <Row label="Категория" value={b.room_name} />
             {b.room_unit && <Row label="Номер комнаты" value={`№ ${b.room_unit}`} />}
             {meta?.tariff && <Row label="Тариф" value={meta.tariff} />}
+            {meta?.mealPlan && <Row label="Питание" value={meta.mealPlan} />}
             <Row
               label="Гостей"
               value={`${b.adults ?? 1} взр.${b.children ? ` · ${b.children} дет.` : ""}`}

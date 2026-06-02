@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { ROOMS } from "@/data/rooms";
-import { ROOM_UNITS, assignToUnits, unitTypeId, realBookingId } from "@/data/room-units";
+import { ROOM_UNITS, assignToUnits, unitTypeId, realBookingId, unitMaintKey } from "@/data/room-units";
 import { OfflineBookingModal } from "@/components/admin/OfflineBookingModal";
 import { CalendarTimeline } from "@/components/admin/CalendarTimeline";
 import { BookingDetailDrawer } from "@/components/admin/BookingDetailDrawer";
@@ -143,7 +143,11 @@ function AdminCalendarPage() {
   const [statusFilter, setStatusFilter] = useState<Set<string>>(new Set(["pending","confirmed","paid","completed"]));
   const [viewMode, setViewMode] = useState<"month" | "week">("month");
   const [blocks, setBlocks] = useState<{ room_id: string; date: string }[]>([]);
+  const [maint, setMaint] = useState<Set<string>>(new Set());
   const syncFn = useServerFn(syncTravellineReservations);
+
+  // Физические номера «в ремонте» скрываются из шахматки.
+  const activeUnits = useMemo(() => ROOM_UNITS.filter((u) => !maint.has(unitMaintKey(u))), [maint]);
 
   // Автосинхронизация TravelLine каждые 15 минут
   useEffect(() => {
@@ -163,6 +167,16 @@ function AdminCalendarPage() {
     void load();
     void loadBlocks();
   }, [anchor]);
+
+  useEffect(() => {
+    void loadMaint();
+  }, []);
+
+  async function loadMaint() {
+    const { data, error } = await (supabase as any).from("room_maintenance").select("room_key");
+    if (error) console.error(error);
+    else setMaint(new Set((data ?? []).map((r: { room_key: string }) => r.room_key)));
+  }
 
   async function loadBlocks() {
     const from = format(addDays(anchor, -1), "yyyy-MM-dd");
@@ -368,14 +382,15 @@ function AdminCalendarPage() {
     return { arrivals: arr, departures: dep };
   }, [bookings, statusFilter, todayStr]);
 
-  // Итоги месяца — по физическим комнатам/койкам (точная заполняемость).
+  // Итоги месяца — по физическим комнатам/койкам (точная заполняемость),
+  // без номеров «в ремонте».
   const monthStats = useMemo(() => {
-    const totalRoomNights = ROOM_UNITS.length * monthDays.length;
+    const totalRoomNights = activeUnits.length * monthDays.length;
     let occupiedNights = 0;
     let revenue = 0;
     const uniqueBookings = new Set<string>();
 
-    ROOM_UNITS.forEach((unit) => {
+    activeUnits.forEach((unit) => {
       monthDays.forEach((d) => {
         const cell = bookingsForCell(unit.id, d);
         cell.forEach((b) => {
@@ -391,7 +406,7 @@ function AdminCalendarPage() {
 
     const pct = totalRoomNights > 0 ? Math.round((occupiedNights / totalRoomNights) * 100) : 0;
     return { occupiedNights, revenue, pct, total: uniqueBookings.size };
-  }, [bookingsForCell, monthDays]);
+  }, [bookingsForCell, monthDays, activeUnits]);
 
   return (
     <div className="min-h-screen">
@@ -536,7 +551,7 @@ function AdminCalendarPage() {
               клик по пустой ячейке — новая бронь · правый клик — статус / блокировка
             </p>
             <CalendarTimeline
-              rooms={ROOM_UNITS}
+              rooms={activeUnits}
               days={monthDays}
               bookings={assignedBookings}
               defaultCollapsed={Object.keys(HOSTEL_CAPACITY)}
