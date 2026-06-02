@@ -41,6 +41,27 @@ function mapStatus(tl: string): string {
   return "confirmed"; // Active
 }
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// Загрузка одной детали с повторами и backoff (TL режет лавину запросом 429).
+async function fetchDetail(url: string, headers: Record<string, string>): Promise<any | null> {
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      const r = await fetch(url, { headers });
+      if (r.ok) return await r.json();
+      if (r.status === 429 || r.status >= 500) {
+        const ra = Number(r.headers.get("retry-after"));
+        await sleep(Number.isFinite(ra) && ra > 0 ? ra * 1000 : 400 * Math.pow(2, attempt));
+        continue;
+      }
+      return null; // 4xx (кроме 429) — пропускаем бронь, повтор не поможет
+    } catch {
+      await sleep(400 * Math.pow(2, attempt));
+    }
+  }
+  return null;
+}
+
 const masked = (v: any) => !v || String(v).includes("*");
 
 // Одна TL-бронь (number) может быть ГРУППОВОЙ — содержать много roomStays
@@ -186,9 +207,9 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
     back.setDate(back.getDate() - 120);
     const seedFrom = `${(data.from ?? back.toISOString().slice(0, 10))}T00:00:00Z`;
 
-    const PAGE = 12; // деталей за страницу
-    const MAX_PAGES = 12; // до ~144 деталей за прогон — быстрее доходим до нужных дат
-    const CONCURRENCY = 4; // ≤4 одновременных запроса деталей (иначе 429/лимит воркера)
+    const PAGE = 10; // деталей за страницу
+    const MAX_PAGES = 8; // до ~80 деталей за прогон
+    const CONCURRENCY = 2; // мягко — по 2 запроса (иначе TL режет лавину 429)
     let totalSynced = 0;
     let caughtUp = false;
     let firstError: string | null = null;
@@ -217,20 +238,9 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
           const worker = async () => {
             while (next < summaries.length) {
               const idx = next++;
-              // одна повторная попытка при сбое (гасит редкие 429/таймауты)
-              let ok = false;
-              for (let attempt = 0; attempt < 2 && !ok; attempt++) {
-                try {
-                  const r = await fetch(`${base}/${summaries[idx].number}`, { headers });
-                  if (r.ok) {
-                    details[idx] = await r.json();
-                    ok = true;
-                  }
-                } catch {
-                  /* retry */
-                }
-              }
-              if (!ok) failed++;
+              const d = await fetchDetail(`${base}/${summaries[idx].number}`, headers);
+              if (d) details[idx] = d;
+              else failed++;
             }
           };
           await Promise.all(
