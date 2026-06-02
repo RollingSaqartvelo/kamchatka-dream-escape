@@ -126,8 +126,9 @@ function mapBookingRows(detail: any): any[] {
     };
 
     return {
-      // Уникальный ключ на каждый номер группы (index уникален в рамках брони).
-      tl_reservation_id: `${number}#${rs.index ?? i}`,
+      // Уникальный ключ на каждый номер группы — последовательный индекс
+      // (совпадает с ключами импорта из отчёта, чтобы не задваивать брони).
+      tl_reservation_id: `${number}#${i}`,
       source,
       first_name: oRest.join(" ") || "—",
       last_name: oLast || "Бронь TL",
@@ -187,11 +188,19 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
     );
 
     // Resume from the persisted cursor; reset=true начинает заново.
-    const { data: state } = await supabaseAdmin
+    const { data: state, error: stateErr } = await supabaseAdmin
       .from("tl_sync_state")
       .select("continue_token")
       .eq("id", 1)
       .maybeSingle();
+    // Без этой таблицы курсор не сохраняется → синк топчется на месте. Падаем явно.
+    if (stateErr) {
+      return {
+        ok: false,
+        synced: 0,
+        error: `tl_sync_state недоступна (${stateErr.message}). Создайте таблицу tl_sync_state в БД.`,
+      };
+    }
     let cursor: string | null = data.reset ? null : ((state as any)?.continue_token ?? null);
     if (data.reset) {
       await supabaseAdmin
@@ -298,9 +307,14 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
         // Сбойные (rate-limit/таймаут) собираем в failedNumbers и докачиваем
         // отдельным проходом в конце; если так и не вышло — показываем их.
         cursor = j.continueToken ?? cursor;
-        await supabaseAdmin
+        const { error: persistErr } = await supabaseAdmin
           .from("tl_sync_state")
           .upsert({ id: 1, continue_token: cursor, updated_at: new Date().toISOString() });
+        if (persistErr) {
+          // Если курсор не сохраняется — синк зациклится. Останавливаемся с явной ошибкой.
+          firstError = `курсор не сохраняется: ${persistErr.message}`;
+          break;
+        }
 
         if (!j.hasMoreData) {
           caughtUp = true;
