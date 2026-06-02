@@ -186,9 +186,8 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
     back.setDate(back.getDate() - 120);
     const seedFrom = `${(data.from ?? back.toISOString().slice(0, 10))}T00:00:00Z`;
 
-    const PAGE = 10; // деталей за страницу — небольшая, чтобы страница гарантированно
-                     // проходила целиком и сдвигала курсор даже при жёстком лимите
-    const MAX_PAGES = 6; // до ~60 деталей за прогон; само-ограничится при недогрузке
+    const PAGE = 12; // деталей за страницу
+    const MAX_PAGES = 12; // до ~144 деталей за прогон — быстрее доходим до нужных дат
     const CONCURRENCY = 4; // ≤4 одновременных запроса деталей (иначе 429/лимит воркера)
     let totalSynced = 0;
     let caughtUp = false;
@@ -218,13 +217,20 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
           const worker = async () => {
             while (next < summaries.length) {
               const idx = next++;
-              try {
-                const r = await fetch(`${base}/${summaries[idx].number}`, { headers });
-                if (r.ok) details[idx] = await r.json();
-                else failed++;
-              } catch {
-                failed++;
+              // одна повторная попытка при сбое (гасит редкие 429/таймауты)
+              let ok = false;
+              for (let attempt = 0; attempt < 2 && !ok; attempt++) {
+                try {
+                  const r = await fetch(`${base}/${summaries[idx].number}`, { headers });
+                  if (r.ok) {
+                    details[idx] = await r.json();
+                    ok = true;
+                  }
+                } catch {
+                  /* retry */
+                }
               }
+              if (!ok) failed++;
             }
           };
           await Promise.all(
