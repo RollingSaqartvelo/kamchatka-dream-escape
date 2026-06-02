@@ -266,9 +266,12 @@ function AdminCalendarPage() {
       const stayFrom = format(startOfMonth(subMonths(anchor, 1)), "yyyy-MM-dd");
       const stayTo = format(endOfMonth(addMonths(anchor, 2)), "yyyy-MM-dd");
       const res = await syncFn({ data: { stayFrom, stayTo, ...(full ? { reset: true } : {}) } });
+      const r = res as typeof res & { lastMod?: string; minCi?: string; maxCi?: string; unknown?: number };
+      console.log("TL sync:", r);
       if (res.ok) {
         toast.success(
-          `Синхронизировано: ${res.synced} номеров (заезд ${stayFrom}…${stayTo})${res.hasMore ? " · есть ещё, нажмите ↻ снова" : " · сезон подтянут ✓"}`,
+          `+${res.synced} номеров · курсор до модификации ${r.lastMod || "?"} · заезды ${r.minCi || "—"}…${r.maxCi || "—"}${r.unknown ? ` · без карты: ${r.unknown}` : ""}${res.hasMore ? " · ещё есть" : " · сезон подтянут ✓"}`,
+          { duration: 8000 },
         );
         void load();
       } else {

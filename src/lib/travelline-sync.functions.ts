@@ -213,6 +213,11 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
     let totalSynced = 0;
     let caughtUp = false;
     let firstError: string | null = null;
+    // диагностика
+    let unknown = 0;
+    let minCi = "";
+    let maxCi = "";
+    let lastMod = "";
 
     for (let page = 0; page < MAX_PAGES; page++) {
       try {
@@ -228,6 +233,7 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
         }
         const j: any = await res.json();
         const summaries: any[] = j.bookingSummaries ?? [];
+        if (summaries.length) lastMod = summaries[summaries.length - 1]?.modifiedDateTime ?? lastMod;
 
         if (summaries.length > 0) {
           let failed = 0;
@@ -260,6 +266,11 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
             }
             const num = d?.booking?.number;
             if (num) numbers.push(String(num)); // для чистки легаси (даже если строк нет)
+            for (const row of r) {
+              if (row.room_id === "unknown") unknown++;
+              if (!minCi || row.check_in < minCi) minCi = row.check_in;
+              if (!maxCi || row.check_in > maxCi) maxCi = row.check_in;
+            }
             if (r.length) rows.push(...r);
           }
           if (rows.length) {
@@ -300,8 +311,9 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
       }
     }
 
+    const diag = { unknown, minCi, maxCi, lastMod: lastMod.slice(0, 16) };
     if (firstError && totalSynced === 0) {
-      return { ok: false, error: firstError, synced: 0 };
+      return { ok: false, error: firstError, synced: 0, ...diag };
     }
-    return { ok: true, synced: totalSynced, caughtUp, hasMore: !caughtUp };
+    return { ok: true, synced: totalSynced, caughtUp, hasMore: !caughtUp, ...diag };
   });
