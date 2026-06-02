@@ -269,12 +269,13 @@ function AdminCalendarPage() {
       const r = res as typeof res & {
         lastMod?: string; minCi?: string; maxCi?: string; unknown?: number;
         skipped?: number; skippedSample?: string[];
+        upsertErrors?: number; cursorFrom?: string; cursorTo?: string;
       };
       console.log("TL sync:", r);
       if (res.ok) {
         toast.success(
-          `+${res.synced} номеров · курсор ${r.lastMod || "?"} · заезды ${r.minCi || "—"}…${r.maxCi || "—"}${r.unknown ? ` · без карты: ${r.unknown}` : ""}${r.skipped ? ` · ⚠ пропущено ${r.skipped}: ${(r.skippedSample || []).join(", ")}` : ""}${res.hasMore ? " · ещё есть" : " · сезон подтянут ✓"}`,
-          { duration: 9000 },
+          `+${res.synced} · мод. ${r.lastMod || "?"} · курсор ${r.cursorFrom}→${r.cursorTo} · заезды ${r.minCi || "—"}…${r.maxCi || "—"}${r.upsertErrors ? ` · ⚠upsert:${r.upsertErrors}` : ""}${r.skipped ? ` · пропущ ${r.skipped}` : ""}${res.hasMore ? " · ещё есть" : " · подтянут ✓"}`,
+          { duration: 10000 },
         );
         void load();
       } else {

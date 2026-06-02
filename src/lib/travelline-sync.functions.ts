@@ -218,6 +218,8 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
     let minCi = "";
     let maxCi = "";
     let lastMod = "";
+    let upsertErrors = 0;
+    const cursorStart = (cursor ?? "seed").slice(-8);
     const failedNumbers: string[] = []; // брони, чья деталь не догрузилась (rate-limit)
 
     for (let page = 0; page < MAX_PAGES; page++) {
@@ -278,13 +280,16 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
               .from("bookings")
               .upsert(rows, { onConflict: "tl_reservation_id" });
             if (error) {
-              firstError = error.message;
-              break;
-            }
-            totalSynced += rows.length;
-            // Удаляем легаси-строки старого формата (ключ = голый номер без #index).
-            if (numbers.length) {
-              await supabaseAdmin.from("bookings").delete().in("tl_reservation_id", numbers);
+              // НЕ прерываемся — записываем ошибку и двигаемся дальше, чтобы
+              // одна битая страница не блокировала весь синк.
+              firstError = `upsert: ${error.message}`;
+              upsertErrors++;
+            } else {
+              totalSynced += rows.length;
+              // Удаляем легаси-строки старого формата (ключ = голый номер без #index).
+              if (numbers.length) {
+                await supabaseAdmin.from("bookings").delete().in("tl_reservation_id", numbers);
+              }
             }
           }
         }
@@ -341,6 +346,9 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
       lastMod: lastMod.slice(0, 16),
       skipped: stillFailed.length,
       skippedSample: stillFailed.slice(0, 5),
+      upsertErrors,
+      cursorFrom: cursorStart, // хвост курсора НА ВХОДЕ
+      cursorTo: (cursor ?? "seed").slice(-8), // хвост курсора НА ВЫХОДЕ — должен меняться
     };
     if (firstError && totalSynced === 0) {
       return { ok: false, error: firstError, synced: 0, ...diag };
