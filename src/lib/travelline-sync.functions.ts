@@ -180,8 +180,10 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
     back.setMonth(back.getMonth() - 18);
     const seedFrom = `${(data.from ?? back.toISOString().slice(0, 10))}T00:00:00Z`;
 
-    const PAGE = 40; // деталей за страницу
-    const MAX_PAGES = 6; // при высоком лимите подзапросов — до ~240 за прогон
+    const PAGE = 12; // деталей за страницу — небольшая, чтобы гарантированно
+                     // пройти целиком и сдвинуть курсор даже при жёстком лимите
+    const MAX_PAGES = 3; // до ~36 деталей за прогон; само-ограничится при недогрузке
+    const CONCURRENCY = 4; // ≤4 одновременных запроса деталей (иначе 429/лимит воркера)
     let totalSynced = 0;
     let caughtUp = false;
     let firstError: string | null = null;
@@ -203,28 +205,27 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
 
         if (summaries.length > 0) {
           let failed = 0;
-          const details = await Promise.all(
-            summaries.map(async (s) => {
+          // Грузим детали с ограниченной параллельностью (воркеры берут из общей
+          // очереди), чтобы не упереться в лимит подзапросов / rate-limit TL.
+          const details: any[] = new Array(summaries.length).fill(null);
+          let next = 0;
+          const worker = async () => {
+            while (next < summaries.length) {
+              const idx = next++;
               try {
-                const r = await fetch(`${base}/${s.number}`, { headers });
-                if (!r.ok) {
-                  failed++;
-                  return null;
-                }
-                return await r.json();
+                const r = await fetch(`${base}/${summaries[idx].number}`, { headers });
+                if (r.ok) details[idx] = await r.json();
+                else failed++;
               } catch {
                 failed++;
-                return null;
               }
-            }),
+            }
+          };
+          await Promise.all(
+            Array.from({ length: Math.min(CONCURRENCY, summaries.length) }, worker),
           );
-          // Если часть деталей не догрузилась (вероятно, лимит подзапросов
-          // воркера) — НЕ двигаем курсор и выходим, чтобы повторить страницу
-          // в следующий прогон и не потерять брони.
-          if (failed > 0) {
-            firstError = `детали недогрузились (${failed}/${summaries.length}) — лимит подзапросов; курсор сохранён, повторите ↻`;
-            break;
-          }
+          // Успешно загруженные брони сохраняем сразу (даже если часть
+          // недогрузилась) — апсерт идемпотентен.
           const rows: any[] = [];
           const numbers: string[] = [];
           for (const d of details) {
@@ -244,15 +245,20 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
               break;
             }
             totalSynced += rows.length;
-            // Удаляем легаси-строки старого формата (ключ = голый номер без #index),
-            // оставшиеся от прошлой версии синка (1 строка на всю бронь).
+            // Удаляем легаси-строки старого формата (ключ = голый номер без #index).
             if (numbers.length) {
               await supabaseAdmin.from("bookings").delete().in("tl_reservation_id", numbers);
             }
           }
+          // Если хоть одна деталь не догрузилась — НЕ двигаем курсор: повторим
+          // эту же страницу в следующий прогон (потерь нет, апсерт идемпотентен).
+          if (failed > 0) {
+            firstError = `детали недогрузились (${failed}/${summaries.length}) — повторите ↻ (докачается)`;
+            break;
+          }
         }
 
-        // advance + persist cursor after each successful page
+        // advance + persist cursor только при полностью успешной странице
         cursor = j.continueToken ?? cursor;
         await supabaseAdmin
           .from("tl_sync_state")
