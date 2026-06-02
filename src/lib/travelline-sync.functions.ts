@@ -136,10 +136,14 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
     z.object({
-      // Необязательно: переопределить старт бэкафилла. По умолчанию — 18 мес назад.
+      // Необязательно: переопределить старт бэкафилла (по дате модификации).
       from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
       to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-      // reset=true сбрасывает курсор и заново тянет ВСЕ брони с начала.
+      // Окно по дате ЗАЕЗДА: сохраняем только брони, пересекающие [stayFrom, stayTo].
+      // Так наполняем нужный сезон (API фильтра по заезду не имеет).
+      stayFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      stayTo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      // reset=true сбрасывает курсор и тянет заново с начала окна модификаций.
       reset: z.boolean().optional(),
     }),
   )
@@ -174,15 +178,17 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
         .upsert({ id: 1, continue_token: null, updated_at: new Date().toISOString() });
     }
 
-    // Старт бэкафилла по дате МОДИФИКАЦИИ: 18 мес назад, чтобы захватить все
-    // брони (в т.ч. с будущими заездами, изменённые давно). `from` — переопределение.
+    // Выдача TL идёт по ВОЗРАСТАНИЮ даты модификации (старые → новые), фильтра
+    // по дате заезда нет. Поэтому стартуем бэкафилл недалеко — 120 дней назад,
+    // чтобы быстро попадать в актуальные брони сезона, а не в древнюю историю.
+    // `from` — переопределение (напр. для глубокого импорта в аналитику).
     const back = new Date();
-    back.setMonth(back.getMonth() - 18);
+    back.setDate(back.getDate() - 120);
     const seedFrom = `${(data.from ?? back.toISOString().slice(0, 10))}T00:00:00Z`;
 
-    const PAGE = 12; // деталей за страницу — небольшая, чтобы гарантированно
-                     // пройти целиком и сдвинуть курсор даже при жёстком лимите
-    const MAX_PAGES = 3; // до ~36 деталей за прогон; само-ограничится при недогрузке
+    const PAGE = 10; // деталей за страницу — небольшая, чтобы страница гарантированно
+                     // проходила целиком и сдвигала курсор даже при жёстком лимите
+    const MAX_PAGES = 6; // до ~60 деталей за прогон; само-ограничится при недогрузке
     const CONCURRENCY = 4; // ≤4 одновременных запроса деталей (иначе 429/лимит воркера)
     let totalSynced = 0;
     let caughtUp = false;
@@ -229,12 +235,16 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
           const rows: any[] = [];
           const numbers: string[] = [];
           for (const d of details) {
-            const r = mapBookingRows(d);
-            if (r.length) {
-              rows.push(...r);
-              const num = d?.booking?.number;
-              if (num) numbers.push(String(num));
+            let r = mapBookingRows(d);
+            // Окно по дате заезда: оставляем только пересекающие [stayFrom, stayTo].
+            if (data.stayFrom || data.stayTo) {
+              const lo = data.stayFrom ?? "0000-01-01";
+              const hi = data.stayTo ?? "9999-12-31";
+              r = r.filter((row) => row.check_out > lo && row.check_in <= hi);
             }
+            const num = d?.booking?.number;
+            if (num) numbers.push(String(num)); // для чистки легаси (даже если строк нет)
+            if (r.length) rows.push(...r);
           }
           if (rows.length) {
             const { error } = await supabaseAdmin

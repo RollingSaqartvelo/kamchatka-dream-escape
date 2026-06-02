@@ -261,11 +261,14 @@ function AdminCalendarPage() {
   async function syncTravelline(full = false) {
     setSyncing(true);
     try {
-      // Без from — синк сам тянет с 18 мес назад; reset=true начинает заново.
-      const res = await syncFn({ data: full ? { reset: true } : {} });
+      // Сохраняем только брони с заездом в окне сезона (пред. месяц … +2 вперёд),
+      // т.е. при июне — май–август 2026. reset=true начинает окно модификаций заново.
+      const stayFrom = format(startOfMonth(subMonths(anchor, 1)), "yyyy-MM-dd");
+      const stayTo = format(endOfMonth(addMonths(anchor, 2)), "yyyy-MM-dd");
+      const res = await syncFn({ data: { stayFrom, stayTo, ...(full ? { reset: true } : {}) } });
       if (res.ok) {
         toast.success(
-          `Синхронизировано: ${res.synced} номеров${res.hasMore ? " · есть ещё, нажмите ↻ снова" : " · всё подтянуто ✓"}`,
+          `Синхронизировано: ${res.synced} номеров (заезд ${stayFrom}…${stayTo})${res.hasMore ? " · есть ещё, нажмите ↻ снова" : " · сезон подтянут ✓"}`,
         );
         void load();
       } else {
