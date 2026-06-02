@@ -136,9 +136,11 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
     z.object({
-      // Used only on the very first run (no cursor yet) as the backfill start.
-      from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      // Необязательно: переопределить старт бэкафилла. По умолчанию — 18 мес назад.
+      from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
       to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      // reset=true сбрасывает курсор и заново тянет ВСЕ брони с начала.
+      reset: z.boolean().optional(),
     }),
   )
   .handler(async ({ data }) => {
@@ -159,16 +161,27 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
     );
 
-    // Resume from the persisted cursor; first ever run starts from `from`.
+    // Resume from the persisted cursor; reset=true начинает заново.
     const { data: state } = await supabaseAdmin
       .from("tl_sync_state")
       .select("continue_token")
       .eq("id", 1)
       .maybeSingle();
-    let cursor: string | null = (state as any)?.continue_token ?? null;
+    let cursor: string | null = data.reset ? null : ((state as any)?.continue_token ?? null);
+    if (data.reset) {
+      await supabaseAdmin
+        .from("tl_sync_state")
+        .upsert({ id: 1, continue_token: null, updated_at: new Date().toISOString() });
+    }
 
-    const PAGE = 40; // details per page (keeps subrequests within Worker limits)
-    const MAX_PAGES = 6; // up to ~240 bookings per run; cron keeps catching up
+    // Старт бэкафилла по дате МОДИФИКАЦИИ: 18 мес назад, чтобы захватить все
+    // брони (в т.ч. с будущими заездами, изменённые давно). `from` — переопределение.
+    const back = new Date();
+    back.setMonth(back.getMonth() - 18);
+    const seedFrom = `${(data.from ?? back.toISOString().slice(0, 10))}T00:00:00Z`;
+
+    const PAGE = 40; // деталей за страницу
+    const MAX_PAGES = 6; // при высоком лимите подзапросов — до ~240 за прогон
     let totalSynced = 0;
     let caughtUp = false;
     let firstError: string | null = null;
@@ -178,7 +191,7 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
         const url = new URL(base);
         url.searchParams.set("count", String(PAGE));
         if (cursor) url.searchParams.set("continueToken", cursor);
-        else url.searchParams.set("lastModification", `${data.from}T00:00:00Z`);
+        else url.searchParams.set("lastModification", seedFrom);
 
         const res = await fetch(url, { headers });
         if (!res.ok) {
@@ -189,16 +202,29 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
         const summaries: any[] = j.bookingSummaries ?? [];
 
         if (summaries.length > 0) {
+          let failed = 0;
           const details = await Promise.all(
             summaries.map(async (s) => {
               try {
                 const r = await fetch(`${base}/${s.number}`, { headers });
-                return r.ok ? await r.json() : null;
+                if (!r.ok) {
+                  failed++;
+                  return null;
+                }
+                return await r.json();
               } catch {
+                failed++;
                 return null;
               }
             }),
           );
+          // Если часть деталей не догрузилась (вероятно, лимит подзапросов
+          // воркера) — НЕ двигаем курсор и выходим, чтобы повторить страницу
+          // в следующий прогон и не потерять брони.
+          if (failed > 0) {
+            firstError = `детали недогрузились (${failed}/${summaries.length}) — лимит подзапросов; курсор сохранён, повторите ↻`;
+            break;
+          }
           const rows: any[] = [];
           const numbers: string[] = [];
           for (const d of details) {

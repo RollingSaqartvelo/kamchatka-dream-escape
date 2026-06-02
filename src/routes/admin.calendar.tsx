@@ -258,14 +258,15 @@ function AdminCalendarPage() {
     }
   }
 
-  async function syncTravelline() {
+  async function syncTravelline(full = false) {
     setSyncing(true);
-    const from = format(anchor, "yyyy-MM-dd");
-    const to = format(endOfMonth(addMonths(anchor, 1)), "yyyy-MM-dd");
     try {
-      const res = await syncFn({ data: { from, to } });
+      // Без from — синк сам тянет с 18 мес назад; reset=true начинает заново.
+      const res = await syncFn({ data: full ? { reset: true } : {} });
       if (res.ok) {
-        toast.success(`Синхронизировано: ${res.synced} броней из TravelLine`);
+        toast.success(
+          `Синхронизировано: ${res.synced} номеров${res.hasMore ? " · есть ещё, нажмите ↻ снова" : " · всё подтянуто ✓"}`,
+        );
         void load();
       } else {
         toast.error(`Ошибка TravelLine: ${res.error}`);
@@ -449,11 +450,22 @@ function AdminCalendarPage() {
               ))}
             </div>
             <button
-              onClick={() => void syncTravelline()}
+              onClick={() => void syncTravelline(false)}
               disabled={syncing}
               className="border border-[#C9A96E] px-5 py-2 text-[11px] uppercase tracking-widest text-[#C9A96E] hover:bg-[#C9A96E] hover:text-white disabled:opacity-50"
             >
               {syncing ? "Синхронизация…" : "↻ TravelLine"}
+            </button>
+            <button
+              onClick={() => {
+                if (confirm("Полный импорт заново подтянет ВСЕ брони из TravelLine с нуля. Запустить?"))
+                  void syncTravelline(true);
+              }}
+              disabled={syncing}
+              title="Сбросить курсор и заново импортировать все брони"
+              className="border border-zinc-400 px-4 py-2 text-[11px] uppercase tracking-widest text-zinc-500 hover:bg-zinc-100 disabled:opacity-50"
+            >
+              ↻↻ Полный импорт
             </button>
             <button
               onClick={() => void handleTestEmail()}
