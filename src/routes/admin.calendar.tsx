@@ -464,14 +464,14 @@ function AdminCalendarPage() {
             </button>
             <button
               onClick={() => {
-                if (confirm("Полный импорт заново подтянет ВСЕ брони из TravelLine с нуля. Запустить?"))
+                if (confirm("Сбросить курсор и начать импорт со свежих модификаций (последние 30 дней)? Это быстро подтянет текущие брони."))
                   void syncTravelline(true);
               }}
               disabled={syncing}
-              title="Сбросить курсор и заново импортировать все брони"
+              title="Сбросить курсор и начать со свежих броней"
               className="border border-zinc-400 px-4 py-2 text-[11px] uppercase tracking-widest text-zinc-500 hover:bg-zinc-100 disabled:opacity-50"
             >
-              ↻↻ Полный импорт
+              ↻↻ Сброс + свежие
             </button>
             <button
               onClick={() => void handleTestEmail()}
