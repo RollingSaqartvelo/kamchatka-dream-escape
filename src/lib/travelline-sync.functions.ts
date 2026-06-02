@@ -44,20 +44,54 @@ function mapStatus(tl: string): string {
 function mapBooking(detail: any) {
   const bk = detail?.booking;
   if (!bk) return null;
-  const rs = bk.roomStays?.[0] ?? {};
-  const checkIn = String(rs.stayDates?.arrivalDateTime ?? "").slice(0, 10);
-  const checkOut = String(rs.stayDates?.departureDateTime ?? "").slice(0, 10);
+  const stays: any[] = bk.roomStays ?? [];
+  const rs = stays[0] ?? {};
+  const arrivalDT = String(rs.stayDates?.arrivalDateTime ?? "");
+  const departureDT = String(rs.stayDates?.departureDateTime ?? "");
+  const checkIn = arrivalDT.slice(0, 10);
+  const checkOut = departureDT.slice(0, 10);
   if (!checkIn || !checkOut) return null;
 
   const nights = Math.max(1, Math.round((+new Date(checkOut) - +new Date(checkIn)) / 86400000));
   const roomId = TL_TO_ROOM_ID[Number(rs.roomType?.id)] ?? "unknown";
-  const roomRevenue = (bk.roomStays ?? []).reduce(
-    (s: number, r: any) => s + (r.total?.priceAfterTax ?? 0),
-    0,
-  );
+  const roomRevenue = Math.round(stays.reduce((s: number, r: any) => s + (r.total?.priceAfterTax ?? 0), 0));
+  const total = Math.round(bk.total?.priceAfterTax ?? roomRevenue);
+  const prepaid = Math.round(bk.guaranteeInfo?.totalPrepaid ?? 0);
+  const remaining = Math.max(0, total - prepaid);
+  const servicesTotal = Math.max(0, total - roomRevenue);
+  const adults =
+    stays.reduce((s: number, r: any) => s + Number(r.guestCount?.adultCount ?? 0), 0) ||
+    Number(rs.guestCount?.adultCount ?? 2);
+  const children = stays.reduce((s: number, r: any) => s + (r.guestCount?.childAges?.length ?? 0), 0);
+
   const masked = (v: any) => !v || String(v).includes("*");
+  // Список гостей (без дублей и маскированных).
+  const guestMap = new Map<string, string>();
+  for (const r of stays)
+    for (const g of r.guests ?? []) {
+      const nm = `${g.lastName ?? ""} ${g.firstName ?? ""}`.trim();
+      if (nm && !masked(nm)) guestMap.set(nm.toLowerCase(), nm);
+    }
+  const guests = [...guestMap.values()];
+
   const firstName = masked(bk.customer?.firstName) ? "" : String(bk.customer.firstName);
   const lastName = masked(bk.customer?.lastName) ? "Бронь TL" : String(bk.customer.lastName);
+
+  // Доп. данные TL, которых нет отдельными колонками, кладём в special_requests
+  // (Json). Партнёрский API НЕ отдаёт: комментарий агента, № подтверждения в
+  // канале, телефон гостя, способ гарантии — поэтому их здесь нет.
+  const meta = {
+    kind: "tl",
+    tariff: rs.ratePlans?.[0]?.name ?? "",
+    arrival: arrivalDT, // полная дата-время заезда (…T14:00)
+    departure: departureDT,
+    prepaid,
+    servicesTotal,
+    guests,
+    sourceUrl: bk.source?.sourceUrl ?? "",
+    channelCode: bk.source?.code ?? "",
+    bookedAt: bk.createdDateTime ?? "",
+  };
 
   return {
     tl_reservation_id: String(bk.number),
@@ -71,15 +105,17 @@ function mapBooking(detail: any) {
     check_in: checkIn,
     check_out: checkOut,
     nights,
-    adults: Number(rs.guestCount?.adultCount ?? 2),
-    children: (rs.guestCount?.childAges ?? []).length,
+    adults,
+    children,
     meal_plan: "room_only",
-    room_price_total: Math.round(roomRevenue),
-    total_price: Math.round(bk.total?.priceAfterTax ?? roomRevenue),
+    room_price_total: roomRevenue,
+    prepayment_amount: prepaid,
+    remaining_amount: remaining,
+    total_price: total,
     payment_status: mapStatus(String(bk.status)),
     id_consent: true,
     terms_consent: true,
-    special_requests: [],
+    special_requests: meta,
   };
 }
 

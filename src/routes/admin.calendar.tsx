@@ -19,6 +19,7 @@ import { ROOMS } from "@/data/rooms";
 import { ROOM_UNITS, assignToUnits, unitTypeId, realBookingId } from "@/data/room-units";
 import { OfflineBookingModal } from "@/components/admin/OfflineBookingModal";
 import { CalendarTimeline } from "@/components/admin/CalendarTimeline";
+import { BookingDetailDrawer } from "@/components/admin/BookingDetailDrawer";
 import { sourceIcon, sourceLabel } from "@/lib/channels";
 import { syncTravellineReservations } from "@/lib/travelline-sync.functions";
 import { sendTestEmail } from "@/lib/email.functions";
@@ -37,15 +38,31 @@ export const Route = createFileRoute("/admin/calendar")({
 type Bk = {
   id: string;
   booking_number: string;
+  tl_reservation_id?: string | null;
   first_name: string;
   last_name: string;
+  salutation?: string | null;
+  email?: string | null;
   room_id: string;
   room_name: string;
   check_in: string;
   check_out: string;
+  nights: number;
+  adults?: number;
+  children?: number;
+  meal_plan?: string | null;
   payment_status: string;
   total_price: number;
-  adults?: number;
+  room_price_total?: number | null;
+  breakfast_total?: number | null;
+  prepayment_amount?: number | null;
+  remaining_amount?: number | null;
+  created_at?: string | null;
+  custom_request?: string | null;
+  admin_notes?: string | null;
+  city?: string | null;
+  country?: string | null;
+  special_requests?: unknown;
   source?: string;
   phone?: string;
 };
@@ -256,7 +273,7 @@ function AdminCalendarPage() {
     const { data, error } = await supabase
       .from("bookings")
       .select(
-        "id, booking_number, first_name, last_name, room_id, room_name, check_in, check_out, payment_status, total_price, source, phone",
+        "id, booking_number, tl_reservation_id, first_name, last_name, salutation, email, room_id, room_name, check_in, check_out, nights, adults, children, meal_plan, payment_status, total_price, room_price_total, breakfast_total, prepayment_amount, remaining_amount, created_at, custom_request, admin_notes, city, country, special_requests, source, phone",
       )
       .or(`and(check_in.lte.${to},check_out.gte.${from})`)
       .neq("payment_status", "cancelled")
@@ -298,7 +315,7 @@ function AdminCalendarPage() {
   // Persist a drag-move / resize. `b` — это разложенная по юниту копия, а
   // `unitId` — id физической комнаты; в БД пишем тип (room_id типа), привязку
   // к конкретной комнате (room_unit) сохраним отдельным шагом.
-  async function moveBooking(b: Bk, unitId: string, checkIn: string, checkOut: string) {
+  async function moveBooking(b: { id: string }, unitId: string, checkIn: string, checkOut: string) {
     const realId = realBookingId(b.id);
     const typeId = unitTypeId(unitId);
     const orig = bookings.find((x) => x.id === realId);
@@ -531,10 +548,11 @@ function AdminCalendarPage() {
                 setModalRoom(unitTypeId(roomId));
                 setModalDate(day);
               }}
-              onOpen={(b) => setSelected(bookings.find((x) => x.id === realBookingId(b.id)) ?? b)}
-              onContext={(b, x, y) =>
-                setCtxMenu({ booking: bookings.find((x) => x.id === realBookingId(b.id)) ?? b, x, y })
-              }
+              onOpen={(b) => setSelected(bookings.find((x) => x.id === realBookingId(b.id)) ?? null)}
+              onContext={(b, x, y) => {
+                const real = bookings.find((x) => x.id === realBookingId(b.id));
+                if (real) setCtxMenu({ booking: real, x, y });
+              }}
               onTooltip={(t) => setTooltip(t as TooltipData | null)}
               onMove={moveBooking}
             />
@@ -550,46 +568,16 @@ function AdminCalendarPage() {
         onCreated={() => void load()}
       />
 
-      {/* Detail mini-drawer */}
+      {/* Detail drawer — полная карточка брони */}
       {selected && (
-        <div
-          className="fixed inset-0 z-50 flex justify-end bg-black/40"
-          onClick={() => setSelected(null)}
-        >
-          <div
-            className="h-full w-full max-w-md overflow-y-auto bg-background p-8"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between">
-              <p className="font-mono text-lg text-navy">{selected.booking_number}</p>
-              <button onClick={() => setSelected(null)} className="text-2xl text-muted-foreground">
-                ×
-              </button>
-            </div>
-            <div className="mt-6 space-y-2 text-sm">
-              <p className="text-navy">
-                {selected.last_name} {selected.first_name}
-              </p>
-              <p className="text-muted-foreground">{selected.room_name}</p>
-              <p>
-                {format(parseISO(selected.check_in), "d MMM", { locale: ru })} —{" "}
-                {format(parseISO(selected.check_out), "d MMM yyyy", { locale: ru })}
-              </p>
-              <p className="font-serif text-xl text-navy">
-                ₽ {new Intl.NumberFormat("ru-RU").format(selected.total_price)}
-              </p>
-              <p className="text-xs uppercase tracking-widest text-[#C9A96E]">
-                {selected.payment_status}
-              </p>
-              <a
-                href={`/admin/bookings`}
-                className="mt-4 inline-block border border-navy px-4 py-2 text-[10px] uppercase tracking-widest text-navy hover:bg-navy hover:text-cream"
-              >
-                Открыть в списке
-              </a>
-            </div>
-          </div>
-        </div>
+        <BookingDetailDrawer
+          booking={selected}
+          onClose={() => setSelected(null)}
+          onChangeStatus={(id, status) => {
+            void changeStatus(id, status);
+            setSelected((s) => (s ? { ...s, payment_status: status } : s));
+          }}
+        />
       )}
 
       {/* Контекстное меню — смена статуса */}
