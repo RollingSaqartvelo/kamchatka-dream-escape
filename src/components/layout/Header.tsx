@@ -75,6 +75,7 @@ export function Header() {
             <LanguageSwitcher light />
             <Link
               to="/account"
+              aria-label={c.text("menu.account", t("nav.account"))}
               className="inline-flex items-center gap-1.5 text-[11px] tracking-widest-plus uppercase text-cream/80 hover:text-cream"
             >
               <User className="h-3.5 w-3.5" />

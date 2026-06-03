@@ -34,9 +34,9 @@ export function Footer() {
 
 
           <div>
-            <h4 className="mb-5 text-[11px] tracking-widest-plus uppercase text-gold">
+            <h3 className="mb-5 text-[11px] tracking-widest-plus uppercase text-gold">
               {c.text("footer.navHeading", t("footer.nav"))}
-            </h4>
+            </h3>
             <ul className="space-y-3 text-sm">
               {[
                 ["/rooms", c.text("menu.rooms", t("nav.rooms"))],
@@ -55,9 +55,9 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="mb-5 text-[11px] tracking-widest-plus uppercase text-gold">
+            <h3 className="mb-5 text-[11px] tracking-widest-plus uppercase text-gold">
               {c.text("footer.contactHeading", t("footer.contact"))}
-            </h4>
+            </h3>
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-2">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
