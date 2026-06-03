@@ -37,13 +37,13 @@ function ArticleNotFound() {
   return (
     <SiteLayout>
       <div className="mx-auto max-w-2xl px-4 py-32 text-center">
-        <p className="text-[11px] tracking-widest-plus uppercase text-gold">404</p>
+        <p className="text-[11px] tracking-widest-plus uppercase text-gold-ink">404</p>
         <h1 className="mt-4 font-serif text-4xl text-navy">
           {t("kamchatka.notFoundTitle")}
         </h1>
         <Link
           to="/kamchatka"
-          className="mt-8 inline-block text-[11px] tracking-widest-plus uppercase text-navy hover:text-gold"
+          className="mt-8 inline-block text-[11px] tracking-widest-plus uppercase text-navy hover:text-gold-ink"
         >
           ← {t("kamchatka.backAll")}
         </Link>
@@ -61,7 +61,7 @@ function ArticleError({ error, reset }: { error: Error; reset: () => void }) {
         <p className="mt-3 text-sm text-muted-foreground">{error.message}</p>
         <button
           onClick={reset}
-          className="mt-8 text-[11px] tracking-widest-plus uppercase text-navy hover:text-gold"
+          className="mt-8 text-[11px] tracking-widest-plus uppercase text-navy hover:text-gold-ink"
         >
           {t("kamchatka.retry")}
         </button>
@@ -148,7 +148,7 @@ function ArticlePage() {
                 >
                   «{s.text}»
                   {s.author && (
-                    <footer className="mt-3 text-[11px] not-italic tracking-widest-plus uppercase text-gold">
+                    <footer className="mt-3 text-[11px] not-italic tracking-widest-plus uppercase text-gold-ink">
                       — {s.author}
                     </footer>
                   )}
@@ -196,7 +196,7 @@ function ArticlePage() {
           <div className="mt-20 border-t border-border pt-10">
             <Link
               to="/kamchatka"
-              className="inline-flex items-center gap-3 text-[11px] tracking-widest-plus uppercase text-navy hover:text-gold"
+              className="inline-flex items-center gap-3 text-[11px] tracking-widest-plus uppercase text-navy hover:text-gold-ink"
             >
               <span aria-hidden>←</span> {t("kamchatka.backAll")}
             </Link>

@@ -32,7 +32,7 @@ function AboutPage() {
       {!c.hidden("intro") && (
         <section className="bg-background py-24">
           <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-            <p className="text-center text-[11px] uppercase tracking-[4px] text-gold">
+            <p className="text-center text-[11px] uppercase tracking-[4px] text-gold-ink">
               {c.text("intro.eyebrow", "Полуостров")}
             </p>
             <h2 className="mt-4 text-center font-serif text-3xl text-navy sm:text-4xl">
@@ -52,7 +52,7 @@ function AboutPage() {
       {!c.hidden("conditions") && (
       <section className="bg-cream py-24">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-[11px] uppercase tracking-[4px] text-gold">
+          <p className="text-center text-[11px] uppercase tracking-[4px] text-gold-ink">
             {c.text("conditions.eyebrow", "Условия проживания")}
           </p>
           <h2 className="mt-4 text-center font-serif text-3xl text-navy sm:text-4xl">
@@ -116,7 +116,7 @@ function AboutPage() {
                   key={i}
                   className="flex gap-5 border-b border-beige pb-4 last:border-b-0"
                 >
-                  <span className="font-serif text-xl text-gold">
+                  <span className="font-serif text-xl text-gold-ink">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <span className="text-muted-foreground">{step}</span>

@@ -42,7 +42,7 @@ function KamchatkaPage() {
       {/* Featured */}
       <section className="bg-cream py-24 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <p className="mb-10 text-center text-[11px] tracking-widest-plus uppercase text-gold">
+          <p className="mb-10 text-center text-[11px] tracking-widest-plus uppercase text-gold-ink">
             {t("kamchatka.mainStory")}
           </p>
           <article className="grid gap-10 lg:grid-cols-2 lg:items-center">
@@ -54,7 +54,7 @@ function KamchatkaPage() {
               />
             </div>
             <div>
-              <p className="text-[11px] tracking-widest-plus uppercase text-gold">
+              <p className="text-[11px] tracking-widest-plus uppercase text-gold-ink">
                 {featured.category} · {featured.readingTime}
               </p>
               <h2 className="mt-5 font-serif text-4xl text-navy sm:text-5xl">
@@ -66,7 +66,7 @@ function KamchatkaPage() {
               <Link
                 to="/kamchatka/$slug"
                 params={{ slug: featured.slug }}
-                className="mt-8 inline-flex items-center gap-3 text-[11px] tracking-widest-plus uppercase text-navy hover:text-gold"
+                className="mt-8 inline-flex items-center gap-3 text-[11px] tracking-widest-plus uppercase text-navy hover:text-gold-ink"
               >
                 {t("kamchatka.readArticle")}
                 <span aria-hidden>→</span>
@@ -81,7 +81,7 @@ function KamchatkaPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-14 flex items-end justify-between">
             <div>
-              <p className="text-[11px] tracking-widest-plus uppercase text-gold">
+              <p className="text-[11px] tracking-widest-plus uppercase text-gold-ink">
                 {t("kamchatka.journal")}
               </p>
               <h3 className="mt-3 font-serif text-3xl text-navy sm:text-4xl">
@@ -112,10 +112,10 @@ function KamchatkaPage() {
                     loading="lazy"
                   />
                 </div>
-                <p className="mt-5 text-[11px] tracking-widest-plus uppercase text-gold">
+                <p className="mt-5 text-[11px] tracking-widest-plus uppercase text-gold-ink">
                   {a.category} · {a.readingTime}
                 </p>
-                <h4 className="mt-3 font-serif text-2xl text-navy transition-colors group-hover:text-gold">
+                <h4 className="mt-3 font-serif text-2xl text-navy transition-colors group-hover:text-gold-ink">
                   {a.title}
                 </h4>
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">

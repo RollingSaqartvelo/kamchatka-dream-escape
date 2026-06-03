@@ -52,7 +52,7 @@ function AboutShowcase({ c }: { c: PageGetters }) {
           />
         </div>
         <div className="flex flex-col justify-center md:col-span-3">
-          <p className="mb-5 text-[11px] tracking-widest-plus uppercase text-gold">
+          <p className="mb-5 text-[11px] tracking-widest-plus uppercase text-gold-ink">
             {c.text("about.eyebrow", t("sections.aboutTitle"))}
           </p>
           <h2 className="font-serif text-4xl leading-tight text-navy sm:text-5xl">
@@ -184,7 +184,7 @@ function FeatureBlock({
           )}
         </div>
         <div className={reverse ? "md:order-1" : ""}>
-          <p className="mb-5 text-[11px] tracking-widest-plus uppercase text-gold">
+          <p className="mb-5 text-[11px] tracking-widest-plus uppercase text-gold-ink">
             {eyebrow}
           </p>
           <h2 className="font-serif text-4xl text-navy sm:text-5xl">{title}</h2>
@@ -214,7 +214,7 @@ function RoomsBlock({ c }: { c: PageGetters }) {
   return (
     <section className="bg-cream py-20 sm:py-28">
       <div className="mx-auto max-w-[720px] px-4 text-center sm:px-6 lg:px-8">
-        <p className="mb-5 text-[11px] tracking-widest-plus uppercase text-gold">
+        <p className="mb-5 text-[11px] tracking-widest-plus uppercase text-gold-ink">
           {c.text("rooms.eyebrow", t("home.roomsBlock.eyebrow"))}
         </p>
         <h2 className="font-serif text-4xl text-navy sm:text-5xl">
@@ -235,7 +235,7 @@ function RoomsBlock({ c }: { c: PageGetters }) {
                 i > 0 ? "sm:border-l sm:border-border" : ""
               }`}
             >
-              <div className="mb-3 text-2xl text-gold">{item.icon}</div>
+              <div className="mb-3 text-2xl text-gold-ink">{item.icon}</div>
               <div className="font-serif text-2xl text-navy">{item.title}</div>
               <div className="mt-1 text-xs text-muted-foreground">{item.caption}</div>
             </div>
