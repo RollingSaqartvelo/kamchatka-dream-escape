@@ -275,7 +275,6 @@ function AdminCalendarPage() {
         skipped?: number; skippedSample?: string[];
         upsertErrors?: number; cursorFrom?: string; cursorTo?: string;
       };
-      console.log("TL sync:", r);
       if (res.ok) {
         toast.success(
           `+${res.synced} · мод. ${r.lastMod || "?"} · курсор ${r.cursorFrom}→${r.cursorTo} · заезды ${r.minCi || "—"}…${r.maxCi || "—"}${r.upsertErrors ? ` · ⚠upsert:${r.upsertErrors}` : ""}${r.skipped ? ` · пропущ ${r.skipped}` : ""}${res.hasMore ? " · ещё есть" : " · подтянут ✓"}`,

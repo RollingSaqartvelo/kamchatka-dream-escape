@@ -73,11 +73,12 @@ export const auroraChat = createServerFn({ method: "POST" })
       return;
     }
 
+    const reader = upstream.body.pipeThrough(new TextDecoderStream()).getReader();
     let buffer = "";
-    for await (const chunk of upstream.body.pipeThrough(
-      new TextDecoderStream()
-    )) {
-      buffer += chunk;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += value;
       let idx;
       while ((idx = buffer.indexOf("\n")) !== -1) {
         const line = buffer.slice(0, idx).trim();
