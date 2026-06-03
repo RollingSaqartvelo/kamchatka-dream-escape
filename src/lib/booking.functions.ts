@@ -3,7 +3,7 @@ import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
 import { ROOMS } from "@/data/rooms";
 import { ROOM_ID_TO_TL, RATE_PLAN_BY_MEAL } from "./travelline.functions";
-import { sendBookingConfirmation } from "./email.functions";
+import { sendBookingConfirmation, sendNewBookingToStaff } from "./email.functions";
 import { notifyNewBooking } from "./telegram.functions";
 import { createConversationForBooking } from "./inbox.functions";
 import { enforceRateLimit } from "./rate-limit";
@@ -234,6 +234,11 @@ export const createBooking = createServerFn({ method: "POST" })
       prepayment_amount: prepaymentAmount,
       source: "website",
     }).catch((e) => console.error("notifyNewBooking failed:", e));
+
+    // Уведомление о новой брони на почту сотрудников (Шеф + администраторы)
+    sendNewBookingToStaff(row.id as string).catch((e) =>
+      console.error("sendNewBookingToStaff failed:", e),
+    );
 
     // Создаём диалог в CRM инбоксе
     createConversationForBooking({

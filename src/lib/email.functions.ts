@@ -303,6 +303,77 @@ export async function sendPaymentConfirmation(bookingId: string) {
   );
 }
 
+// ─── Уведомление сотрудникам о новой брони ───────────────────────────────────
+
+function esc(s: string | null | undefined): string {
+  return String(s ?? "").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// Email всех сотрудников с ролью admin/manager.
+async function staffEmails(): Promise<string[]> {
+  const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+    auth: { persistSession: false },
+  });
+  const { data: roles } = await supabase.from("user_roles").select("user_id, role").in("role", ["admin", "manager"]);
+  const ids = new Set((roles ?? []).map((r: { user_id: string }) => r.user_id));
+  if (!ids.size) return [];
+  const emails: string[] = [];
+  let page = 1;
+  for (;;) {
+    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 200 });
+    if (error || !data?.users?.length) break;
+    for (const u of data.users) if (u.email && ids.has(u.id)) emails.push(u.email);
+    if (data.users.length < 200) break;
+    page += 1;
+  }
+  return [...new Set(emails)];
+}
+
+const SOURCE_LABEL: Record<string, string> = {
+  website: "Сайт", travelline: "TravelLine", manual: "Вручную", offline: "Вручную",
+};
+
+export async function sendNewBookingToStaff(bookingId: string) {
+  const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+    auth: { persistSession: false },
+  });
+  const { data: b } = await supabase
+    .from("bookings")
+    .select("booking_number,first_name,last_name,email,phone,room_name,check_in,check_out,nights,adults,children,total_price,prepayment_amount,source,payment_status,meal_plan")
+    .eq("id", bookingId)
+    .single();
+  if (!b) return;
+
+  const recipients = await staffEmails();
+  if (!recipients.length) return;
+
+  const fmt = (n: number | null | undefined) => `${new Intl.NumberFormat("ru-RU").format(Number(n ?? 0))} ₽`;
+  const adminUrl = "https://kamchatka-dream-escape.lovable.app/admin/calendar";
+  const html = `<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"></head>
+<body style="font-family:Georgia,serif;background:#f5f2ee;margin:0;padding:0;">
+  <div style="max-width:600px;margin:32px auto;background:#fff;border-radius:4px;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,0.08);">
+    <div style="background:#1a1a2e;padding:24px 32px;">
+      <p style="color:#C9A96E;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 6px;">Новое бронирование</p>
+      <h1 style="color:#fff;font-size:22px;margin:0;font-weight:400;">№ ${esc(b.booking_number)}</h1>
+    </div>
+    <div style="padding:28px 32px;color:#1a1a2e;font-size:14px;line-height:1.8;">
+      <p style="margin:0 0 12px;"><b>Гость:</b> ${esc(b.last_name)} ${esc(b.first_name)}<br>
+      <b>Телефон:</b> ${esc(b.phone) || "—"} · <b>Email:</b> ${esc(b.email) || "—"}</p>
+      <p style="margin:0 0 12px;"><b>Номер:</b> ${esc(b.room_name)}<br>
+      <b>Заезд:</b> ${esc(b.check_in)} → <b>Выезд:</b> ${esc(b.check_out)} (${b.nights} ноч.)<br>
+      <b>Гостей:</b> ${b.adults} взр.${b.children ? ` + ${b.children} дет.` : ""}</p>
+      <p style="margin:0 0 12px;"><b>Сумма:</b> ${fmt(b.total_price)} · <b>Предоплата:</b> ${fmt(b.prepayment_amount)}<br>
+      <b>Источник:</b> ${SOURCE_LABEL[b.source ?? "website"] ?? esc(b.source)} · <b>Статус:</b> ${esc(b.payment_status)}</p>
+      <a href="${adminUrl}" style="display:inline-block;margin-top:8px;background:#1a1a2e;color:#fff;padding:12px 24px;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;border-radius:2px;">Открыть в админке</a>
+    </div>
+  </div>
+</body></html>`;
+
+  for (const to of recipients) {
+    await sendViaResend(to, `Новая бронь — ${b.booking_number} · ${b.room_name}`, html);
+  }
+}
+
 // ─── Тестовое письмо ─────────────────────────────────────────────────────────
 
 export const sendTestEmail = createServerFn({ method: "POST" })
