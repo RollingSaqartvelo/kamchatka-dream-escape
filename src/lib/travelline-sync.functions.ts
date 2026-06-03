@@ -3,7 +3,7 @@ import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
 import { ROOM_ID_TO_TL } from "@/lib/travelline.functions";
 import { resolveTlChannel } from "@/lib/channels";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireStaff } from "@/integrations/supabase/staff-middleware";
 
 const TL_API = "https://partner.tlintegration.com";
 
@@ -384,7 +384,7 @@ export async function runTravellineSync(data: SyncOpts): Promise<SyncResult> {
 
 // Server fn для кнопки в админке (с авторизацией сотрудника).
 export const syncTravellineReservations = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireStaff])
   .inputValidator(
     z.object({
       from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),

@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireStaff } from "@/integrations/supabase/staff-middleware";
 
 function admin() {
   return createClient(
@@ -94,7 +94,7 @@ export async function createConversationForBooking(opts: {
 // ─── Список диалогов ──────────────────────────────────────────────────────────
 
 export const listConversations = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireStaff])
   .handler(async () => {
     const { data } = await admin()
       .from("conversations")
@@ -107,7 +107,7 @@ export const listConversations = createServerFn({ method: "GET" })
 // ─── Сообщения диалога ────────────────────────────────────────────────────────
 
 export const getMessages = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireStaff])
   .inputValidator(z.object({ conversationId: z.string().uuid() }))
   .handler(async ({ data }) => {
     const db = admin();
@@ -138,7 +138,7 @@ export const getMessages = createServerFn({ method: "GET" })
 // ─── Ответить гостю ───────────────────────────────────────────────────────────
 
 export const replyToGuest = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireStaff])
   .inputValidator(
     z.object({
       conversationId: z.string().uuid(),
@@ -189,7 +189,7 @@ export const replyToGuest = createServerFn({ method: "POST" })
 // ─── Изменить статус диалога ──────────────────────────────────────────────────
 
 export const setConversationStatus = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireStaff])
   .inputValidator(
     z.object({
       conversationId: z.string().uuid(),
@@ -208,7 +208,7 @@ export const setConversationStatus = createServerFn({ method: "POST" })
 // ─── Создать диалог вручную (из форм обратной связи) ─────────────────────────
 
 export const createManualConversation = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireStaff])
   .inputValidator(
     z.object({
       guestName: z.string().min(1).max(100),

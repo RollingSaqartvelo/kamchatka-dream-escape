@@ -138,8 +138,9 @@ export async function notifyCancellation(b: {
 // ─── Тестовое сообщение ───────────────────────────────────────────────────────
 
 import { createServerFn } from "@tanstack/react-start";
+import { requireStaff } from "@/integrations/supabase/staff-middleware";
 
-export const sendTelegramTest = createServerFn({ method: "POST" }).handler(async () => {
+export const sendTelegramTest = createServerFn({ method: "POST" }).middleware([requireStaff]).handler(async () => {
   const chatId = process.env.TELEGRAM_ADMIN_CHAT_ID ?? "";
   const ok = await sendMessage(
     chatId,

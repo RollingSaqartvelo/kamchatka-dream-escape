@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
+import { requireStaff } from "@/integrations/supabase/staff-middleware";
 
 // ─── HTML шаблоны ────────────────────────────────────────────────────────────
 
@@ -305,6 +306,7 @@ export async function sendPaymentConfirmation(bookingId: string) {
 // ─── Тестовое письмо ─────────────────────────────────────────────────────────
 
 export const sendTestEmail = createServerFn({ method: "POST" })
+  .middleware([requireStaff])
   .inputValidator(z.object({ to: z.string().email() }))
   .handler(async ({ data }) => {
     const testBooking = {
