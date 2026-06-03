@@ -18,6 +18,7 @@ function SignupPage() {
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [consent, setConsent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -27,6 +28,10 @@ function SignupPage() {
     setError(null);
     if (password.length < 6) {
       setError("Пароль должен быть не короче 6 символов");
+      return;
+    }
+    if (!consent) {
+      setError("Необходимо согласие на обработку персональных данных");
       return;
     }
     setLoading(true);
@@ -85,6 +90,22 @@ function SignupPage() {
               <Input label="Email*" type="email" value={email} onChange={setEmail} required />
               <Input label="Пароль*" type="password" value={password} onChange={setPassword} required />
 
+              <label className="flex cursor-pointer items-start gap-2 text-xs text-muted-foreground">
+                <input
+                  type="checkbox"
+                  checked={consent}
+                  onChange={(e) => setConsent(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-gold"
+                />
+                <span>
+                  Я согласен(на) на обработку персональных данных в соответствии с{" "}
+                  <a href="/privacy" target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="text-navy underline">
+                    Политикой обработки персональных данных
+                  </a>
+                  .
+                </span>
+              </label>
+
               {error && (
                 <p className="border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
                   {error}
@@ -93,7 +114,7 @@ function SignupPage() {
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !consent}
                 className="w-full bg-navy py-4 text-[11px] uppercase tracking-[2px] text-cream transition-colors hover:bg-gold disabled:opacity-50"
               >
                 {loading ? "Создаём…" : "Создать аккаунт"}

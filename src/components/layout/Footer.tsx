@@ -24,6 +24,10 @@ export function Footer() {
             <p className="max-w-md text-sm leading-relaxed text-cream/60">
               {c.text("footer.about", t("footer.about"))}
             </p>
+            <p className="mt-4 text-xs text-cream/40">
+              ИП Смирнов Роман Яковлевич · ИНН 772400271482<br />
+              г. Петропавловск-Камчатский, ул. Абеля, 41
+            </p>
           </div>
 
 
@@ -82,10 +86,10 @@ export function Footer() {
         <div className="mt-16 flex flex-col items-start justify-between gap-4 border-t border-cream/10 pt-8 text-xs text-cream/40 md:flex-row md:items-center">
           <p>{c.text("footer.rights", t("footer.rights"))}</p>
           <div className="flex gap-6">
-            <Link to="/" className="hover:text-gold">
+            <Link to="/privacy" className="hover:text-gold">
               {c.text("footer.privacy", t("footer.privacy"))}
             </Link>
-            <Link to="/" className="hover:text-gold">
+            <Link to="/oferta" className="hover:text-gold">
               {c.text("footer.terms", t("footer.terms"))}
             </Link>
           </div>

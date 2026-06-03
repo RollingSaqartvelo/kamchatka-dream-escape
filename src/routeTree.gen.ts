@@ -13,6 +13,8 @@ import { Route as WellnessRouteImport } from './routes/wellness'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ServicesRouteImport } from './routes/services'
 import { Route as RoomsRouteImport } from './routes/rooms'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as OfertaRouteImport } from './routes/oferta'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ContactsRouteImport } from './routes/contacts'
 import { Route as BookingRouteImport } from './routes/booking'
@@ -67,6 +69,16 @@ const ServicesRoute = ServicesRouteImport.update({
 const RoomsRoute = RoomsRouteImport.update({
   id: '/rooms',
   path: '/rooms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OfertaRoute = OfertaRouteImport.update({
+  id: '/oferta',
+  path: '/oferta',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -254,6 +266,8 @@ export interface FileRoutesByFullPath {
   '/booking': typeof BookingRouteWithChildren
   '/contacts': typeof ContactsRoute
   '/login': typeof LoginRoute
+  '/oferta': typeof OfertaRoute
+  '/privacy': typeof PrivacyRoute
   '/rooms': typeof RoomsRoute
   '/services': typeof ServicesRoute
   '/signup': typeof SignupRoute
@@ -294,6 +308,8 @@ export interface FileRoutesByTo {
   '/booking': typeof BookingRouteWithChildren
   '/contacts': typeof ContactsRoute
   '/login': typeof LoginRoute
+  '/oferta': typeof OfertaRoute
+  '/privacy': typeof PrivacyRoute
   '/rooms': typeof RoomsRoute
   '/services': typeof ServicesRoute
   '/signup': typeof SignupRoute
@@ -335,6 +351,8 @@ export interface FileRoutesById {
   '/booking': typeof BookingRouteWithChildren
   '/contacts': typeof ContactsRoute
   '/login': typeof LoginRoute
+  '/oferta': typeof OfertaRoute
+  '/privacy': typeof PrivacyRoute
   '/rooms': typeof RoomsRoute
   '/services': typeof ServicesRoute
   '/signup': typeof SignupRoute
@@ -378,6 +396,8 @@ export interface FileRouteTypes {
     | '/booking'
     | '/contacts'
     | '/login'
+    | '/oferta'
+    | '/privacy'
     | '/rooms'
     | '/services'
     | '/signup'
@@ -418,6 +438,8 @@ export interface FileRouteTypes {
     | '/booking'
     | '/contacts'
     | '/login'
+    | '/oferta'
+    | '/privacy'
     | '/rooms'
     | '/services'
     | '/signup'
@@ -458,6 +480,8 @@ export interface FileRouteTypes {
     | '/booking'
     | '/contacts'
     | '/login'
+    | '/oferta'
+    | '/privacy'
     | '/rooms'
     | '/services'
     | '/signup'
@@ -500,6 +524,8 @@ export interface RootRouteChildren {
   BookingRoute: typeof BookingRouteWithChildren
   ContactsRoute: typeof ContactsRoute
   LoginRoute: typeof LoginRoute
+  OfertaRoute: typeof OfertaRoute
+  PrivacyRoute: typeof PrivacyRoute
   RoomsRoute: typeof RoomsRoute
   ServicesRoute: typeof ServicesRoute
   SignupRoute: typeof SignupRoute
@@ -542,6 +568,20 @@ declare module '@tanstack/react-router' {
       path: '/rooms'
       fullPath: '/rooms'
       preLoaderRoute: typeof RoomsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/oferta': {
+      id: '/oferta'
+      path: '/oferta'
+      fullPath: '/oferta'
+      preLoaderRoute: typeof OfertaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -867,6 +907,8 @@ const rootRouteChildren: RootRouteChildren = {
   BookingRoute: BookingRouteWithChildren,
   ContactsRoute: ContactsRoute,
   LoginRoute: LoginRoute,
+  OfertaRoute: OfertaRoute,
+  PrivacyRoute: PrivacyRoute,
   RoomsRoute: RoomsRoute,
   ServicesRoute: ServicesRoute,
   SignupRoute: SignupRoute,

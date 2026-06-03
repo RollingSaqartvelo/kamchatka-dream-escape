@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
@@ -114,11 +114,10 @@ export function Step4Confirm({ state, patch, onEditStep, onBack }: Props) {
           total_price: totals.total,
           prepayment_amount: prepayment,
           remaining_amount: remaining,
-          id_consent: true,
-          terms_consent: true,
+          id_consent: idConsent,
+          terms_consent: termsConsent,
         },
       });
-      void booking_number;
 
       // If user is logged in: link booking + save profile data for next time
       if (user) {
@@ -146,6 +145,8 @@ export function Step4Confirm({ state, patch, onEditStep, onBack }: Props) {
           console.warn("Profile sync failed:", e);
         }
       }
+
+      if (booking_number) toast.success(`Бронирование создано: № ${booking_number}`);
 
       navigate({
         to: "/booking/pay/$id",
@@ -262,16 +263,32 @@ export function Step4Confirm({ state, patch, onEditStep, onBack }: Props) {
 
         {/* Consents */}
         <div className="mt-8 space-y-3 border-t border-border pt-8">
-          <ConsentRow
-            checked={idConsent}
-            onChange={(v) => patch({ idConsent: v })}
-            text={t("booking.step4.consentId")}
-          />
-          <ConsentRow
-            checked={termsConsent}
-            onChange={(v) => patch({ termsConsent: v })}
-            text={t("booking.step4.consentTerms")}
-          />
+          <ConsentRow checked={idConsent} onChange={(v) => patch({ idConsent: v })}>
+            Я даю согласие на обработку моих персональных данных в соответствии с{" "}
+            <a
+              href="/privacy"
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="text-gold underline"
+            >
+              Политикой обработки персональных данных
+            </a>{" "}
+            (152-ФЗ).
+          </ConsentRow>
+          <ConsentRow checked={termsConsent} onChange={(v) => patch({ termsConsent: v })}>
+            Я ознакомлен(а) и согласен(на) с{" "}
+            <a
+              href="/oferta"
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="text-gold underline"
+            >
+              Публичной офертой
+            </a>{" "}
+            и условиями бронирования.
+          </ConsentRow>
         </div>
 
         {/* Actions */}
@@ -414,11 +431,11 @@ function PhoneField({
 function ConsentRow({
   checked,
   onChange,
-  text,
+  children,
 }: {
   checked: boolean;
   onChange: (v: boolean) => void;
-  text: string;
+  children: ReactNode;
 }) {
   return (
     <label className="flex cursor-pointer items-start gap-3 text-sm text-navy">
@@ -428,7 +445,7 @@ function ConsentRow({
         onChange={(e) => onChange(e.target.checked)}
         className="mt-0.5 h-4 w-4 shrink-0 accent-[#C9A96E]"
       />
-      <span className="leading-relaxed">{text}</span>
+      <span className="leading-relaxed">{children}</span>
     </label>
   );
 }

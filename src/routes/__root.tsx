@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/sonner";
 import { AccessibilityWidget } from "@/components/layout/AccessibilityWidget";
+import { CookieBanner } from "@/components/layout/CookieBanner";
 
 import appCss from "../styles.css?url";
 import "@/lib/i18n";
@@ -127,6 +128,7 @@ function RootComponent() {
       <Outlet />
       <Toaster richColors position="top-right" />
       <AccessibilityWidget />
+      <CookieBanner />
     </QueryClientProvider>
   );
 }
