@@ -156,27 +156,27 @@ export function RoomModal({
         {/* Body */}
         <div className="grid gap-8 px-4 pb-32 sm:px-6 md:grid-cols-[1fr_1fr] md:pb-28">
           <div>
-            <p className="text-[11px] uppercase tracking-widest text-gold">{t("rooms.modal.eyebrow")}</p>
+            <p className="text-[11px] uppercase tracking-widest text-gold-ink">{t("rooms.modal.eyebrow")}</p>
             <h2 className="mt-2 font-serif text-3xl text-navy sm:text-4xl">
               {room.name_ru}
             </h2>
 
             <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-1.5">
-                <Users className="h-4 w-4 text-gold" strokeWidth={1.5} />
+                <Users className="h-4 w-4 text-gold-ink" strokeWidth={1.5} />
                 {t("rooms.card.seats", { n: room.max_guests })}
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <Ruler className="h-4 w-4 text-gold" strokeWidth={1.5} />
+                <Ruler className="h-4 w-4 text-gold-ink" strokeWidth={1.5} />
                 {t("rooms.card.area", { n: room.area_sqm })}
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <DoorClosed className="h-4 w-4 text-gold" strokeWidth={1.5} />
+                <DoorClosed className="h-4 w-4 text-gold-ink" strokeWidth={1.5} />
                 {t("rooms.card.rooms", { n: room.rooms_count })}
               </span>
               {room.levels && (
                 <span className="inline-flex items-center gap-1.5">
-                  <Layers className="h-4 w-4 text-gold" strokeWidth={1.5} />
+                  <Layers className="h-4 w-4 text-gold-ink" strokeWidth={1.5} />
                   {t("rooms.card.levels", { n: room.levels })}
                 </span>
               )}
@@ -213,7 +213,7 @@ export function RoomModal({
           </div>
 
           <div>
-            <p className="text-[11px] uppercase tracking-widest text-gold">
+            <p className="text-[11px] uppercase tracking-widest text-gold-ink">
               {t("rooms.modal.desc")}
             </p>
             <p className="mt-4 text-base italic leading-relaxed text-muted-foreground">

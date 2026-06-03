@@ -270,7 +270,7 @@ export function Step4Confirm({ state, patch, onEditStep, onBack }: Props) {
               target="_blank"
               rel="noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="text-gold underline"
+              className="text-gold-ink underline"
             >
               Политикой обработки персональных данных
             </a>{" "}
@@ -283,7 +283,7 @@ export function Step4Confirm({ state, patch, onEditStep, onBack }: Props) {
               target="_blank"
               rel="noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="text-gold underline"
+              className="text-gold-ink underline"
             >
               Публичной офертой
             </a>{" "}

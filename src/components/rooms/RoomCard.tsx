@@ -87,7 +87,7 @@ export function RoomCard({
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
-            className="mt-3 inline-flex w-fit items-center gap-1 text-xs uppercase tracking-widest text-gold hover:text-gold-dark transition-colors"
+            className="mt-3 inline-flex w-fit items-center gap-1 text-xs uppercase tracking-widest text-gold-ink hover:text-gold-dark transition-colors"
           >
             {t("rooms.card.more")}
             <ChevronDown

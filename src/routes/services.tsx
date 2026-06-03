@@ -60,7 +60,7 @@ function PhotoGallery({ photos, alt }: { photos: string[]; alt: string }) {
 function Price({ value, unit }: { value: string; unit: string }) {
   return (
     <div className="mt-8 flex items-baseline gap-3 border-t border-beige pt-6">
-      <span className="text-[11px] tracking-widest-plus uppercase text-gold">Стоимость</span>
+      <span className="text-[11px] tracking-widest-plus uppercase text-gold-ink">Стоимость</span>
       <span className="font-serif text-3xl text-navy">{value}</span>
       <span className="text-sm text-muted-foreground">{unit}</span>
     </div>
@@ -68,7 +68,7 @@ function Price({ value, unit }: { value: string; unit: string }) {
 }
 
 function Eyebrow({ children }: { children: string }) {
-  return <p className="text-[11px] tracking-widest-plus uppercase text-gold">{children}</p>;
+  return <p className="text-[11px] tracking-widest-plus uppercase text-gold-ink">{children}</p>;
 }
 
 // Карточка «название · подпись · цена/единица» (трансфер, заезд/выезд, пансионы).

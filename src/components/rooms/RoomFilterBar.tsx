@@ -40,7 +40,7 @@ export function RoomFilterBar({
       <div className="mx-auto flex max-w-7xl flex-col items-stretch gap-3 px-4 py-4 sm:flex-row sm:items-center sm:gap-5 sm:px-6 lg:px-8">
         <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:gap-5 overflow-x-auto">
           <label className="flex items-center gap-2 text-sm text-navy">
-            <Users className="h-4 w-4 text-gold" strokeWidth={1.5} />
+            <Users className="h-4 w-4 text-gold-ink" strokeWidth={1.5} />
             <span className="text-[11px] uppercase tracking-widest text-muted-foreground">
               {t("rooms.filterGuests")}
             </span>
@@ -57,7 +57,7 @@ export function RoomFilterBar({
           </label>
 
           <div className="flex items-center gap-2 text-sm text-navy">
-            <CalendarIcon className="h-4 w-4 text-gold" strokeWidth={1.5} />
+            <CalendarIcon className="h-4 w-4 text-gold-ink" strokeWidth={1.5} />
             <span className="text-[11px] uppercase tracking-widest text-muted-foreground">
               {t("rooms.filterDates")}
             </span>

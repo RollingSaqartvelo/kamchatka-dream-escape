@@ -45,13 +45,13 @@ function ContactsPage() {
         <div className="mx-auto grid max-w-5xl gap-8 px-4 sm:grid-cols-2 lg:grid-cols-4 sm:px-6 lg:px-8">
           {cards.map(({ Icon, label, value, href, external }) => (
             <div key={label} className="border border-border bg-cream/40 p-8 text-center">
-              <Icon className="mx-auto h-6 w-6 text-gold" />
+              <Icon className="mx-auto h-6 w-6 text-gold-ink" />
               <p className="mt-5 text-[10px] tracking-widest-plus uppercase text-muted-foreground">{label}</p>
               {href ? (
                 <a
                   href={href}
                   {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                  className="mt-2 block font-serif text-lg text-navy hover:text-gold"
+                  className="mt-2 block font-serif text-lg text-navy hover:text-gold-ink"
                 >
                   {value}
                 </a>
@@ -77,7 +77,7 @@ function ContactsPage() {
                   const Icon = ICONS[d.icon] ?? MapPin;
                   return (
                     <div key={i} className="flex gap-4">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-gold/40 text-gold">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-gold/40 text-gold-ink">
                         <Icon className="h-5 w-5" />
                       </div>
                       <div>

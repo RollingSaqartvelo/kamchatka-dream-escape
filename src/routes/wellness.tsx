@@ -32,7 +32,7 @@ function WellnessPage() {
       {!c.hidden("intro") && (
         <section className="bg-background py-24">
           <div className="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
-            <p className="text-[11px] tracking-widest-plus uppercase text-gold">{c.text("intro.eyebrow", "Термальная Камчатка")}</p>
+            <p className="text-[11px] tracking-widest-plus uppercase text-gold-ink">{c.text("intro.eyebrow", "Термальная Камчатка")}</p>
             <h2 className="mt-4 font-serif text-4xl text-navy md:text-5xl">
               {c.text("intro.title", "Источники силы полуострова")}
             </h2>
@@ -59,7 +59,7 @@ function WellnessPage() {
                     {spring.image ? (
                       <img src={spring.image} alt={spring.name} className="h-full w-full object-cover" loading="lazy" />
                     ) : (
-                      <div className="flex flex-col items-center gap-3 text-gold/70">
+                      <div className="flex flex-col items-center gap-3 text-gold-ink/70">
                         <ImageIcon className="h-12 w-12" strokeWidth={1} />
                         <span className="text-[10px] tracking-widest-plus uppercase">Фото скоро</span>
                       </div>
@@ -67,7 +67,7 @@ function WellnessPage() {
                   </div>
 
                   <div className={reversed ? "lg:order-1" : ""}>
-                    <p className="text-[10px] tracking-widest-plus uppercase text-gold">
+                    <p className="text-[10px] tracking-widest-plus uppercase text-gold-ink">
                       {String(idx + 1).padStart(2, "0")} — Источник
                     </p>
                     <h3 className="mt-3 font-serif text-3xl text-navy md:text-4xl">{spring.name}</h3>
@@ -76,13 +76,13 @@ function WellnessPage() {
                     <div className="mt-6 flex flex-wrap gap-x-8 gap-y-3 text-sm text-navy/80">
                       {spring.distance && (
                         <span className="inline-flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-gold" />
+                          <MapPin className="h-4 w-4 text-gold-ink" />
                           {spring.distance}
                         </span>
                       )}
                       {spring.temp && (
                         <span className="inline-flex items-center gap-2">
-                          <Thermometer className="h-4 w-4 text-gold" />
+                          <Thermometer className="h-4 w-4 text-gold-ink" />
                           {spring.temp}
                         </span>
                       )}

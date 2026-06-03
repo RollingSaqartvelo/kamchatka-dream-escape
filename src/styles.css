@@ -219,6 +219,7 @@
   --color-beige: var(--beige);
   --color-gold: var(--gold);
   --color-gold-dark: var(--gold-dark);
+  --color-gold-ink: var(--gold-ink);
   --color-navy: var(--navy);
   --color-light-gray: var(--light-gray);
 }
@@ -229,8 +230,9 @@
   /* Brand palette */
   --cream: oklch(0.962 0.012 80);          /* #F5F1EC */
   --beige: oklch(0.910 0.022 70);          /* #E8DDD0 */
-  --gold: oklch(0.685 0.085 70);           /* #B8976A */
+  --gold: oklch(0.685 0.085 70);           /* #B8976A — акцент/тёмные фоны */
   --gold-dark: oklch(0.560 0.075 65);
+  --gold-ink: oklch(0.475 0.075 65);       /* тёмное золото для текста на светлом (WCAG 4.5:1) */
   --navy: oklch(0.205 0.025 270);          /* #1C1C2E */
   --light-gray: oklch(0.975 0.005 80);     /* #F9F7F4 */
 
