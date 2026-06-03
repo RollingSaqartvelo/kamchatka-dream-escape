@@ -13,8 +13,8 @@ export const Route = createFileRoute("/admin/site")({
 
 // Разделы конструктора. status: "ready" — рабочая подстраница, "soon" — в разработке.
 export const SITE_SECTIONS: { to: string; label: string; status: "ready" | "soon" }[] = [
+  { to: "/admin/site/home", label: "Главная", status: "ready" },
   { to: "/admin/site/services", label: "Услуги", status: "ready" },
-  { to: "/admin/site/home", label: "Главная", status: "soon" },
   { to: "/admin/site/about", label: "Об отеле / Условия", status: "soon" },
   { to: "/admin/site/wellness", label: "Оздоровление", status: "soon" },
   { to: "/admin/site/kamchatka", label: "О Камчатке", status: "soon" },

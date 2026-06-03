@@ -170,6 +170,90 @@ export const SERVICES_SCHEMA: PageSchema = {
   ],
 };
 
+export const HOME_ABOUT_DEF = ["/media/about-building.webp"];
+export const HOME_WELLNESS_DEF = ["/media/wellness-home.webp"];
+
+export const HOME_SCHEMA: PageSchema = {
+  key: "home",
+  label: "Главная",
+  href: "/",
+  blocks: [
+    {
+      id: "hero",
+      label: "Шапка (hero) — фон остаётся видео",
+      toggleable: false,
+      fields: [
+        { id: "hero.eyebrow", label: "Надзаголовок", type: "text", def: "Отель «Полуостров» · Камчатка" },
+        { id: "hero.title", label: "Заголовок", type: "text", def: "Где океан встречается с вулканами" },
+        { id: "hero.subtitle", label: "Подзаголовок", type: "textarea", def: "Бутик-отель на берегу Авачинской бухты — ваш дом на краю света." },
+        { id: "hero.cta", label: "Кнопка 1", type: "text", def: "Забронировать номер" },
+        { id: "hero.ctaSecondary", label: "Кнопка 2", type: "text", def: "Открыть номера" },
+        { id: "hero.scroll", label: "Подсказка прокрутки", type: "text", def: "Прокрутите" },
+      ],
+    },
+    {
+      id: "about",
+      label: "Об отеле (фото + текст)",
+      toggleable: true,
+      fields: [
+        { id: "about.eyebrow", label: "Надзаголовок", type: "text", def: "О нас" },
+        { id: "about.title", label: "Заголовок", type: "text", def: "Камчатка, как вы её ещё не видели" },
+        { id: "about.text", label: "Текст", type: "textarea", def: "«Полуостров» — это место, где камчатская природа встречается с гостеприимством. Мы заботимся о каждой детали, чтобы ваш визит остался в памяти." },
+        { id: "about.cta", label: "Кнопка", type: "text", def: "Подробнее" },
+        { id: "about.photo", label: "Фото", type: "gallery", def: HOME_ABOUT_DEF },
+      ],
+    },
+    {
+      id: "rooms",
+      label: "Номера",
+      toggleable: true,
+      fields: [
+        { id: "rooms.eyebrow", label: "Надзаголовок", type: "text", def: "01 — Размещение" },
+        { id: "rooms.title", label: "Заголовок", type: "text", def: "Номера и сьюты" },
+        { id: "rooms.tagline", label: "Слоган", type: "text", def: "Виды на океан и вулканы из каждого окна" },
+        { id: "rooms.body", label: "Текст", type: "textarea", def: "21 номер для тех, кто ценит настоящий отдых на краю земли. От уютных стандартных номеров до просторных семейных — каждый оснащён всем необходимым: удобными кроватями, телевизором, холодильником, феном, Wi-Fi и тёплыми полами." },
+        { id: "rooms.stat1Title", label: "Показатель 1 — число", type: "text", def: "21 номер" },
+        { id: "rooms.stat1Sub", label: "Показатель 1 — подпись", type: "text", def: "от 1 200 ₽/ночь" },
+        { id: "rooms.stat2Title", label: "Показатель 2 — число", type: "text", def: "Вид на залив" },
+        { id: "rooms.stat2Sub", label: "Показатель 2 — подпись", type: "text", def: "и вулканы" },
+        { id: "rooms.stat3Title", label: "Показатель 3 — число", type: "text", def: "Все удобства" },
+        { id: "rooms.stat3Sub", label: "Показатель 3 — подпись", type: "text", def: "включены" },
+        { id: "rooms.cta", label: "Кнопка", type: "text", def: "Посмотреть номера" },
+      ],
+    },
+    {
+      id: "wellness",
+      label: "Оздоровление (фото + текст)",
+      toggleable: true,
+      fields: [
+        { id: "wellness.eyebrow", label: "Надзаголовок", type: "text", def: "02 — Wellness" },
+        { id: "wellness.title", label: "Заголовок", type: "text", def: "Оздоровление" },
+        { id: "wellness.subtitle", label: "Текст", type: "textarea", def: "Термальные источники, спа и тишина" },
+        { id: "wellness.photo", label: "Фото", type: "gallery", def: HOME_WELLNESS_DEF },
+      ],
+    },
+    {
+      id: "homeservices",
+      label: "Услуги (4 карточки)",
+      toggleable: true,
+      fields: [
+        { id: "homeservices.eyebrow", label: "Надзаголовок", type: "text", def: "04 — Услуги" },
+        { id: "homeservices.title", label: "Заголовок", type: "text", def: "Услуги отеля" },
+        { id: "homeservices.subtitle", label: "Подзаголовок", type: "text", def: "Всё для безупречного отдыха" },
+        { id: "homeservices.i1Title", label: "Карточка 1 — название", type: "text", def: "Трансфер" },
+        { id: "homeservices.i1Text", label: "Карточка 1 — текст", type: "text", def: "Из аэропорта и по городу на премиальных авто." },
+        { id: "homeservices.i2Title", label: "Карточка 2 — название", type: "text", def: "Экскурсии" },
+        { id: "homeservices.i2Text", label: "Карточка 2 — текст", type: "text", def: "Вулканы, океан, термальные источники." },
+        { id: "homeservices.i3Title", label: "Карточка 3 — название", type: "text", def: "Консьерж" },
+        { id: "homeservices.i3Text", label: "Карточка 3 — текст", type: "text", def: "Бронирование, советы, особые запросы 24/7." },
+        { id: "homeservices.i4Title", label: "Карточка 4 — название", type: "text", def: "Завтрак" },
+        { id: "homeservices.i4Text", label: "Карточка 4 — текст", type: "text", def: "Камчатская кухня от шеф-повара ресторана." },
+      ],
+    },
+  ],
+};
+
 export const PAGE_SCHEMAS: Record<string, PageSchema> = {
   services: SERVICES_SCHEMA,
+  home: HOME_SCHEMA,
 };

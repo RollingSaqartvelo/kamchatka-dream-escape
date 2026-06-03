@@ -42,6 +42,7 @@ import { Route as ApiPublicAlfaCallbackRouteImport } from './routes/api/public/a
 import { Route as ApiInternalCronTlSyncRouteImport } from './routes/api/internal/cron-tl-sync'
 import { Route as ApiInternalCronRemindersRouteImport } from './routes/api/internal/cron-reminders'
 import { Route as AdminSiteServicesRouteImport } from './routes/admin.site.services'
+import { Route as AdminSiteHomeRouteImport } from './routes/admin.site.home'
 import { Route as ApiPublicVoucherIdRouteImport } from './routes/api/public/voucher.$id'
 
 const WellnessRoute = WellnessRouteImport.update({
@@ -210,6 +211,11 @@ const AdminSiteServicesRoute = AdminSiteServicesRouteImport.update({
   path: '/services',
   getParentRoute: () => AdminSiteRoute,
 } as any)
+const AdminSiteHomeRoute = AdminSiteHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => AdminSiteRoute,
+} as any)
 const ApiPublicVoucherIdRoute = ApiPublicVoucherIdRouteImport.update({
   id: '/api/public/voucher/$id',
   path: '/api/public/voucher/$id',
@@ -240,6 +246,7 @@ export interface FileRoutesByFullPath {
   '/kamchatka/$slug': typeof KamchatkaSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/kamchatka/': typeof KamchatkaIndexRoute
+  '/admin/site/home': typeof AdminSiteHomeRoute
   '/admin/site/services': typeof AdminSiteServicesRoute
   '/api/internal/cron-reminders': typeof ApiInternalCronRemindersRoute
   '/api/internal/cron-tl-sync': typeof ApiInternalCronTlSyncRoute
@@ -274,6 +281,7 @@ export interface FileRoutesByTo {
   '/kamchatka/$slug': typeof KamchatkaSlugRoute
   '/admin': typeof AdminIndexRoute
   '/kamchatka': typeof KamchatkaIndexRoute
+  '/admin/site/home': typeof AdminSiteHomeRoute
   '/admin/site/services': typeof AdminSiteServicesRoute
   '/api/internal/cron-reminders': typeof ApiInternalCronRemindersRoute
   '/api/internal/cron-tl-sync': typeof ApiInternalCronTlSyncRoute
@@ -311,6 +319,7 @@ export interface FileRoutesById {
   '/kamchatka/$slug': typeof KamchatkaSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/kamchatka/': typeof KamchatkaIndexRoute
+  '/admin/site/home': typeof AdminSiteHomeRoute
   '/admin/site/services': typeof AdminSiteServicesRoute
   '/api/internal/cron-reminders': typeof ApiInternalCronRemindersRoute
   '/api/internal/cron-tl-sync': typeof ApiInternalCronTlSyncRoute
@@ -349,6 +358,7 @@ export interface FileRouteTypes {
     | '/kamchatka/$slug'
     | '/admin/'
     | '/kamchatka/'
+    | '/admin/site/home'
     | '/admin/site/services'
     | '/api/internal/cron-reminders'
     | '/api/internal/cron-tl-sync'
@@ -383,6 +393,7 @@ export interface FileRouteTypes {
     | '/kamchatka/$slug'
     | '/admin'
     | '/kamchatka'
+    | '/admin/site/home'
     | '/admin/site/services'
     | '/api/internal/cron-reminders'
     | '/api/internal/cron-tl-sync'
@@ -419,6 +430,7 @@ export interface FileRouteTypes {
     | '/kamchatka/$slug'
     | '/admin/'
     | '/kamchatka/'
+    | '/admin/site/home'
     | '/admin/site/services'
     | '/api/internal/cron-reminders'
     | '/api/internal/cron-tl-sync'
@@ -687,6 +699,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSiteServicesRouteImport
       parentRoute: typeof AdminSiteRoute
     }
+    '/admin/site/home': {
+      id: '/admin/site/home'
+      path: '/home'
+      fullPath: '/admin/site/home'
+      preLoaderRoute: typeof AdminSiteHomeRouteImport
+      parentRoute: typeof AdminSiteRoute
+    }
     '/api/public/voucher/$id': {
       id: '/api/public/voucher/$id'
       path: '/api/public/voucher/$id'
@@ -698,11 +717,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminSiteRouteChildren {
+  AdminSiteHomeRoute: typeof AdminSiteHomeRoute
   AdminSiteServicesRoute: typeof AdminSiteServicesRoute
   AdminSiteIndexRoute: typeof AdminSiteIndexRoute
 }
 
 const AdminSiteRouteChildren: AdminSiteRouteChildren = {
+  AdminSiteHomeRoute: AdminSiteHomeRoute,
   AdminSiteServicesRoute: AdminSiteServicesRoute,
   AdminSiteIndexRoute: AdminSiteIndexRoute,
 }
