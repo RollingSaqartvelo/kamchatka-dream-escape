@@ -85,6 +85,9 @@ type Props = {
   onContext: (b: TBk, x: number, y: number) => void;
   onTooltip: (t: { booking: TBk; x: number; y: number } | null) => void;
   onMove: (b: TBk, roomId: string, checkIn: string, checkOut: string) => void;
+  searchActive?: boolean; // приглушить несовпавшие брони
+  isMatch?: (b: TBk) => boolean; // подсветить совпавшие с поиском
+  scrollTarget?: { roomId: string; dateStr: string; nonce: number } | null; // прыжок к ячейке
 };
 
 export function CalendarTimeline({
@@ -101,10 +104,15 @@ export function CalendarTimeline({
   onContext,
   onTooltip,
   onMove,
+  searchActive,
+  isMatch,
+  scrollTarget,
 }: Props) {
   const bodyRef = useRef<HTMLDivElement>(null);
   const rowLayoutRef = useRef<{ roomId: string; top: number; height: number }[]>([]);
   const [drag, setDrag] = useState<DragState | null>(null);
+  const [ptr, setPtr] = useState<{ x: number; y: number } | null>(null);
+  const [flashRoom, setFlashRoom] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(defaultCollapsed ?? []));
   const toggleGroup = (typeId: string) =>
     setCollapsed((prev) => {
@@ -132,6 +140,48 @@ export function CalendarTimeline({
     return () => ro.disconnect();
   }, []);
   const dayW = wrapW > 0 ? Math.max(DAY_W, Math.floor((wrapW - LABEL_W) / Math.max(1, len))) : DAY_W;
+
+  // Автоскролл к сегодня: при смене периода прокручиваем так, чтобы текущая дата
+  // была видна слева (если она вообще попадает в окно).
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el || dayW <= 0) return;
+    const idx = differenceInCalendarDays(today, days[0]);
+    if (idx < 0 || idx >= len) return;
+    el.scrollLeft = Math.max(0, idx * dayW - dayW * 2);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [days, dayW, len]);
+
+  // Прыжок к ячейке (конфликт / поиск): разворачиваем группу при необходимости,
+  // скроллим по горизонтали и вертикали, подсвечиваем строку на ~1.6с.
+  useEffect(() => {
+    if (!scrollTarget) return;
+    const { roomId, dateStr } = scrollTarget;
+    const room = rooms.find((r) => r.id === roomId);
+    if (room && collapsed.has(room.typeId)) {
+      setCollapsed((prev) => {
+        const n = new Set(prev);
+        n.delete(room.typeId);
+        return n;
+      });
+    }
+    const raf = requestAnimationFrame(() => {
+      const el = wrapRef.current;
+      if (el) {
+        const idx = differenceInCalendarDays(parseISO(dateStr), days[0]);
+        if (idx >= 0) el.scrollLeft = Math.max(0, idx * dayW - dayW * 3);
+      }
+      const rowEl = bodyRef.current?.querySelector<HTMLElement>(`[data-roomid="${CSS.escape(roomId)}"]`);
+      rowEl?.scrollIntoView({ block: "center", behavior: "smooth" });
+      setFlashRoom(roomId);
+    });
+    const t = setTimeout(() => setFlashRoom(null), 1600);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(t);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scrollTarget]);
 
   // Apply live drag preview to the dragged booking so it re-lays-out as you drag.
   const effBookings = useMemo(() => {
@@ -248,6 +298,7 @@ export function CalendarTimeline({
   useEffect(() => {
     if (!drag) return;
     const onMoveEvt = (e: PointerEvent) => {
+      setPtr({ x: e.clientX, y: e.clientY });
       const dd = Math.round((e.clientX - drag.startX) / dayW);
       let roomId = drag.booking.room_id;
       let ci = drag.startCi;
@@ -272,6 +323,7 @@ export function CalendarTimeline({
       setDrag((d) => (d ? { ...d, preview: { roomId, ci, co }, moved } : d));
     };
     const onUp = () => {
+      setPtr(null);
       setDrag((d) => {
         if (d?.moved) {
           const p = d.preview;
@@ -395,7 +447,15 @@ export function CalendarTimeline({
             // Unit row
             const r = item;
             return (
-              <div key={r.room.id} className="flex border-b border-border" style={{ height: r.height }}>
+              <div
+                key={r.room.id}
+                data-roomid={r.room.id}
+                className={cn(
+                  "flex border-b border-border",
+                  flashRoom === r.room.id && "bg-amber-100 ring-2 ring-inset ring-amber-400",
+                )}
+                style={{ height: r.height }}
+              >
                 <div
                   className={cn(
                     "sticky left-0 z-10 flex shrink-0 flex-col justify-center border-r border-border bg-background px-3 text-navy",
@@ -452,6 +512,8 @@ export function CalendarTimeline({
                       clampIdx(dayIndex(parseISO(b.check_out))) - clampIdx(dayIndex(parseISO(b.check_in)));
                     const width = Math.max(0.5, span) * dayW - 3;
                     const dragging = drag?.booking.id === b.id && drag.moved;
+                    const matched = searchActive ? (isMatch?.(b) ?? false) : false;
+                    const dimmed = searchActive && !matched;
                     return (
                       <div
                         key={b.id}
@@ -461,6 +523,8 @@ export function CalendarTimeline({
                           STATUS_TEXT[b.payment_status] ?? "text-white",
                           conflict && "ring-2 ring-inset ring-red-600",
                           dragging && "z-30 opacity-70 ring-2 ring-navy",
+                          matched && "z-20 ring-2 ring-amber-400 ring-offset-1",
+                          dimmed && "opacity-20",
                         )}
                         style={{ left: left + 1, width, top: lane * LANE_H + 3, height: LANE_H - 4 }}
                         title={`${b.last_name} ${b.first_name}`}
@@ -524,6 +588,18 @@ export function CalendarTimeline({
           </div>
         </div>
       </div>
+
+      {/* Плавающая подпись при перетаскивании */}
+      {drag?.moved && ptr && (
+        <div
+          className="pointer-events-none fixed z-[120] whitespace-nowrap rounded bg-navy px-2 py-1 text-[11px] font-semibold text-cream shadow-lg"
+          style={{ left: ptr.x + 14, top: ptr.y + 14 }}
+        >
+          {format(drag.preview.ci, "d MMM", { locale: ru })} — {format(drag.preview.co, "d MMM", { locale: ru })}
+          {" · "}
+          {rooms.find((r) => r.id === drag.preview.roomId)?.unitLabel ?? ""}
+        </div>
+      )}
     </div>
   );
 }

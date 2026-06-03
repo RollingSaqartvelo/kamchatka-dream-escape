@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   addDays,
@@ -142,6 +142,10 @@ function AdminCalendarPage() {
   const [ctxMenu, setCtxMenu] = useState<{ booking: Bk; x: number; y: number } | null>(null);
   const [statusFilter, setStatusFilter] = useState<Set<string>>(new Set(["pending","confirmed","paid","completed"]));
   const [viewMode, setViewMode] = useState<"month" | "week">("month");
+  const [search, setSearch] = useState("");
+  const [conflictIdx, setConflictIdx] = useState(0);
+  const [scrollTarget, setScrollTarget] = useState<{ roomId: string; dateStr: string; nonce: number } | null>(null);
+  const nonceRef = useRef(0);
   const [blocks, setBlocks] = useState<{ room_id: string; date: string }[]>([]);
   const [maint, setMaint] = useState<Set<string>>(new Set());
   const syncFn = useServerFn(syncTravellineReservations);
@@ -374,14 +378,49 @@ function AdminCalendarPage() {
 
   // Овербукинг: физическая комната/койка с >1 бронью в одной ячейке —
   // больше броней, чем реально вмещает тип (greedy-раскладка не нашла места).
-  const conflictCount = useMemo(() => {
-    let n = 0;
+  // Список ячеек (отсортирован по дате) — для перехода «к следующему конфликту».
+  const conflictCells = useMemo(() => {
+    const out: { roomId: string; date: string }[] = [];
     for (const [key, arr] of cellIndex) {
-      const tid = unitTypeId(key.slice(0, key.indexOf("|")));
-      if (!HOSTEL_CAPACITY[tid] && arr.length > 1) n++; // хостелы (койки) — не конфликт
+      const sep = key.indexOf("|");
+      const roomId = key.slice(0, sep);
+      const tid = unitTypeId(roomId);
+      if (!HOSTEL_CAPACITY[tid] && arr.length > 1) out.push({ roomId, date: key.slice(sep + 1) }); // хостелы — не конфликт
     }
-    return n;
+    out.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+    return out;
   }, [cellIndex]);
+  const conflictCount = conflictCells.length;
+
+  // Прыжок к ячейке конфликта (по кругу).
+  const jumpToConflict = useCallback(
+    (dir: 1 | -1) => {
+      if (conflictCells.length === 0) return;
+      const next = (conflictIdx + dir + conflictCells.length) % conflictCells.length;
+      setConflictIdx(next);
+      const c = conflictCells[next];
+      nonceRef.current += 1;
+      setScrollTarget({ roomId: c.roomId, dateStr: c.date, nonce: nonceRef.current });
+    },
+    [conflictCells, conflictIdx],
+  );
+
+  // Поиск: совпавшие реальные брони (по фамилии/имени/телефону/номеру).
+  const searchActive = search.trim().length > 0;
+  const matchRealIds = useMemo(() => {
+    if (!searchActive) return null;
+    const q = search.trim().toLowerCase();
+    const s = new Set<string>();
+    for (const b of bookings) {
+      const hay = `${b.last_name ?? ""} ${b.first_name ?? ""} ${b.phone ?? ""} ${b.booking_number ?? ""} ${b.tl_reservation_id ?? ""}`.toLowerCase();
+      if (hay.includes(q)) s.add(b.id);
+    }
+    return s;
+  }, [search, searchActive, bookings]);
+  const isMatch = useCallback(
+    (b: { id: string }) => matchRealIds?.has(realBookingId(b.id)) ?? false,
+    [matchRealIds],
+  );
 
   // Заезды и выезды на сегодня (независимо от просматриваемого месяца).
   const todayStr = format(new Date(), "yyyy-MM-dd");
@@ -523,10 +562,29 @@ function AdminCalendarPage() {
 
         {/* Конфликты двойных броней */}
         {conflictCount > 0 && (
-          <div className="mt-4 flex items-center gap-2 border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-800">
+          <div className="mt-4 flex flex-wrap items-center gap-2 border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-800">
             <span className="text-base">⚠️</span>
-            Обнаружены пересечения броней: {conflictCount} ячеек с двойным
-            бронированием (обведены красным). Проверьте и разнесите по номерам.
+            <span>
+              Пересечения броней: {conflictCount}{" "}
+              {conflictCount === 1 ? "ячейка" : conflictCount < 5 ? "ячейки" : "ячеек"} с двойным
+              бронированием (обведены красным).
+            </span>
+            <div className="ml-auto flex items-center gap-2">
+              <span className="text-xs text-red-600">{Math.min(conflictIdx, conflictCount - 1) + 1} / {conflictCount}</span>
+              <button
+                onClick={() => jumpToConflict(-1)}
+                className="border border-red-400 px-2 py-1 text-xs hover:bg-red-100"
+                title="Предыдущий конфликт"
+              >
+                ↑
+              </button>
+              <button
+                onClick={() => jumpToConflict(1)}
+                className="border border-red-500 bg-red-500 px-3 py-1 text-xs font-semibold text-white hover:bg-red-600"
+              >
+                К конфликту ↓
+              </button>
+            </div>
           </div>
         )}
 
@@ -546,8 +604,8 @@ function AdminCalendarPage() {
           />
         </div>
 
-        {/* Legend + фильтр */}
-        <div className="mt-4 flex flex-wrap gap-2 text-[11px]">
+        {/* Legend + фильтр + поиск */}
+        <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px]">
           {(["pending","confirmed","paid","completed","cancelled"] as const).map((k) => (
             <button
               key={k}
@@ -561,7 +619,31 @@ function AdminCalendarPage() {
               {statusFilter.has(k) ? "✓ " : ""}{STATUS_LABEL[k]}
             </button>
           ))}
-          <span className="ml-2 self-center text-[10px] text-muted-foreground">← кликни чтобы скрыть</span>
+          <span className="ml-1 self-center text-[10px] text-muted-foreground">← кликни чтобы скрыть</span>
+
+          <div className="relative ml-auto">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="🔍 Поиск: фамилия, телефон, № брони"
+              className="w-64 border border-border bg-background px-3 py-1.5 text-xs text-navy outline-none focus:border-navy"
+            />
+            {searchActive && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-navy"
+                title="Очистить"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+          {searchActive && (
+            <span className="self-center text-[10px] text-muted-foreground">
+              найдено: {matchRealIds?.size ?? 0}
+            </span>
+          )}
         </div>
 
         {/* Grid — таймлайн с перетаскиванием и ресайзом */}
@@ -595,6 +677,9 @@ function AdminCalendarPage() {
               }}
               onTooltip={(t) => setTooltip(t as TooltipData | null)}
               onMove={moveBooking}
+              searchActive={searchActive}
+              isMatch={isMatch}
+              scrollTarget={scrollTarget}
             />
           </>
         )}
