@@ -26,6 +26,7 @@ const NAV = [
   { to: "/admin/calendar", label: "Календарь", icon: "📅" },
   { to: "/admin/inbox", label: "Инбокс", icon: "💬" },
   { to: "/admin/rooms", label: "Номера", icon: "🛏️" },
+  { to: "/admin/site", label: "Управление отелем", icon: "🏨", adminOnly: true },
   { to: "/admin/notifications", label: "Уведомления", icon: "🔔" },
 ] as const;
 
@@ -33,8 +34,9 @@ const IDLE_TIMEOUT_MS = 15 * 60 * 1000; // 15 минут
 
 function AdminLayout() {
   const navigate = useNavigate();
-  const { user, isStaff, loading, signOut } = useAuth();
+  const { user, isStaff, isAdmin, loading, signOut } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navItems = NAV.filter((n) => !("adminOnly" in n && n.adminOnly) || isAdmin);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleSignOut = useCallback(() => {
@@ -105,7 +107,7 @@ function AdminLayout() {
         </div>
 
         <nav className="flex-1 px-3 py-4">
-          {NAV.map((n) => {
+          {navItems.map((n) => {
             const active =
               n.to === "/admin"
                 ? pathname === "/admin" || pathname === "/admin/"
@@ -145,14 +147,14 @@ function AdminLayout() {
         </Link>
         <select
           value={
-            NAV.find((n) =>
+            navItems.find((n) =>
               n.to === "/admin" ? pathname === "/admin" || pathname === "/admin/" : pathname.startsWith(n.to),
             )?.to ?? "/admin"
           }
           onChange={(e) => navigate({ to: e.target.value as any })}
           className="border border-border bg-background px-2 py-1 text-xs"
         >
-          {NAV.map((n) => (
+          {navItems.map((n) => (
             <option key={n.to} value={n.to}>
               {n.label}
             </option>

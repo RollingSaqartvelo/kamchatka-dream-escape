@@ -24,6 +24,7 @@ import { Route as KamchatkaIndexRouteImport } from './routes/kamchatka.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as KamchatkaSlugRouteImport } from './routes/kamchatka.$slug'
 import { Route as BookingSuccessRouteImport } from './routes/booking.success'
+import { Route as AdminSiteRouteImport } from './routes/admin.site'
 import { Route as AdminRoomsRouteImport } from './routes/admin.rooms'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminInboxRouteImport } from './routes/admin.inbox'
@@ -115,6 +116,11 @@ const BookingSuccessRoute = BookingSuccessRouteImport.update({
   id: '/success',
   path: '/success',
   getParentRoute: () => BookingRoute,
+} as any)
+const AdminSiteRoute = AdminSiteRouteImport.update({
+  id: '/site',
+  path: '/site',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminRoomsRoute = AdminRoomsRouteImport.update({
   id: '/rooms',
@@ -217,6 +223,7 @@ export interface FileRoutesByFullPath {
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/rooms': typeof AdminRoomsRoute
+  '/admin/site': typeof AdminSiteRoute
   '/booking/success': typeof BookingSuccessRoute
   '/kamchatka/$slug': typeof KamchatkaSlugRoute
   '/admin/': typeof AdminIndexRoute
@@ -249,6 +256,7 @@ export interface FileRoutesByTo {
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/rooms': typeof AdminRoomsRoute
+  '/admin/site': typeof AdminSiteRoute
   '/booking/success': typeof BookingSuccessRoute
   '/kamchatka/$slug': typeof KamchatkaSlugRoute
   '/admin': typeof AdminIndexRoute
@@ -283,6 +291,7 @@ export interface FileRoutesById {
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/rooms': typeof AdminRoomsRoute
+  '/admin/site': typeof AdminSiteRoute
   '/booking/success': typeof BookingSuccessRoute
   '/kamchatka/$slug': typeof KamchatkaSlugRoute
   '/admin/': typeof AdminIndexRoute
@@ -318,6 +327,7 @@ export interface FileRouteTypes {
     | '/admin/inbox'
     | '/admin/notifications'
     | '/admin/rooms'
+    | '/admin/site'
     | '/booking/success'
     | '/kamchatka/$slug'
     | '/admin/'
@@ -350,6 +360,7 @@ export interface FileRouteTypes {
     | '/admin/inbox'
     | '/admin/notifications'
     | '/admin/rooms'
+    | '/admin/site'
     | '/booking/success'
     | '/kamchatka/$slug'
     | '/admin'
@@ -383,6 +394,7 @@ export interface FileRouteTypes {
     | '/admin/inbox'
     | '/admin/notifications'
     | '/admin/rooms'
+    | '/admin/site'
     | '/booking/success'
     | '/kamchatka/$slug'
     | '/admin/'
@@ -527,6 +539,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BookingSuccessRouteImport
       parentRoute: typeof BookingRoute
     }
+    '/admin/site': {
+      id: '/admin/site'
+      path: '/site'
+      fullPath: '/admin/site'
+      preLoaderRoute: typeof AdminSiteRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/rooms': {
       id: '/admin/rooms'
       path: '/rooms'
@@ -650,6 +669,7 @@ interface AdminRouteChildren {
   AdminInboxRoute: typeof AdminInboxRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminRoomsRoute: typeof AdminRoomsRoute
+  AdminSiteRoute: typeof AdminSiteRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -661,6 +681,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminInboxRoute: AdminInboxRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminRoomsRoute: AdminRoomsRoute,
+  AdminSiteRoute: AdminSiteRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 

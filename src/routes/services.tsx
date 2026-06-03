@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { SiteLayout } from "@/components/layout/SiteLayout";
 import { PageHero } from "@/components/sections/PageHero";
+import { loadServicesContent, SERVICES_DEFAULT, type ServicesContent } from "@/lib/site-content";
 
 export const Route = createFileRoute("/services")({
   component: ServicesPage,
@@ -14,40 +15,24 @@ export const Route = createFileRoute("/services")({
   }),
 });
 
-const breakfastPhotos = [
-  "/media/breakfast-1.webp",
-  "/media/breakfast-2.webp",
-  "/media/breakfast-3.webp",
-  "/media/breakfast-4.webp",
-];
-
-const dinnerPhotos = [
-  "/media/dinner-1.webp",
-  "/media/dinner-2.webp",
-  "/media/dinner-3.webp",
-];
-
-// Блюда нашей кухни — без подписей.
-const dishPhotos = [
-  "/media/dish-bruschetta.jpg",
-  "/media/dish-vyalenoe-myaso.jpg",
-  "/media/dish-tiramisu.jpg",
-  "/media/dish-desert.jpg",
-];
+const rub = (n: number) => `${new Intl.NumberFormat("ru-RU").format(n)} ₽`;
 
 function PhotoGallery({ photos, alt }: { photos: string[]; alt: string }) {
   const [index, setIndex] = useState(0);
   const total = photos.length;
   const prev = () => setIndex((i) => (i - 1 + total) % total);
   const next = () => setIndex((i) => (i + 1) % total);
+  if (total === 0)
+    return <div className="aspect-[4/3] bg-beige" style={{ borderRadius: "2px" }} />;
+  const safe = index % total;
 
   return (
     <div className="relative aspect-[4/3] overflow-hidden bg-beige" style={{ borderRadius: "2px" }}>
       <img
-        src={photos[index]}
-        alt={`${alt} — фото ${index + 1}`}
+        src={photos[safe]}
+        alt={`${alt} — фото ${safe + 1}`}
         className="h-full w-full object-cover transition-opacity duration-500"
-        key={index}
+        key={safe}
       />
       <button
         type="button"
@@ -68,7 +53,7 @@ function PhotoGallery({ photos, alt }: { photos: string[]; alt: string }) {
         <span aria-hidden className="text-lg">→</span>
       </button>
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-navy/70 px-3 py-1 text-[10px] tracking-widest-plus uppercase text-cream" style={{ borderRadius: "2px" }}>
-        {index + 1} / {total}
+        {safe + 1} / {total}
       </div>
     </div>
   );
@@ -86,6 +71,11 @@ function Price({ value, unit }: { value: string; unit: string }) {
 
 function ServicesPage() {
   const { t } = useTranslation();
+  const [c, setC] = useState<ServicesContent>(SERVICES_DEFAULT);
+  useEffect(() => {
+    void loadServicesContent().then(setC).catch(() => {});
+  }, []);
+  const p = c.prices;
   return (
     <SiteLayout>
       <PageHero
@@ -111,7 +101,7 @@ function ServicesPage() {
               <h3 className="font-serif text-2xl text-navy">Легковой автомобиль</h3>
               <p className="mt-3 text-sm text-muted-foreground">Аэропорт Елизово ↔ отель, до 3 пассажиров</p>
               <div className="mt-6 flex items-baseline gap-2 border-t border-beige pt-6">
-                <span className="font-serif text-3xl text-navy">1 500 ₽</span>
+                <span className="font-serif text-3xl text-navy">{rub(p.transferCar)}</span>
                 <span className="text-sm text-muted-foreground">/ поездка</span>
               </div>
             </div>
@@ -119,7 +109,7 @@ function ServicesPage() {
               <h3 className="font-serif text-2xl text-navy">Микроавтобус</h3>
               <p className="mt-3 text-sm text-muted-foreground">Аэропорт Елизово ↔ отель, для группы</p>
               <div className="mt-6 flex items-baseline gap-2 border-t border-beige pt-6">
-                <span className="font-serif text-3xl text-navy">2 000 ₽</span>
+                <span className="font-serif text-3xl text-navy">{rub(p.transferMinibus)}</span>
                 <span className="text-sm text-muted-foreground">/ поездка</span>
               </div>
             </div>
@@ -143,7 +133,7 @@ function ServicesPage() {
               <h3 className="font-serif text-2xl text-navy">Ранний заезд</h3>
               <p className="mt-3 text-sm text-muted-foreground">Заселение до 14:00</p>
               <div className="mt-6 flex items-baseline gap-2 border-t border-beige pt-6">
-                <span className="font-serif text-3xl text-navy">50 %</span>
+                <span className="font-serif text-3xl text-navy">{p.earlyCheckin}</span>
                 <span className="text-sm text-muted-foreground">от стоимости за ночь</span>
               </div>
             </div>
@@ -151,7 +141,7 @@ function ServicesPage() {
               <h3 className="font-serif text-2xl text-navy">Поздний выезд</h3>
               <p className="mt-3 text-sm text-muted-foreground">Выезд после 12:00</p>
               <div className="mt-6 flex items-baseline gap-2 border-t border-beige pt-6">
-                <span className="font-serif text-3xl text-navy">50 %</span>
+                <span className="font-serif text-3xl text-navy">{p.lateCheckout}</span>
                 <span className="text-sm text-muted-foreground">от стоимости за ночь</span>
               </div>
             </div>
@@ -163,7 +153,7 @@ function ServicesPage() {
       <section className="bg-cream py-24 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
-            <PhotoGallery photos={breakfastPhotos} alt="Завтрак в отеле «Полуостров»" />
+            <PhotoGallery photos={c.photos.breakfast} alt="Завтрак в отеле «Полуостров»" />
             <div>
               <p className="text-[11px] tracking-widest-plus uppercase text-gold">Гастрономия</p>
               <h2 className="mt-5 font-serif text-4xl text-navy sm:text-5xl">Завтрак</h2>
@@ -171,7 +161,7 @@ function ServicesPage() {
                 Комплексный завтрак по предварительному заказу — приготовлен из локальных
                 продуктов и подаётся в нашем ресторане.
               </p>
-              <Price value="450 ₽" unit="/ гость в сутки" />
+              <Price value={rub(p.breakfast)} unit="/ гость в сутки" />
               <p className="mt-6 text-xs tracking-widest-plus uppercase text-muted-foreground">
                 Заказ принимается до 20:00 предыдущего дня
               </p>
@@ -185,7 +175,7 @@ function ServicesPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
             <div className="lg:order-2">
-              <PhotoGallery photos={dishPhotos} alt="Блюда кухни отеля «Полуостров»" />
+              <PhotoGallery photos={c.photos.dishes} alt="Блюда кухни отеля «Полуостров»" />
             </div>
             <div className="lg:order-1">
               <p className="text-[11px] tracking-widest-plus uppercase text-gold">Гастрономия</p>
@@ -193,7 +183,7 @@ function ServicesPage() {
               <p className="mt-6 text-base leading-relaxed text-muted-foreground">
                 Комплексный обед из локальных продуктов — по предварительному заказу.
               </p>
-              <Price value="850 ₽" unit="/ гость в сутки" />
+              <Price value={rub(p.lunch)} unit="/ гость в сутки" />
             </div>
           </div>
         </div>
@@ -203,7 +193,7 @@ function ServicesPage() {
       <section className="bg-cream py-24 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
-            <PhotoGallery photos={dinnerPhotos} alt="Ужин в отеле «Полуостров»" />
+            <PhotoGallery photos={c.photos.dinner} alt="Ужин в отеле «Полуостров»" />
             <div>
               <p className="text-[11px] tracking-widest-plus uppercase text-gold">Гастрономия</p>
               <h2 className="mt-5 font-serif text-4xl text-navy sm:text-5xl">Ужин</h2>
@@ -211,7 +201,7 @@ function ServicesPage() {
                 Комплексный ужин по предварительному заказу — салат, горячее блюдо,
                 гарнир и домашний напиток.
               </p>
-              <Price value="850 ₽" unit="/ гость в сутки" />
+              <Price value={rub(p.dinner)} unit="/ гость в сутки" />
               <p className="mt-6 text-xs tracking-widest-plus uppercase text-muted-foreground">
                 Заказ принимается до 14:00 в день подачи
               </p>
@@ -235,7 +225,7 @@ function ServicesPage() {
               <h3 className="font-serif text-2xl text-navy">Полупансион</h3>
               <p className="mt-3 text-sm text-muted-foreground">Завтрак и ужин</p>
               <div className="mt-6 flex items-baseline gap-2 border-t border-beige pt-6">
-                <span className="font-serif text-3xl text-navy">1 200 ₽</span>
+                <span className="font-serif text-3xl text-navy">{rub(p.halfBoard)}</span>
                 <span className="text-sm text-muted-foreground">/ гость в сутки</span>
               </div>
             </div>
@@ -243,7 +233,7 @@ function ServicesPage() {
               <h3 className="font-serif text-2xl text-navy">Полный пансион</h3>
               <p className="mt-3 text-sm text-muted-foreground">Завтрак, обед и ужин</p>
               <div className="mt-6 flex items-baseline gap-2 border-t border-beige pt-6">
-                <span className="font-serif text-3xl text-navy">1 900 ₽</span>
+                <span className="font-serif text-3xl text-navy">{rub(p.fullBoard)}</span>
                 <span className="text-sm text-muted-foreground">/ гость в сутки</span>
               </div>
             </div>
