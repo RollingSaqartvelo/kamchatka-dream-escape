@@ -145,14 +145,16 @@ for r in rows:
         })
 
 # Генерим SQL
-cols = ("tl_reservation_id, booking_number, first_name, last_name, email, phone, room_id, room_name, "
+# booking_number НЕ заполняем (на нём отдельный unique-constraint, а группа = N
+# строк с одним номером). Синк делает так же. Номер брони хранится в tl_reservation_id.
+cols = ("tl_reservation_id, first_name, last_name, email, phone, room_id, room_name, "
         "check_in, check_out, nights, adults, children, meal_plan, source, payment_status, "
         "total_price, room_price_total, breakfast_total, prepayment_amount, remaining_amount, "
         "special_requests, id_consent, terms_consent")
 vals = []
 for x in out_rows:
     vals.append("(" + ", ".join([
-        sq(x["tl"]), sq(x["bn"]), sq(x["first"]), sq(x["last"]), sq(x["email"]), sq(x["phone"]),
+        sq(x["tl"]), sq(x["first"]), sq(x["last"]), sq(x["email"]), sq(x["phone"]),
         sq(x["rid"]), sq(x["rname"]), sq(x["ci"]), sq(x["co"]), str(x["nights"]), str(x["adults"]),
         str(x["children"]), "'room_only'", sq(x["src"]), sq(x["status"]),
         str(x["total"]), str(x["rpt"]), "0", str(x["prepaid"]), str(x["remaining"]),
@@ -163,7 +165,7 @@ min_ci = min(x["ci"] for x in out_rows)
 max_co = max(x["co"] for x in out_rows)
 upd = (
     "ON CONFLICT (tl_reservation_id) DO UPDATE SET\n"
-    "  booking_number=EXCLUDED.booking_number, first_name=EXCLUDED.first_name, last_name=EXCLUDED.last_name,\n"
+    "  first_name=EXCLUDED.first_name, last_name=EXCLUDED.last_name,\n"
     "  email=EXCLUDED.email, phone=EXCLUDED.phone, room_id=EXCLUDED.room_id, room_name=EXCLUDED.room_name,\n"
     "  check_in=EXCLUDED.check_in, check_out=EXCLUDED.check_out, nights=EXCLUDED.nights, adults=EXCLUDED.adults,\n"
     "  source=EXCLUDED.source, payment_status=EXCLUDED.payment_status, total_price=EXCLUDED.total_price,\n"

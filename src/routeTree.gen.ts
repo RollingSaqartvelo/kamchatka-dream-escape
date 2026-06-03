@@ -37,6 +37,7 @@ import { Route as BookingChatIdRouteImport } from './routes/booking.chat.$id'
 import { Route as ApiTelegramWebhookRouteImport } from './routes/api/telegram/webhook'
 import { Route as ApiPublicTravellineTestRouteImport } from './routes/api/public/travelline-test'
 import { Route as ApiPublicAlfaCallbackRouteImport } from './routes/api/public/alfa-callback'
+import { Route as ApiInternalCronTlSyncRouteImport } from './routes/api/internal/cron-tl-sync'
 import { Route as ApiInternalCronRemindersRouteImport } from './routes/api/internal/cron-reminders'
 import { Route as ApiPublicVoucherIdRouteImport } from './routes/api/public/voucher.$id'
 
@@ -180,6 +181,11 @@ const ApiPublicAlfaCallbackRoute = ApiPublicAlfaCallbackRouteImport.update({
   path: '/api/public/alfa-callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiInternalCronTlSyncRoute = ApiInternalCronTlSyncRouteImport.update({
+  id: '/api/internal/cron-tl-sync',
+  path: '/api/internal/cron-tl-sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiInternalCronRemindersRoute =
   ApiInternalCronRemindersRouteImport.update({
     id: '/api/internal/cron-reminders',
@@ -216,6 +222,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/kamchatka/': typeof KamchatkaIndexRoute
   '/api/internal/cron-reminders': typeof ApiInternalCronRemindersRoute
+  '/api/internal/cron-tl-sync': typeof ApiInternalCronTlSyncRoute
   '/api/public/alfa-callback': typeof ApiPublicAlfaCallbackRoute
   '/api/public/travelline-test': typeof ApiPublicTravellineTestRoute
   '/api/telegram/webhook': typeof ApiTelegramWebhookRoute
@@ -247,6 +254,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/kamchatka': typeof KamchatkaIndexRoute
   '/api/internal/cron-reminders': typeof ApiInternalCronRemindersRoute
+  '/api/internal/cron-tl-sync': typeof ApiInternalCronTlSyncRoute
   '/api/public/alfa-callback': typeof ApiPublicAlfaCallbackRoute
   '/api/public/travelline-test': typeof ApiPublicTravellineTestRoute
   '/api/telegram/webhook': typeof ApiTelegramWebhookRoute
@@ -280,6 +288,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/kamchatka/': typeof KamchatkaIndexRoute
   '/api/internal/cron-reminders': typeof ApiInternalCronRemindersRoute
+  '/api/internal/cron-tl-sync': typeof ApiInternalCronTlSyncRoute
   '/api/public/alfa-callback': typeof ApiPublicAlfaCallbackRoute
   '/api/public/travelline-test': typeof ApiPublicTravellineTestRoute
   '/api/telegram/webhook': typeof ApiTelegramWebhookRoute
@@ -314,6 +323,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/kamchatka/'
     | '/api/internal/cron-reminders'
+    | '/api/internal/cron-tl-sync'
     | '/api/public/alfa-callback'
     | '/api/public/travelline-test'
     | '/api/telegram/webhook'
@@ -345,6 +355,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/kamchatka'
     | '/api/internal/cron-reminders'
+    | '/api/internal/cron-tl-sync'
     | '/api/public/alfa-callback'
     | '/api/public/travelline-test'
     | '/api/telegram/webhook'
@@ -377,6 +388,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/kamchatka/'
     | '/api/internal/cron-reminders'
+    | '/api/internal/cron-tl-sync'
     | '/api/public/alfa-callback'
     | '/api/public/travelline-test'
     | '/api/telegram/webhook'
@@ -401,6 +413,7 @@ export interface RootRouteChildren {
   KamchatkaSlugRoute: typeof KamchatkaSlugRoute
   KamchatkaIndexRoute: typeof KamchatkaIndexRoute
   ApiInternalCronRemindersRoute: typeof ApiInternalCronRemindersRoute
+  ApiInternalCronTlSyncRoute: typeof ApiInternalCronTlSyncRoute
   ApiPublicAlfaCallbackRoute: typeof ApiPublicAlfaCallbackRoute
   ApiPublicTravellineTestRoute: typeof ApiPublicTravellineTestRoute
   ApiTelegramWebhookRoute: typeof ApiTelegramWebhookRoute
@@ -605,6 +618,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAlfaCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/internal/cron-tl-sync': {
+      id: '/api/internal/cron-tl-sync'
+      path: '/api/internal/cron-tl-sync'
+      fullPath: '/api/internal/cron-tl-sync'
+      preLoaderRoute: typeof ApiInternalCronTlSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/internal/cron-reminders': {
       id: '/api/internal/cron-reminders'
       path: '/api/internal/cron-reminders'
@@ -678,6 +698,7 @@ const rootRouteChildren: RootRouteChildren = {
   KamchatkaSlugRoute: KamchatkaSlugRoute,
   KamchatkaIndexRoute: KamchatkaIndexRoute,
   ApiInternalCronRemindersRoute: ApiInternalCronRemindersRoute,
+  ApiInternalCronTlSyncRoute: ApiInternalCronTlSyncRoute,
   ApiPublicAlfaCallbackRoute: ApiPublicAlfaCallbackRoute,
   ApiPublicTravellineTestRoute: ApiPublicTravellineTestRoute,
   ApiTelegramWebhookRoute: ApiTelegramWebhookRoute,

@@ -154,22 +154,34 @@ function mapBookingRows(detail: any): any[] {
   }).filter((r): r is NonNullable<typeof r> => r !== null);
 }
 
-export const syncTravellineReservations = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator(
-    z.object({
-      // Необязательно: переопределить старт бэкафилла (по дате модификации).
-      from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-      to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-      // Окно по дате ЗАЕЗДА: сохраняем только брони, пересекающие [stayFrom, stayTo].
-      // Так наполняем нужный сезон (API фильтра по заезду не имеет).
-      stayFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-      stayTo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-      // reset=true сбрасывает курсор и тянет заново с начала окна модификаций.
-      reset: z.boolean().optional(),
-    }),
-  )
-  .handler(async ({ data }) => {
+export type SyncOpts = {
+  from?: string;
+  to?: string;
+  stayFrom?: string;
+  stayTo?: string;
+  reset?: boolean;
+};
+
+export type SyncResult = {
+  ok: boolean;
+  synced: number;
+  error?: string;
+  caughtUp?: boolean;
+  hasMore?: boolean;
+  unknown?: number;
+  minCi?: string;
+  maxCi?: string;
+  lastMod?: string;
+  skipped?: number;
+  skippedSample?: string[];
+  upsertErrors?: number;
+  cursorFrom?: string;
+  cursorTo?: string;
+};
+
+/** Ядро синхронизации TravelLine. Вызывается из server fn (кнопка в админке)
+ *  и из cron-эндпоинта (автосинк 24/7). */
+export async function runTravellineSync(data: SyncOpts): Promise<SyncResult> {
     const propertyId = process.env.TRAVELLINE_PROPERTY_ID;
     if (!propertyId) return { ok: false, error: "TRAVELLINE_PROPERTY_ID missing", synced: 0 };
 
@@ -368,4 +380,18 @@ export const syncTravellineReservations = createServerFn({ method: "POST" })
       return { ok: false, error: firstError, synced: 0, ...diag };
     }
     return { ok: true, synced: totalSynced, caughtUp, hasMore: !caughtUp, ...diag };
-  });
+}
+
+// Server fn для кнопки в админке (с авторизацией сотрудника).
+export const syncTravellineReservations = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    z.object({
+      from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      stayFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      stayTo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      reset: z.boolean().optional(),
+    }),
+  )
+  .handler(async ({ data }) => runTravellineSync(data));
