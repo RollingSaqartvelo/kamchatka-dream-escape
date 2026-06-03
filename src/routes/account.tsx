@@ -18,7 +18,7 @@ export const Route = createFileRoute("/account")({
 });
 
 function AccountPage() {
-  const { user, loading: authLoading, isStaff, signOut } = useAuth();
+  const { user, loading: authLoading, isStaff, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
 
   // Сотрудников отправляем в полную админ-панель (со всеми разделами).
@@ -56,7 +56,7 @@ function AccountPage() {
     // Перенаправление в админку (см. useEffect выше) — показываем заглушку.
     return (
       <SiteLayout>
-        <PageHero eyebrow="Staff" title="Кабинет администратора" videoSrc="/media/account.mp4" />
+        <PageHero eyebrow="Staff" title={isAdmin ? "Кабинет Шефа" : "Кабинет администратора"} videoSrc="/media/account.mp4" />
         <section className="bg-background py-16">
           <p className="text-center text-muted-foreground">
             Открываем админ-панель…{" "}

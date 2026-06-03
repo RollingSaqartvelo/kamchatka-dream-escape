@@ -26,6 +26,7 @@ import { Route as KamchatkaIndexRouteImport } from './routes/kamchatka.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as KamchatkaSlugRouteImport } from './routes/kamchatka.$slug'
 import { Route as BookingSuccessRouteImport } from './routes/booking.success'
+import { Route as AdminStaffRouteImport } from './routes/admin.staff'
 import { Route as AdminSiteRouteImport } from './routes/admin.site'
 import { Route as AdminRoomsRouteImport } from './routes/admin.rooms'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
@@ -135,6 +136,11 @@ const BookingSuccessRoute = BookingSuccessRouteImport.update({
   id: '/success',
   path: '/success',
   getParentRoute: () => BookingRoute,
+} as any)
+const AdminStaffRoute = AdminStaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminSiteRoute = AdminSiteRouteImport.update({
   id: '/site',
@@ -280,6 +286,7 @@ export interface FileRoutesByFullPath {
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/rooms': typeof AdminRoomsRoute
   '/admin/site': typeof AdminSiteRouteWithChildren
+  '/admin/staff': typeof AdminStaffRoute
   '/booking/success': typeof BookingSuccessRoute
   '/kamchatka/$slug': typeof KamchatkaSlugRoute
   '/admin/': typeof AdminIndexRoute
@@ -321,6 +328,7 @@ export interface FileRoutesByTo {
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/rooms': typeof AdminRoomsRoute
+  '/admin/staff': typeof AdminStaffRoute
   '/booking/success': typeof BookingSuccessRoute
   '/kamchatka/$slug': typeof KamchatkaSlugRoute
   '/admin': typeof AdminIndexRoute
@@ -365,6 +373,7 @@ export interface FileRoutesById {
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/rooms': typeof AdminRoomsRoute
   '/admin/site': typeof AdminSiteRouteWithChildren
+  '/admin/staff': typeof AdminStaffRoute
   '/booking/success': typeof BookingSuccessRoute
   '/kamchatka/$slug': typeof KamchatkaSlugRoute
   '/admin/': typeof AdminIndexRoute
@@ -410,6 +419,7 @@ export interface FileRouteTypes {
     | '/admin/notifications'
     | '/admin/rooms'
     | '/admin/site'
+    | '/admin/staff'
     | '/booking/success'
     | '/kamchatka/$slug'
     | '/admin/'
@@ -451,6 +461,7 @@ export interface FileRouteTypes {
     | '/admin/inbox'
     | '/admin/notifications'
     | '/admin/rooms'
+    | '/admin/staff'
     | '/booking/success'
     | '/kamchatka/$slug'
     | '/admin'
@@ -494,6 +505,7 @@ export interface FileRouteTypes {
     | '/admin/notifications'
     | '/admin/rooms'
     | '/admin/site'
+    | '/admin/staff'
     | '/booking/success'
     | '/kamchatka/$slug'
     | '/admin/'
@@ -660,6 +672,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/booking/success'
       preLoaderRoute: typeof BookingSuccessRouteImport
       parentRoute: typeof BookingRoute
+    }
+    '/admin/staff': {
+      id: '/admin/staff'
+      path: '/staff'
+      fullPath: '/admin/staff'
+      preLoaderRoute: typeof AdminStaffRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/site': {
       id: '/admin/site'
@@ -865,6 +884,7 @@ interface AdminRouteChildren {
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminRoomsRoute: typeof AdminRoomsRoute
   AdminSiteRoute: typeof AdminSiteRouteWithChildren
+  AdminStaffRoute: typeof AdminStaffRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -877,6 +897,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminRoomsRoute: AdminRoomsRoute,
   AdminSiteRoute: AdminSiteRouteWithChildren,
+  AdminStaffRoute: AdminStaffRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
@@ -925,3 +946,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
