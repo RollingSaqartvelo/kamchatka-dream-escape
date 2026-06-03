@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
 import { requireStaff } from "@/integrations/supabase/staff-middleware";
+import { enforceRateLimit } from "./rate-limit";
 
 function admin() {
   return createClient(
@@ -292,6 +293,9 @@ export const sendGuestMessage = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data }) => {
+    // Антиспам: не более 10 сообщений за минуту с одного IP.
+    await enforceRateLimit("guest_msg", { max: 10, windowSec: 60 });
+
     const db = admin();
 
     // Проверяем бронь + email

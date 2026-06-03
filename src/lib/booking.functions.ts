@@ -6,6 +6,7 @@ import { ROOM_ID_TO_TL, RATE_PLAN_BY_MEAL } from "./travelline.functions";
 import { sendBookingConfirmation } from "./email.functions";
 import { notifyNewBooking } from "./telegram.functions";
 import { createConversationForBooking } from "./inbox.functions";
+import { enforceRateLimit } from "./rate-limit";
 
 const BREAKFAST_PER_PERSON = 500;
 
@@ -119,6 +120,9 @@ async function fetchTravellineRoomTotal(
 export const createBooking = createServerFn({ method: "POST" })
   .inputValidator((input) => bookingSchema.parse(input))
   .handler(async ({ data }) => {
+    // Антиспам: не более 5 броней за 10 минут с одного IP.
+    await enforceRateLimit("booking", { max: 5, windowSec: 600 });
+
     // ── Authoritative server-side pricing ────────────────────────────────
     const room = ROOMS.find((r) => r.id === data.room_id);
     if (!room) {

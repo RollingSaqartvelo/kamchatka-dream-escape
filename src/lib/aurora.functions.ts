@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { checkRateLimit } from "./rate-limit";
 
 const SYSTEM_PROMPT = `Ты — Аврора, AI-консьерж бутик-отеля «Полуостров» в Петропавловске-Камчатском.
 
@@ -34,6 +35,12 @@ export const auroraChat = createServerFn({ method: "POST" })
     })
   )
   .handler(async function* ({ data }) {
+    // Антиспам/защита кредитов: не более 20 запросов за минуту с одного IP.
+    if (!(await checkRateLimit("aurora", { max: 20, windowSec: 60 }))) {
+      yield { delta: "Слишком много сообщений. Пожалуйста, подождите минуту." };
+      return;
+    }
+
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) {
       yield { delta: "Сервис AI временно недоступен." };
