@@ -95,98 +95,6 @@ function ServicesPage() {
         videoSrc="/media/services.mp4"
       />
 
-      {/* Завтрак */}
-      <section className="bg-cream py-24 sm:py-28">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
-            <PhotoGallery photos={breakfastPhotos} alt="Завтрак в отеле «Полуостров»" />
-            <div>
-              <p className="text-[11px] tracking-widest-plus uppercase text-gold">Гастрономия</p>
-              <h2 className="mt-5 font-serif text-4xl text-navy sm:text-5xl">Завтрак</h2>
-              <p className="mt-6 text-base leading-relaxed text-muted-foreground">
-                Комплексный завтрак по предварительному заказу — приготовлен из локальных
-                продуктов и подаётся в нашем ресторане.
-              </p>
-              <Price value="450 ₽" unit="/ гость в сутки" />
-              <p className="mt-6 text-xs tracking-widest-plus uppercase text-muted-foreground">
-                Заказ принимается до 20:00 предыдущего дня
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Ужин */}
-      <section className="bg-background py-24 sm:py-28">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
-            <div className="lg:order-2">
-              <PhotoGallery photos={dinnerPhotos} alt="Ужин в отеле «Полуостров»" />
-            </div>
-            <div className="lg:order-1">
-              <p className="text-[11px] tracking-widest-plus uppercase text-gold">Гастрономия</p>
-              <h2 className="mt-5 font-serif text-4xl text-navy sm:text-5xl">Ужин</h2>
-              <p className="mt-6 text-base leading-relaxed text-muted-foreground">
-                Комплексный ужин по предварительному заказу — салат, горячее блюдо,
-                гарнир и домашний напиток.
-              </p>
-              <Price value="850 ₽" unit="/ гость в сутки" />
-              <p className="mt-6 text-xs tracking-widest-plus uppercase text-muted-foreground">
-                Заказ принимается до 14:00 в день подачи
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Обед */}
-      <section className="bg-cream py-24 sm:py-28">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
-            <PhotoGallery photos={dishPhotos} alt="Блюда кухни отеля «Полуостров»" />
-            <div>
-              <p className="text-[11px] tracking-widest-plus uppercase text-gold">Гастрономия</p>
-              <h2 className="mt-5 font-serif text-4xl text-navy sm:text-5xl">Обед</h2>
-              <p className="mt-6 text-base leading-relaxed text-muted-foreground">
-                Комплексный обед из локальных продуктов — по предварительному заказу.
-              </p>
-              <Price value="850 ₽" unit="/ гость в сутки" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Пансионы */}
-      <section className="bg-background py-24 sm:py-28">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-[11px] tracking-widest-plus uppercase text-gold">Питание</p>
-            <h2 className="mt-5 font-serif text-4xl text-navy sm:text-5xl">Пакеты питания</h2>
-            <p className="mt-6 text-base leading-relaxed text-muted-foreground">
-              Закажите питание на весь срок проживания — выгоднее, чем по отдельности.
-            </p>
-          </div>
-          <div className="mx-auto mt-14 grid max-w-4xl gap-6 sm:grid-cols-2">
-            <div className="border border-beige bg-cream p-8" style={{ borderRadius: "2px" }}>
-              <h3 className="font-serif text-2xl text-navy">Полупансион</h3>
-              <p className="mt-3 text-sm text-muted-foreground">Завтрак и ужин</p>
-              <div className="mt-6 flex items-baseline gap-2 border-t border-beige pt-6">
-                <span className="font-serif text-3xl text-navy">1 200 ₽</span>
-                <span className="text-sm text-muted-foreground">/ гость в сутки</span>
-              </div>
-            </div>
-            <div className="border border-beige bg-cream p-8" style={{ borderRadius: "2px" }}>
-              <h3 className="font-serif text-2xl text-navy">Полный пансион</h3>
-              <p className="mt-3 text-sm text-muted-foreground">Завтрак, обед и ужин</p>
-              <div className="mt-6 flex items-baseline gap-2 border-t border-beige pt-6">
-                <span className="font-serif text-3xl text-navy">1 900 ₽</span>
-                <span className="text-sm text-muted-foreground">/ гость в сутки</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Трансфер */}
       <section className="bg-cream py-24 sm:py-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -245,6 +153,98 @@ function ServicesPage() {
               <div className="mt-6 flex items-baseline gap-2 border-t border-beige pt-6">
                 <span className="font-serif text-3xl text-navy">50 %</span>
                 <span className="text-sm text-muted-foreground">от стоимости за ночь</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Завтрак */}
+      <section className="bg-cream py-24 sm:py-28">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+            <PhotoGallery photos={breakfastPhotos} alt="Завтрак в отеле «Полуостров»" />
+            <div>
+              <p className="text-[11px] tracking-widest-plus uppercase text-gold">Гастрономия</p>
+              <h2 className="mt-5 font-serif text-4xl text-navy sm:text-5xl">Завтрак</h2>
+              <p className="mt-6 text-base leading-relaxed text-muted-foreground">
+                Комплексный завтрак по предварительному заказу — приготовлен из локальных
+                продуктов и подаётся в нашем ресторане.
+              </p>
+              <Price value="450 ₽" unit="/ гость в сутки" />
+              <p className="mt-6 text-xs tracking-widest-plus uppercase text-muted-foreground">
+                Заказ принимается до 20:00 предыдущего дня
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Обед */}
+      <section className="bg-background py-24 sm:py-28">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+            <div className="lg:order-2">
+              <PhotoGallery photos={dishPhotos} alt="Блюда кухни отеля «Полуостров»" />
+            </div>
+            <div className="lg:order-1">
+              <p className="text-[11px] tracking-widest-plus uppercase text-gold">Гастрономия</p>
+              <h2 className="mt-5 font-serif text-4xl text-navy sm:text-5xl">Обед</h2>
+              <p className="mt-6 text-base leading-relaxed text-muted-foreground">
+                Комплексный обед из локальных продуктов — по предварительному заказу.
+              </p>
+              <Price value="850 ₽" unit="/ гость в сутки" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Ужин */}
+      <section className="bg-cream py-24 sm:py-28">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+            <PhotoGallery photos={dinnerPhotos} alt="Ужин в отеле «Полуостров»" />
+            <div>
+              <p className="text-[11px] tracking-widest-plus uppercase text-gold">Гастрономия</p>
+              <h2 className="mt-5 font-serif text-4xl text-navy sm:text-5xl">Ужин</h2>
+              <p className="mt-6 text-base leading-relaxed text-muted-foreground">
+                Комплексный ужин по предварительному заказу — салат, горячее блюдо,
+                гарнир и домашний напиток.
+              </p>
+              <Price value="850 ₽" unit="/ гость в сутки" />
+              <p className="mt-6 text-xs tracking-widest-plus uppercase text-muted-foreground">
+                Заказ принимается до 14:00 в день подачи
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Пансионы */}
+      <section className="bg-background py-24 sm:py-28">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-[11px] tracking-widest-plus uppercase text-gold">Питание</p>
+            <h2 className="mt-5 font-serif text-4xl text-navy sm:text-5xl">Пакеты питания</h2>
+            <p className="mt-6 text-base leading-relaxed text-muted-foreground">
+              Закажите питание на весь срок проживания — выгоднее, чем по отдельности.
+            </p>
+          </div>
+          <div className="mx-auto mt-14 grid max-w-4xl gap-6 sm:grid-cols-2">
+            <div className="border border-beige bg-cream p-8" style={{ borderRadius: "2px" }}>
+              <h3 className="font-serif text-2xl text-navy">Полупансион</h3>
+              <p className="mt-3 text-sm text-muted-foreground">Завтрак и ужин</p>
+              <div className="mt-6 flex items-baseline gap-2 border-t border-beige pt-6">
+                <span className="font-serif text-3xl text-navy">1 200 ₽</span>
+                <span className="text-sm text-muted-foreground">/ гость в сутки</span>
+              </div>
+            </div>
+            <div className="border border-beige bg-cream p-8" style={{ borderRadius: "2px" }}>
+              <h3 className="font-serif text-2xl text-navy">Полный пансион</h3>
+              <p className="mt-3 text-sm text-muted-foreground">Завтрак, обед и ужин</p>
+              <div className="mt-6 flex items-baseline gap-2 border-t border-beige pt-6">
+                <span className="font-serif text-3xl text-navy">1 900 ₽</span>
+                <span className="text-sm text-muted-foreground">/ гость в сутки</span>
               </div>
             </div>
           </div>
