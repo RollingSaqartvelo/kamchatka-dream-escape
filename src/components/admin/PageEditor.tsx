@@ -7,7 +7,7 @@ import {
   deleteMedia,
   type PageContent,
 } from "@/lib/site-content";
-import type { PageSchema } from "@/lib/content-registry";
+import type { PageSchema, ItemField } from "@/lib/content-registry";
 
 // Универсальный редактор контента страницы. Строится по схеме из реестра:
 // текстовые поля, галереи фото и переключатель «скрыть блок». Дизайн страницы
@@ -33,6 +33,10 @@ export function PageEditor({ schema }: { schema: PageSchema }) {
   }
   function setImages(id: string, list: string[]) {
     setContent((c) => ({ ...c, images: { ...c.images, [id]: list } }));
+    setDirty(true);
+  }
+  function setListItems(id: string, items: Record<string, string>[]) {
+    setContent((c) => ({ ...c, lists: { ...c.lists, [id]: items } }));
     setDirty(true);
   }
   function setHidden(id: string, hidden: boolean) {
@@ -100,6 +104,19 @@ export function PageEditor({ schema }: { schema: PageSchema }) {
                           label={f.label}
                           photos={list}
                           onChange={(l) => setImages(f.id, l)}
+                        />
+                      );
+                    }
+                    if (f.type === "list") {
+                      const items = content.lists?.[f.id] ?? f.def;
+                      return (
+                        <ListField
+                          key={f.id}
+                          label={f.label}
+                          addLabel={f.addLabel}
+                          itemFields={f.item}
+                          items={items}
+                          onChange={(l) => setListItems(f.id, l)}
                         />
                       );
                     }
@@ -224,6 +241,153 @@ function GalleryField({
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// Редактор повторяющихся карточек: добавление/удаление/перемещение элементов,
+// у каждого — свои подполя (текст / textarea / фото).
+function ListField({
+  label,
+  addLabel,
+  itemFields,
+  items,
+  onChange,
+}: {
+  label: string;
+  addLabel?: string;
+  itemFields: ItemField[];
+  items: Record<string, string>[];
+  onChange: (items: Record<string, string>[]) => void;
+}) {
+  function update(i: number, key: string, value: string) {
+    const next = items.map((it, idx) => (idx === i ? { ...it, [key]: value } : it));
+    onChange(next);
+  }
+  function add() {
+    const blank: Record<string, string> = {};
+    itemFields.forEach((f) => (blank[f.id] = ""));
+    onChange([...items, blank]);
+  }
+  function remove(i: number) {
+    onChange(items.filter((_, idx) => idx !== i));
+  }
+  function move(i: number, dir: -1 | 1) {
+    const j = i + dir;
+    if (j < 0 || j >= items.length) return;
+    const next = [...items];
+    [next[i], next[j]] = [next[j], next[i]];
+    onChange(next);
+  }
+
+  return (
+    <div className="border-t border-border pt-4">
+      <div className="flex items-center justify-between">
+        <span className="text-[11px] uppercase tracking-widest text-muted-foreground">{label}</span>
+        <button
+          type="button"
+          onClick={add}
+          className="border border-[#C9A96E] px-4 py-1.5 text-[11px] uppercase tracking-widest text-[#C9A96E] hover:bg-[#C9A96E] hover:text-white"
+        >
+          {addLabel ?? "+ Добавить"}
+        </button>
+      </div>
+      {items.length === 0 ? (
+        <p className="mt-3 text-xs text-muted-foreground">Пусто.</p>
+      ) : (
+        <div className="mt-3 space-y-4">
+          {items.map((item, i) => (
+            <div key={i} className="relative border border-border bg-cream/20 p-4">
+              <div className="absolute right-2 top-2 flex gap-1">
+                <button type="button" onClick={() => move(i, -1)} disabled={i === 0} title="Выше" className="flex h-6 w-6 items-center justify-center border border-border bg-background text-xs disabled:opacity-30">↑</button>
+                <button type="button" onClick={() => move(i, 1)} disabled={i === items.length - 1} title="Ниже" className="flex h-6 w-6 items-center justify-center border border-border bg-background text-xs disabled:opacity-30">↓</button>
+                <button type="button" onClick={() => remove(i)} title="Удалить" className="flex h-6 w-6 items-center justify-center bg-rose-600 text-xs text-white">✕</button>
+              </div>
+              <p className="mb-3 text-[10px] uppercase tracking-widest text-muted-foreground">№ {i + 1}</p>
+              <div className="space-y-3 pr-20">
+                {itemFields.map((sf) => {
+                  const v = item[sf.id] ?? "";
+                  if (sf.type === "image") {
+                    return <ItemImage key={sf.id} label={sf.label} url={v} onChange={(u) => update(i, sf.id, u)} />;
+                  }
+                  return (
+                    <label key={sf.id} className="block">
+                      <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{sf.label}</span>
+                      {sf.type === "textarea" ? (
+                        <textarea
+                          rows={2}
+                          value={v}
+                          onChange={(e) => update(i, sf.id, e.target.value)}
+                          className="mt-1 w-full border border-border bg-background px-3 py-2 text-sm text-navy outline-none focus:border-navy"
+                        />
+                      ) : (
+                        <input
+                          type="text"
+                          value={v}
+                          onChange={(e) => update(i, sf.id, e.target.value)}
+                          className="mt-1 w-full border border-border bg-background px-3 py-2 text-sm text-navy outline-none focus:border-navy"
+                        />
+                      )}
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Одиночное фото внутри карточки списка.
+function ItemImage({ label, url, onChange }: { label: string; url: string; onChange: (url: string) => void }) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  async function onFile(files: FileList | null) {
+    if (!files || !files[0]) return;
+    setUploading(true);
+    try {
+      const u = await uploadMedia(files[0]);
+      onChange(u);
+    } catch (e: any) {
+      toast.error(`Не загрузилось: ${e?.message ?? e}`);
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+  return (
+    <div>
+      <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</span>
+      <div className="mt-1 flex items-center gap-3">
+        <div className="h-16 w-20 shrink-0 overflow-hidden border border-border bg-beige">
+          {url ? <img src={url} alt="" className="h-full w-full object-cover" /> : null}
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="border border-[#C9A96E] px-3 py-1.5 text-[10px] uppercase tracking-widest text-[#C9A96E] hover:bg-[#C9A96E] hover:text-white disabled:opacity-50"
+          >
+            {uploading ? "…" : url ? "Заменить" : "Загрузить"}
+          </button>
+          {url && (
+            <button
+              type="button"
+              onClick={() => {
+                void deleteMedia(url);
+                onChange("");
+              }}
+              className="border border-border px-3 py-1.5 text-[10px] uppercase tracking-widest text-muted-foreground hover:bg-rose-50"
+            >
+              Убрать
+            </button>
+          )}
+        </div>
+        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => void onFile(e.target.files)} />
+      </div>
     </div>
   );
 }

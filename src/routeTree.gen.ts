@@ -41,8 +41,11 @@ import { Route as ApiPublicTravellineTestRouteImport } from './routes/api/public
 import { Route as ApiPublicAlfaCallbackRouteImport } from './routes/api/public/alfa-callback'
 import { Route as ApiInternalCronTlSyncRouteImport } from './routes/api/internal/cron-tl-sync'
 import { Route as ApiInternalCronRemindersRouteImport } from './routes/api/internal/cron-reminders'
+import { Route as AdminSiteWellnessRouteImport } from './routes/admin.site.wellness'
 import { Route as AdminSiteServicesRouteImport } from './routes/admin.site.services'
+import { Route as AdminSiteNavRouteImport } from './routes/admin.site.nav'
 import { Route as AdminSiteHomeRouteImport } from './routes/admin.site.home'
+import { Route as AdminSiteContactsRouteImport } from './routes/admin.site.contacts'
 import { Route as AdminSiteAboutRouteImport } from './routes/admin.site.about'
 import { Route as ApiPublicVoucherIdRouteImport } from './routes/api/public/voucher.$id'
 
@@ -207,14 +210,29 @@ const ApiInternalCronRemindersRoute =
     path: '/api/internal/cron-reminders',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AdminSiteWellnessRoute = AdminSiteWellnessRouteImport.update({
+  id: '/wellness',
+  path: '/wellness',
+  getParentRoute: () => AdminSiteRoute,
+} as any)
 const AdminSiteServicesRoute = AdminSiteServicesRouteImport.update({
   id: '/services',
   path: '/services',
   getParentRoute: () => AdminSiteRoute,
 } as any)
+const AdminSiteNavRoute = AdminSiteNavRouteImport.update({
+  id: '/nav',
+  path: '/nav',
+  getParentRoute: () => AdminSiteRoute,
+} as any)
 const AdminSiteHomeRoute = AdminSiteHomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => AdminSiteRoute,
+} as any)
+const AdminSiteContactsRoute = AdminSiteContactsRouteImport.update({
+  id: '/contacts',
+  path: '/contacts',
   getParentRoute: () => AdminSiteRoute,
 } as any)
 const AdminSiteAboutRoute = AdminSiteAboutRouteImport.update({
@@ -253,8 +271,11 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/kamchatka/': typeof KamchatkaIndexRoute
   '/admin/site/about': typeof AdminSiteAboutRoute
+  '/admin/site/contacts': typeof AdminSiteContactsRoute
   '/admin/site/home': typeof AdminSiteHomeRoute
+  '/admin/site/nav': typeof AdminSiteNavRoute
   '/admin/site/services': typeof AdminSiteServicesRoute
+  '/admin/site/wellness': typeof AdminSiteWellnessRoute
   '/api/internal/cron-reminders': typeof ApiInternalCronRemindersRoute
   '/api/internal/cron-tl-sync': typeof ApiInternalCronTlSyncRoute
   '/api/public/alfa-callback': typeof ApiPublicAlfaCallbackRoute
@@ -289,8 +310,11 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/kamchatka': typeof KamchatkaIndexRoute
   '/admin/site/about': typeof AdminSiteAboutRoute
+  '/admin/site/contacts': typeof AdminSiteContactsRoute
   '/admin/site/home': typeof AdminSiteHomeRoute
+  '/admin/site/nav': typeof AdminSiteNavRoute
   '/admin/site/services': typeof AdminSiteServicesRoute
+  '/admin/site/wellness': typeof AdminSiteWellnessRoute
   '/api/internal/cron-reminders': typeof ApiInternalCronRemindersRoute
   '/api/internal/cron-tl-sync': typeof ApiInternalCronTlSyncRoute
   '/api/public/alfa-callback': typeof ApiPublicAlfaCallbackRoute
@@ -328,8 +352,11 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/kamchatka/': typeof KamchatkaIndexRoute
   '/admin/site/about': typeof AdminSiteAboutRoute
+  '/admin/site/contacts': typeof AdminSiteContactsRoute
   '/admin/site/home': typeof AdminSiteHomeRoute
+  '/admin/site/nav': typeof AdminSiteNavRoute
   '/admin/site/services': typeof AdminSiteServicesRoute
+  '/admin/site/wellness': typeof AdminSiteWellnessRoute
   '/api/internal/cron-reminders': typeof ApiInternalCronRemindersRoute
   '/api/internal/cron-tl-sync': typeof ApiInternalCronTlSyncRoute
   '/api/public/alfa-callback': typeof ApiPublicAlfaCallbackRoute
@@ -368,8 +395,11 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/kamchatka/'
     | '/admin/site/about'
+    | '/admin/site/contacts'
     | '/admin/site/home'
+    | '/admin/site/nav'
     | '/admin/site/services'
+    | '/admin/site/wellness'
     | '/api/internal/cron-reminders'
     | '/api/internal/cron-tl-sync'
     | '/api/public/alfa-callback'
@@ -404,8 +434,11 @@ export interface FileRouteTypes {
     | '/admin'
     | '/kamchatka'
     | '/admin/site/about'
+    | '/admin/site/contacts'
     | '/admin/site/home'
+    | '/admin/site/nav'
     | '/admin/site/services'
+    | '/admin/site/wellness'
     | '/api/internal/cron-reminders'
     | '/api/internal/cron-tl-sync'
     | '/api/public/alfa-callback'
@@ -442,8 +475,11 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/kamchatka/'
     | '/admin/site/about'
+    | '/admin/site/contacts'
     | '/admin/site/home'
+    | '/admin/site/nav'
     | '/admin/site/services'
+    | '/admin/site/wellness'
     | '/api/internal/cron-reminders'
     | '/api/internal/cron-tl-sync'
     | '/api/public/alfa-callback'
@@ -704,6 +740,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiInternalCronRemindersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/site/wellness': {
+      id: '/admin/site/wellness'
+      path: '/wellness'
+      fullPath: '/admin/site/wellness'
+      preLoaderRoute: typeof AdminSiteWellnessRouteImport
+      parentRoute: typeof AdminSiteRoute
+    }
     '/admin/site/services': {
       id: '/admin/site/services'
       path: '/services'
@@ -711,11 +754,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSiteServicesRouteImport
       parentRoute: typeof AdminSiteRoute
     }
+    '/admin/site/nav': {
+      id: '/admin/site/nav'
+      path: '/nav'
+      fullPath: '/admin/site/nav'
+      preLoaderRoute: typeof AdminSiteNavRouteImport
+      parentRoute: typeof AdminSiteRoute
+    }
     '/admin/site/home': {
       id: '/admin/site/home'
       path: '/home'
       fullPath: '/admin/site/home'
       preLoaderRoute: typeof AdminSiteHomeRouteImport
+      parentRoute: typeof AdminSiteRoute
+    }
+    '/admin/site/contacts': {
+      id: '/admin/site/contacts'
+      path: '/contacts'
+      fullPath: '/admin/site/contacts'
+      preLoaderRoute: typeof AdminSiteContactsRouteImport
       parentRoute: typeof AdminSiteRoute
     }
     '/admin/site/about': {
@@ -737,15 +794,21 @@ declare module '@tanstack/react-router' {
 
 interface AdminSiteRouteChildren {
   AdminSiteAboutRoute: typeof AdminSiteAboutRoute
+  AdminSiteContactsRoute: typeof AdminSiteContactsRoute
   AdminSiteHomeRoute: typeof AdminSiteHomeRoute
+  AdminSiteNavRoute: typeof AdminSiteNavRoute
   AdminSiteServicesRoute: typeof AdminSiteServicesRoute
+  AdminSiteWellnessRoute: typeof AdminSiteWellnessRoute
   AdminSiteIndexRoute: typeof AdminSiteIndexRoute
 }
 
 const AdminSiteRouteChildren: AdminSiteRouteChildren = {
   AdminSiteAboutRoute: AdminSiteAboutRoute,
+  AdminSiteContactsRoute: AdminSiteContactsRoute,
   AdminSiteHomeRoute: AdminSiteHomeRoute,
+  AdminSiteNavRoute: AdminSiteNavRoute,
   AdminSiteServicesRoute: AdminSiteServicesRoute,
+  AdminSiteWellnessRoute: AdminSiteWellnessRoute,
   AdminSiteIndexRoute: AdminSiteIndexRoute,
 }
 

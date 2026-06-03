@@ -11,9 +11,12 @@ import { supabase } from "@/integrations/supabase/client";
 //   data = { text: {fieldId: "..."}, images: {fieldId: ["url", ...]}, hidden: {blockId: true} }
 // ─────────────────────────────────────────────────────────────────────────────
 
+export type ListItem = Record<string, string>; // подполя элемента списка (текст/URL фото)
+
 export type PageContent = {
   text?: Record<string, string>;
   images?: Record<string, string[]>; // галерея; одиночное фото — массив из 1 элемента
+  lists?: Record<string, ListItem[]>; // повторяющиеся карточки
   hidden?: Record<string, boolean>;
 };
 
@@ -39,6 +42,7 @@ export type PageGetters = {
   text: (id: string, def: string) => string;
   image: (id: string, def: string) => string;
   images: (id: string, def: string[]) => string[];
+  list: (id: string, def: ListItem[]) => ListItem[];
   hidden: (id: string) => boolean;
 };
 
@@ -60,6 +64,10 @@ export function usePageContent(pageId: string): PageGetters {
     image: (id, def) => c.images?.[id]?.[0] ?? def,
     images: (id, def) => {
       const v = c.images?.[id];
+      return v && v.length ? v : def;
+    },
+    list: (id, def) => {
+      const v = c.lists?.[id];
       return v && v.length ? v : def;
     },
     hidden: (id) => c.hidden?.[id] ?? false,

@@ -3,11 +3,15 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Phone, MapPin, Menu, User, X } from "lucide-react";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { usePageContent } from "@/lib/site-content";
 import logoDark from "@/assets/logo-poluostrov-dark.svg";
 import logoLight from "@/assets/logo-poluostrov-light.svg";
 
+const telHref = (s: string) => `tel:${s.replace(/[^\d+]/g, "")}`;
+
 export function Header() {
   const { t } = useTranslation();
+  const c = usePageContent("nav");
   const location = useLocation();
   const isHome = location.pathname === "/";
   const [scrolledRaw, setScrolled] = useState(false);
@@ -34,13 +38,15 @@ export function Header() {
     };
   }, [mobileOpen]);
 
+  const phone = c.text("contact.phone", t("header.phone"));
+  const address = c.text("contact.address", t("header.address"));
   const navItems = [
-    { to: "/rooms", label: t("nav.rooms") },
-    { to: "/services", label: t("nav.services") },
-    { to: "/wellness", label: t("nav.wellness") },
-    { to: "/kamchatka", label: t("nav.kamchatka") },
-    { to: "/about", label: t("nav.about") },
-    { to: "/contacts", label: t("nav.contacts") },
+    { to: "/rooms", label: c.text("menu.rooms", t("nav.rooms")) },
+    { to: "/services", label: c.text("menu.services", t("nav.services")) },
+    { to: "/wellness", label: c.text("menu.wellness", t("nav.wellness")) },
+    { to: "/kamchatka", label: c.text("menu.kamchatka", t("nav.kamchatka")) },
+    { to: "/about", label: c.text("menu.about", t("nav.about")) },
+    { to: "/contacts", label: c.text("menu.contacts", t("nav.contacts")) },
   ];
 
   return (
@@ -49,20 +55,20 @@ export function Header() {
       <div className="bg-navy text-gold">
         <div className="mx-auto flex h-9 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="hidden items-center gap-6 text-[11px] tracking-widest-plus uppercase md:flex">
-            <a href="tel:+79149945757" className="inline-flex items-center gap-2 text-gold hover:text-cream">
+            <a href={telHref(phone)} className="inline-flex items-center gap-2 text-gold hover:text-cream">
               <Phone className="h-3 w-3" />
-              {t("header.phone")}
+              {phone}
             </a>
             <span className="inline-flex items-center gap-2 text-gold/80">
               <MapPin className="h-3 w-3" />
-              {t("header.address")}
+              {address}
             </span>
           </div>
           <a
-            href="tel:+79149945757"
+            href={telHref(phone)}
             className="text-[11px] tracking-widest-plus uppercase text-gold md:hidden"
           >
-            {t("header.phone")}
+            {phone}
           </a>
 
           <div className="flex items-center gap-4">
@@ -72,7 +78,7 @@ export function Header() {
               className="inline-flex items-center gap-1.5 text-[11px] tracking-widest-plus uppercase text-cream/80 hover:text-cream"
             >
               <User className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{t("nav.account")}</span>
+              <span className="hidden sm:inline">{c.text("menu.account", t("nav.account"))}</span>
             </Link>
           </div>
         </div>
@@ -125,7 +131,7 @@ export function Header() {
               }`}
               style={{ borderRadius: "2px" }}
             >
-              {t("nav.book")}
+              {c.text("menu.book", t("nav.book"))}
             </Link>
             <button
               type="button"
@@ -166,11 +172,11 @@ export function Header() {
             {t("nav.book")}
           </Link>
           <a
-            href="tel:+79149945757"
+            href={telHref(phone)}
             className="mt-6 inline-flex items-center justify-center gap-2 text-[11px] tracking-widest-plus uppercase text-navy/70"
           >
             <Phone className="h-3 w-3" />
-            {t("header.phone")}
+            {phone}
           </a>
         </nav>
       </div>

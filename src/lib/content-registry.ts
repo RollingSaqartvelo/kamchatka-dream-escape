@@ -5,9 +5,12 @@
 // Чтобы подключить новую страницу к конструктору: инструментируем её JSX
 // геттерами usePageContent(...) и добавляем сюда её схему.
 
+export type ItemField = { id: string; label: string; type: "text" | "textarea" | "image" };
+
 export type Field =
   | { id: string; label: string; type: "text" | "textarea"; def: string }
-  | { id: string; label: string; type: "gallery"; def: string[] };
+  | { id: string; label: string; type: "gallery"; def: string[] }
+  | { id: string; label: string; type: "list"; item: ItemField[]; addLabel?: string; def: Record<string, string>[] };
 
 export type Block = {
   id: string; // id блока для скрытия (hidden)
@@ -276,6 +279,17 @@ export const ABOUT_BULLETS_DEF = [
   "Выбор формата — от койко-места до двухместного номера",
 ].join("\n");
 
+export const ABOUT_ROOMS_DEF: Record<string, string>[] = [
+  { type: "Двухместный «Стандарт»", desc: "Одна двуспальная или две односпальные кровати, до 2 гостей" },
+  { type: "Двухместный «Эконом»", desc: "Двуспальная кровать-трансформер, санузел на 2 номера, до 2 гостей" },
+  { type: "Двухместный «Эконом» с доп. местом", desc: "Кровать-трансформер и односпальная софа, до 3 гостей" },
+  { type: "Двухместный «Комфорт»", desc: "Улучшенный номер с видом на залив, до 2 гостей" },
+  { type: "Двухместный «Комфорт» с доп. местом", desc: "Улучшенный номер с дополнительным местом, до 3 гостей" },
+  { type: "Трёхместный «Комфорт» с душем", desc: "Двухуровневый номер, 3 основных и 1 доп. место" },
+  { type: "Семейный «Делюкс»", desc: "Двухуровневый, 40 м², мини-кухня, до 4 гостей" },
+  { type: "Койко-место", desc: "Комнаты с двухъярусными кроватями — отличный выбор для бюджетного путешествия" },
+];
+
 export const ABOUT_SCHEMA: PageSchema = {
   key: "about",
   label: "Об отеле / Условия",
@@ -293,12 +307,23 @@ export const ABOUT_SCHEMA: PageSchema = {
     },
     {
       id: "conditions",
-      label: "Условия проживания (таблица номеров — фиксирована)",
+      label: "Условия проживания",
       toggleable: true,
       fields: [
         { id: "conditions.eyebrow", label: "Надзаголовок", type: "text", def: "Условия проживания" },
         { id: "conditions.title", label: "Заголовок", type: "text", def: "Мини-отель «Полуостров»" },
         { id: "conditions.roomFundTitle", label: "Заголовок таблицы", type: "text", def: "Номерной фонд" },
+        {
+          id: "conditions.rooms",
+          label: "Номерной фонд (строки таблицы)",
+          type: "list",
+          addLabel: "+ Добавить тип номера",
+          item: [
+            { id: "type", label: "Тип", type: "text" },
+            { id: "desc", label: "Описание", type: "text" },
+          ],
+          def: ABOUT_ROOMS_DEF,
+        },
         { id: "conditions.checkinTitle", label: "Заезд/выезд — заголовок", type: "text", def: "Время заезда и выезда" },
         { id: "conditions.checkin", label: "Заезд/выезд — строки (по одной в строке)", type: "textarea", def: "Заезд — с 14:00\nВыезд — до 12:00" },
         { id: "conditions.checkinNote", label: "Заезд/выезд — примечание", type: "textarea", def: "Ранний заезд и поздний выезд — по запросу и при наличии свободных номеров." },
@@ -328,8 +353,161 @@ export const ABOUT_SCHEMA: PageSchema = {
   ],
 };
 
+export const SPRINGS_DEF: Record<string, string>[] = [
+  { name: "Нижне-Паратунские источники", distance: "50 км от Петропавловска-Камчатского", temp: "около 38 °C", description: "Идеальная температура для комфортного купания. Насыщенная минералами вода восстанавливает силы и улучшает общее самочувствие.", image: "/media/springs/paratunskie.webp" },
+  { name: "Карымшинские источники", distance: "Долина реки Карымшино", temp: "от 40 до 75 °C", description: "Кристально чистая вода и уединённая атмосфера живописной долины создают идеальные условия для глубокой релаксации и оздоровления.", image: "/media/springs/karymshinskie.webp" },
+  { name: "Зеленовские озерки", distance: "Природный комплекс", temp: "горячие и прохладные купели", description: "Высокое содержание сероводорода и радона. Контрастное купание тонизирует сосуды и придаёт лёгкость телу.", image: "/media/springs/zelenovskie.webp" },
+  { name: "Налычевская долина", distance: "60 км от Петропавловска-Камчатского", temp: "от 14 до 75 °C", description: "Около 50 выходов термальных вод с уникальным минеральным составом. Благотворно влияет на сердечно-сосудистую, нервную и мышечную системы.", image: "/media/springs/nalychevo.webp" },
+  { name: "Малкинские источники", distance: "125 км от Петропавловска-Камчатского", temp: "35–45 °C", description: "Слабоминерализованная вода в окружении первозданной природы помогает по-настоящему расслабиться и восстановить силы.", image: "/media/springs/malkinskie.webp" },
+  { name: "Ходуткинские источники", distance: "Юг полуострова", temp: "38–40 °C", description: "Уникальное место, где горячая вода формирует целую реку. Купание среди вулканических пейзажей — опыт, который остаётся с вами навсегда.", image: "/media/springs/hodutkinskie.webp" },
+  { name: "Эссовские источники", distance: "Уединённая долина", temp: "от 40 до 70 °C", description: "Слабоминерализованная вода восстанавливает силы и благотворно влияет на дыхательную систему. Тишина и горный воздух дополняют эффект.", image: "/media/springs/essovskie.webp" },
+];
+
+export const WELLNESS_SCHEMA: PageSchema = {
+  key: "wellness",
+  label: "Оздоровление",
+  href: "/wellness",
+  blocks: [
+    {
+      id: "intro",
+      label: "Вступление",
+      toggleable: true,
+      fields: [
+        { id: "intro.eyebrow", label: "Надзаголовок", type: "text", def: "Термальная Камчатка" },
+        { id: "intro.title", label: "Заголовок", type: "text", def: "Источники силы полуострова" },
+        { id: "intro.body", label: "Текст", type: "textarea", def: "Камчатка славится многочисленными термальными источниками — каждый со своим характером, температурой и минеральным составом. Мы собрали самые значимые места, куда стоит отправиться ради настоящего оздоровления и единения с природой." },
+      ],
+    },
+    {
+      id: "springs",
+      label: "Источники (карточки)",
+      toggleable: true,
+      fields: [
+        {
+          id: "springs.items",
+          label: "Список источников",
+          type: "list",
+          addLabel: "+ Добавить источник",
+          item: [
+            { id: "name", label: "Название", type: "text" },
+            { id: "distance", label: "Где / расстояние", type: "text" },
+            { id: "temp", label: "Температура", type: "text" },
+            { id: "description", label: "Описание", type: "textarea" },
+            { id: "image", label: "Фото", type: "image" },
+          ],
+          def: SPRINGS_DEF,
+        },
+      ],
+    },
+    {
+      id: "outro",
+      label: "Заключение",
+      toggleable: true,
+      fields: [
+        { id: "outro.text", label: "Текст", type: "textarea", def: "Каждый источник — это своя атмосфера и своя сила. Вместе они делают путешествие на Камчатку по-настоящему незабываемым." },
+      ],
+    },
+  ],
+};
+
+export const CONTACTS_DIRECTIONS_DEF: Record<string, string>[] = [
+  { icon: "map", title: "Адрес", body: "г. Петропавловск-Камчатский, ул. Абеля, 41" },
+  { icon: "car", title: "На автомобиле", body: "С центра города по ул. Ленинская в сторону набережной, повернуть на ул. Абеля. Бесплатная парковка на территории." },
+  { icon: "plane", title: "Из аэропорта", body: "Аэропорт Петропавловск-Камчатский (PKC) — ~30 минут на такси. Рекомендуем Яндекс Такси или трансфер от отеля (закажите заранее при бронировании)." },
+  { icon: "bus", title: "На общественном транспорте", body: "Автобусные маршруты до остановки «Абеля»." },
+  { icon: "phone", title: "Нужен трансфер?", body: "Позвоните нам: +7 (914) 994-57-57. Организуем трансфер из аэропорта." },
+];
+
+export const CONTACTS_SCHEMA: PageSchema = {
+  key: "contacts",
+  label: "Контакты",
+  href: "/contacts",
+  blocks: [
+    {
+      id: "info",
+      label: "Контактные данные",
+      toggleable: false,
+      fields: [
+        { id: "info.address", label: "Адрес", type: "text", def: "ул. Абеля, 41, Петропавловск-Камчатский" },
+        { id: "info.phone", label: "Телефон", type: "text", def: "+7 (914) 994-57-57" },
+        { id: "info.whatsapp", label: "WhatsApp", type: "text", def: "+7 914 994-57-57" },
+        { id: "info.email", label: "Email", type: "text", def: "poluostrovkam@mail.ru" },
+      ],
+    },
+    {
+      id: "directions",
+      label: "Как добраться",
+      toggleable: true,
+      fields: [
+        { id: "directions.title", label: "Заголовок", type: "text", def: "Как до нас добраться" },
+        {
+          id: "directions.items",
+          label: "Способы / пункты",
+          type: "list",
+          addLabel: "+ Добавить пункт",
+          item: [
+            { id: "icon", label: "Иконка (map / car / plane / bus / phone)", type: "text" },
+            { id: "title", label: "Заголовок", type: "text" },
+            { id: "body", label: "Текст", type: "textarea" },
+          ],
+          def: CONTACTS_DIRECTIONS_DEF,
+        },
+      ],
+    },
+  ],
+};
+
+export const NAV_SCHEMA: PageSchema = {
+  key: "nav",
+  label: "Меню и подвал",
+  href: "/",
+  blocks: [
+    {
+      id: "menu",
+      label: "Пункты меню (шапка и подвал)",
+      toggleable: false,
+      fields: [
+        { id: "menu.rooms", label: "Номера", type: "text", def: "Номера" },
+        { id: "menu.services", label: "Услуги", type: "text", def: "Услуги" },
+        { id: "menu.wellness", label: "Оздоровление", type: "text", def: "Оздоровление" },
+        { id: "menu.kamchatka", label: "О Камчатке", type: "text", def: "О Камчатке" },
+        { id: "menu.about", label: "Об отеле", type: "text", def: "Об отеле" },
+        { id: "menu.contacts", label: "Контакты", type: "text", def: "Контакты" },
+        { id: "menu.account", label: "Личный кабинет", type: "text", def: "Личный кабинет" },
+        { id: "menu.book", label: "Кнопка «Забронировать»", type: "text", def: "Забронировать" },
+      ],
+    },
+    {
+      id: "contact",
+      label: "Контакты (шапка и подвал)",
+      toggleable: false,
+      fields: [
+        { id: "contact.phone", label: "Телефон", type: "text", def: "+7 (914) 994-57-57" },
+        { id: "contact.address", label: "Адрес", type: "text", def: "ул. Абеля, 41, Петропавловск-Камчатский" },
+        { id: "contact.email", label: "Email", type: "text", def: "poluostrovkam@mail.ru" },
+      ],
+    },
+    {
+      id: "footer",
+      label: "Подвал",
+      toggleable: false,
+      fields: [
+        { id: "footer.about", label: "О гостинице (текст)", type: "textarea", def: "Отель «Полуостров» — Гостиница на Камчатке." },
+        { id: "footer.navHeading", label: "Заголовок «Навигация»", type: "text", def: "Навигация" },
+        { id: "footer.contactHeading", label: "Заголовок «Контакты»", type: "text", def: "Контакты" },
+        { id: "footer.rights", label: "Копирайт", type: "text", def: "© 2026 Отель «Полуостров». Все права защищены." },
+        { id: "footer.privacy", label: "Ссылка 1", type: "text", def: "Политика конфиденциальности" },
+        { id: "footer.terms", label: "Ссылка 2", type: "text", def: "Пользовательское соглашение" },
+      ],
+    },
+  ],
+};
+
 export const PAGE_SCHEMAS: Record<string, PageSchema> = {
   services: SERVICES_SCHEMA,
   home: HOME_SCHEMA,
   about: ABOUT_SCHEMA,
+  wellness: WELLNESS_SCHEMA,
+  contacts: CONTACTS_SCHEMA,
+  nav: NAV_SCHEMA,
 };

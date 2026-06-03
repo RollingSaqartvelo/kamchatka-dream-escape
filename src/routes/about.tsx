@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { SiteLayout } from "@/components/layout/SiteLayout";
 import { PageHero } from "@/components/sections/PageHero";
 import { usePageContent } from "@/lib/site-content";
-import { ABOUT_INTRO_DEF, ABOUT_HOWTO_DEF, ABOUT_BULLETS_DEF } from "@/lib/content-registry";
+import { ABOUT_INTRO_DEF, ABOUT_HOWTO_DEF, ABOUT_BULLETS_DEF, ABOUT_ROOMS_DEF } from "@/lib/content-registry";
 
 // Разбить многострочный текст на непустые строки.
 const lines = (s: string) => s.split("\n").map((x) => x.trim()).filter(Boolean);
@@ -74,41 +74,8 @@ function AboutPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-beige">
-                  {[
-                    {
-                      type: "Двухместный «Стандарт»",
-                      desc: "Одна двуспальная или две односпальные кровати, до 2 гостей",
-                    },
-                    {
-                      type: "Двухместный «Эконом»",
-                      desc: "Двуспальная кровать-трансформер, санузел на 2 номера, до 2 гостей",
-                    },
-                    {
-                      type: "Двухместный «Эконом» с доп. местом",
-                      desc: "Кровать-трансформер и односпальная софа, до 3 гостей",
-                    },
-                    {
-                      type: "Двухместный «Комфорт»",
-                      desc: "Улучшенный номер с видом на залив, до 2 гостей",
-                    },
-                    {
-                      type: "Двухместный «Комфорт» с доп. местом",
-                      desc: "Улучшенный номер с дополнительным местом, до 3 гостей",
-                    },
-                    {
-                      type: "Трёхместный «Комфорт» с душем",
-                      desc: "Двухуровневый номер, 3 основных и 1 доп. место",
-                    },
-                    {
-                      type: "Семейный «Делюкс»",
-                      desc: "Двухуровневый, 40 м², мини-кухня, до 4 гостей",
-                    },
-                    {
-                      type: "Койко-место",
-                      desc: "Комнаты с двухъярусными кроватями — отличный выбор для бюджетного путешествия",
-                    },
-                  ].map((r) => (
-                    <tr key={r.type}>
+                  {c.list("conditions.rooms", ABOUT_ROOMS_DEF).map((r, i) => (
+                    <tr key={i}>
                       <td className="px-6 py-5 font-serif text-base text-navy">{r.type}</td>
                       <td className="px-6 py-5 text-muted-foreground">{r.desc}</td>
                     </tr>
