@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { sendPaymentConfirmation } from "@/lib/email.functions";
 import { notifyPaymentReceived } from "@/lib/telegram.functions";
+import { pushBookingToTravelline } from "@/lib/travelline-booking.functions";
 
 /**
  * Webhook от Альфа-Банка после оплаты.
@@ -80,6 +81,13 @@ async function handle(request: Request) {
         notifyPaymentReceived(bk).catch((e) =>
           console.error("notifyPaymentReceived failed:", e),
         );
+      }
+      // Пай-фёрст: после оплаты отправляем бронь в TravelLine (закрывает наличие
+      // на всех каналах). Включается флагом TL_PUSH_ENABLED=1 после валидации.
+      if (process.env.TL_PUSH_ENABLED === "1") {
+        pushBookingToTravelline(updated.id)
+          .then((r) => { if (!r.ok) console.error("TL push (pay) failed:", r.error, r.log); })
+          .catch((e) => console.error("TL push (pay) exception:", e));
       }
     }
     return new Response("ok");

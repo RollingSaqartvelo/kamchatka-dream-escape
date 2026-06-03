@@ -32,7 +32,7 @@ export const RATE_PLAN_BY_MEAL: Record<"room_only" | "breakfast", number> = {
 // ─── Token cache (in-memory per worker) ──────────────────────────────────────
 let cachedToken: { token: string; expiresAt: number } | null = null;
 
-async function getTravellineToken(): Promise<string> {
+export async function getTravellineToken(): Promise<string> {
   const now = Date.now();
   if (cachedToken && cachedToken.expiresAt > now + 30_000) {
     return cachedToken.token;

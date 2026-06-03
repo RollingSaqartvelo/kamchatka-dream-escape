@@ -1,6 +1,10 @@
+import { useState } from "react";
 import { format, parseISO } from "date-fns";
 import { ru } from "date-fns/locale";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import { sourceIcon, sourceLabel } from "@/lib/channels";
+import { inspectTravellineOffer } from "@/lib/travelline-booking.functions";
 
 // Полная карточка брони — открывается по клику в календаре/списке.
 // Показывает всё, что у нас есть: гость, канал/источник, тариф, время заезда,
@@ -95,6 +99,20 @@ export function BookingDetailDrawer({
   onChangeStatus?: (id: string, status: string) => void;
 }) {
   const b = booking;
+  const inspectTl = useServerFn(inspectTravellineOffer);
+  const [tlResult, setTlResult] = useState<string | null>(null);
+  const [tlLoading, setTlLoading] = useState(false);
+  async function runTlDiagnose() {
+    setTlLoading(true);
+    try {
+      const r = await inspectTl({ data: { bookingId: b.id } });
+      setTlResult(JSON.stringify(r, null, 2));
+    } catch (e: any) {
+      toast.error("TravelLine: " + (e?.message ?? "ошибка"));
+    } finally {
+      setTlLoading(false);
+    }
+  }
   const meta: TlMeta | null =
     b.special_requests && !Array.isArray(b.special_requests) && typeof b.special_requests === "object"
       ? (b.special_requests as TlMeta)
@@ -243,6 +261,22 @@ export function BookingDetailDrawer({
               </div>
             </Section>
           )}
+
+          {/* TravelLine — диагностика предложения (безопасно, только поиск) */}
+          <Section title="TravelLine (диагностика)">
+            <button
+              onClick={() => void runTlDiagnose()}
+              disabled={tlLoading}
+              className="border border-[#C9A96E] px-3 py-1.5 text-[11px] uppercase tracking-widest text-[#C9A96E] hover:bg-[#C9A96E] hover:text-white disabled:opacity-50"
+            >
+              {tlLoading ? "Проверяем…" : "Проверить предложение в TravelLine"}
+            </button>
+            {tlResult && (
+              <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-all rounded bg-cream/50 p-2 text-[10px] leading-tight text-navy">
+                {tlResult}
+              </pre>
+            )}
+          </Section>
 
           <a
             href="/admin/bookings"
