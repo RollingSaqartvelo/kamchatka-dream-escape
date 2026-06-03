@@ -14,22 +14,48 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
+  const [step, setStep] = useState<"email" | "code">("email");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function onSubmit(e: FormEvent) {
+  // Шаг 1 — отправить код на почту
+  async function sendCode(e: FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error || !data.user) {
-      setLoading(false);
-      setError("Неверный email или пароль");
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email.trim(),
+      options: { shouldCreateUser: false }, // вход только для существующих пользователей
+    });
+    setLoading(false);
+    if (error) {
+      setError(
+        /not allowed|not found|no user/i.test(error.message)
+          ? "Пользователь с таким email не найден. Зарегистрируйтесь."
+          : error.message,
+      );
       return;
     }
-    // Check if user is staff (admin/manager) — redirect to admin panel
+    setStep("code");
+  }
+
+  // Шаг 2 — проверить код и войти
+  async function verify(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    const { data, error } = await supabase.auth.verifyOtp({
+      email: email.trim(),
+      token: code.trim(),
+      type: "email",
+    });
+    if (error || !data.user) {
+      setLoading(false);
+      setError("Неверный или просроченный код");
+      return;
+    }
     const { data: roles } = await supabase
       .from("user_roles")
       .select("role")
@@ -51,44 +77,80 @@ function LoginPage() {
 
         <h1 className="mt-10 font-serif text-3xl text-navy">Вход</h1>
 
-        <form onSubmit={onSubmit} className="mt-8 space-y-5">
-          <div>
-            <label className="text-[11px] uppercase tracking-widest text-navy">Email</label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-2 w-full border border-border bg-background px-3 py-3 text-sm outline-none focus:border-[#C9A96E]"
-              autoComplete="email"
-            />
-          </div>
-          <div>
-            <label className="text-[11px] uppercase tracking-widest text-navy">Пароль</label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-2 w-full border border-border bg-background px-3 py-3 text-sm outline-none focus:border-[#C9A96E]"
-              autoComplete="current-password"
-            />
-          </div>
-
-          {error && (
-            <p className="border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-              {error}
+        {step === "email" ? (
+          <form onSubmit={sendCode} className="mt-8 space-y-5">
+            <p className="text-sm text-muted-foreground">
+              Введите email — мы отправим одноразовый код для входа. Пароль не нужен.
             </p>
-          )}
+            <div>
+              <label className="text-[11px] uppercase tracking-widest text-navy">Email</label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-2 w-full border border-border bg-background px-3 py-3 text-sm outline-none focus:border-[#C9A96E]"
+                autoComplete="email"
+              />
+            </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-[#1a1a1a] py-4 text-[11px] uppercase tracking-[2px] text-white transition-colors hover:bg-[#C9A96E] disabled:opacity-50"
-          >
-            {loading ? "Вход…" : "Войти"}
-          </button>
-        </form>
+            {error && (
+              <p className="border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#1a1a1a] py-4 text-[11px] uppercase tracking-[2px] text-white transition-colors hover:bg-[#C9A96E] disabled:opacity-50"
+            >
+              {loading ? "Отправляем…" : "Получить код"}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={verify} className="mt-8 space-y-5">
+            <p className="text-sm text-muted-foreground">
+              Код отправлен на <span className="text-navy">{email}</span>. Введите его ниже.
+            </p>
+            <div>
+              <label className="text-[11px] uppercase tracking-widest text-navy">Код из письма</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                autoFocus
+                required
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                placeholder="123456"
+                className="mt-2 w-full border border-border bg-background px-3 py-3 text-center font-mono text-lg tracking-[6px] outline-none focus:border-[#C9A96E]"
+                autoComplete="one-time-code"
+              />
+            </div>
+
+            {error && (
+              <p className="border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#1a1a1a] py-4 text-[11px] uppercase tracking-[2px] text-white transition-colors hover:bg-[#C9A96E] disabled:opacity-50"
+            >
+              {loading ? "Проверяем…" : "Войти"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setStep("email");
+                setCode("");
+                setError(null);
+              }}
+              className="w-full text-[11px] uppercase tracking-widest text-muted-foreground hover:text-navy"
+            >
+              ← Изменить email / отправить заново
+            </button>
+          </form>
+        )}
 
         <p className="mt-8 text-xs text-muted-foreground">
           Нет аккаунта?{" "}
