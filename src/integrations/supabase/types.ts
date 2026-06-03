@@ -306,6 +306,45 @@ export type Database = {
         }
         Relationships: []
       }
+      room_maintenance: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          reason: string | null
+          room_key: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          reason?: string | null
+          room_key: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          reason?: string | null
+          room_key?: string
+        }
+        Relationships: []
+      }
+      site_content: {
+        Row: {
+          data: Json
+          key: string
+          updated_at: string
+        }
+        Insert: {
+          data?: Json
+          key: string
+          updated_at?: string
+        }
+        Update: {
+          data?: Json
+          key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       telegram_subscribers: {
         Row: {
           booking_id: string | null
@@ -340,6 +379,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      tl_sync_state: {
+        Row: {
+          continue_token: string | null
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          continue_token?: string | null
+          id?: number
+          updated_at?: string
+        }
+        Update: {
+          continue_token?: string | null
+          id?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
