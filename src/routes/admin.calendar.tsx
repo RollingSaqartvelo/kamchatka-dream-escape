@@ -376,7 +376,10 @@ function AdminCalendarPage() {
   // больше броней, чем реально вмещает тип (greedy-раскладка не нашла места).
   const conflictCount = useMemo(() => {
     let n = 0;
-    for (const arr of cellIndex.values()) if (arr.length > 1) n++;
+    for (const [key, arr] of cellIndex) {
+      const tid = unitTypeId(key.slice(0, key.indexOf("|")));
+      if (!HOSTEL_CAPACITY[tid] && arr.length > 1) n++; // хостелы (койки) — не конфликт
+    }
     return n;
   }, [cellIndex]);
 

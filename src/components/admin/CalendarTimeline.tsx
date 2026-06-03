@@ -55,6 +55,7 @@ type Room = {
   groupName: string; // имя типа — заголовок группы
   unitLabel: string; // подпись строки: «№ 12» | «Кровать №1» | имя одиночного типа
   price_from_rub: number;
+  hostelBed?: boolean; // койка хостела — пересечения НЕ считаем конфликтом (общая комната)
 };
 
 type Group = { typeId: string; groupName: string; price: number; units: Room[]; single: boolean };
@@ -227,7 +228,9 @@ export function CalendarTimeline({
           } else laneEnds[lane] = e;
           return { b, s, e, lane, conflict: false };
         });
-        for (const p of placed) p.conflict = placed.some((q) => q !== p && q.s < p.e && p.s < q.e);
+        // У хостельных коек пересечения — норма (общая комната), не конфликт.
+        if (!room.hostelBed)
+          for (const p of placed) p.conflict = placed.some((q) => q !== p && q.s < p.e && p.s < q.e);
         const lanes = Math.max(1, laneEnds.length);
         const height = Math.max(MIN_ROW_H, lanes * LANE_H + 6);
         out.push({ kind: "row", room, placed: placed.map(({ b, lane, conflict }) => ({ b, lane, conflict })), top, height });
