@@ -15,7 +15,7 @@ export const Route = createFileRoute("/admin/site")({
 export const SITE_SECTIONS: { to: string; label: string; status: "ready" | "soon" }[] = [
   { to: "/admin/site/home", label: "Главная", status: "ready" },
   { to: "/admin/site/services", label: "Услуги", status: "ready" },
-  { to: "/admin/site/about", label: "Об отеле / Условия", status: "soon" },
+  { to: "/admin/site/about", label: "Об отеле / Условия", status: "ready" },
   { to: "/admin/site/wellness", label: "Оздоровление", status: "soon" },
   { to: "/admin/site/kamchatka", label: "О Камчатке", status: "soon" },
   { to: "/admin/site/contacts", label: "Контакты", status: "soon" },
