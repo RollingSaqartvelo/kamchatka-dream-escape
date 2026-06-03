@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Phone, Mail, MapPin } from "lucide-react";
 import { usePageContent } from "@/lib/site-content";
+import { useRequisites } from "@/lib/requisites";
 import logoLight from "@/assets/logo-poluostrov-light.svg";
 
 const telHref = (s: string) => `tel:${s.replace(/[^\d+]/g, "")}`;
@@ -9,6 +10,7 @@ const telHref = (s: string) => `tel:${s.replace(/[^\d+]/g, "")}`;
 export function Footer() {
   const { t } = useTranslation();
   const c = usePageContent("nav");
+  const req = useRequisites();
   const phone = c.text("contact.phone", t("header.phone"));
   const address = c.text("contact.address", t("header.address"));
   const email = c.text("contact.email", "poluostrovkam@mail.ru");
@@ -25,8 +27,8 @@ export function Footer() {
               {c.text("footer.about", t("footer.about"))}
             </p>
             <p className="mt-4 text-xs text-cream/40">
-              ИП Смирнов Роман Яковлевич · ИНН 772400271482<br />
-              г. Петропавловск-Камчатский, ул. Абеля, 41
+              {req.ipName} · ИНН {req.inn}<br />
+              {req.hotelAddress}
             </p>
           </div>
 

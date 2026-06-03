@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import logoDark from "@/assets/logo-poluostrov-dark.svg";
+import type { Requisites } from "@/lib/requisites";
 
 // Фирменный бланк для юридических документов (политика, оферта).
 // На экране — обычная страница; кнопка «Скачать PDF» вызывает печать браузера,
@@ -7,10 +8,12 @@ import logoDark from "@/assets/logo-poluostrov-dark.svg";
 export function LegalDoc({
   title,
   updated,
+  requisites: r,
   children,
 }: {
   title: string;
   updated: string;
+  requisites: Requisites;
   children: ReactNode;
 }) {
   return (
@@ -26,9 +29,12 @@ export function LegalDoc({
         <div className="flex flex-col items-center border-b border-beige pb-8 text-center">
           <img src={logoDark} alt="Полуостров" className="h-16 w-auto" />
           <div className="mt-4 text-xs leading-relaxed text-muted-foreground">
-            ИП Смирнов Роман Яковлевич · ИНН 772400271482<br />
-            г. Петропавловск-Камчатский, ул. Пограничная, д. 30, кв. 36<br />
-            Гостиница «Полуостров» · ул. Абеля, 41 · +7 (914) 994-57-57 · poluostrovkam@mail.ru
+            {r.ipName} · ИНН {r.inn}
+            {r.ogrnip ? ` · ОГРНИП ${r.ogrnip}` : ""}
+            <br />
+            {r.legalAddress}
+            <br />
+            Гостиница «Полуостров» · {r.hotelAddress} · {r.phone} · {r.email}
           </div>
         </div>
 

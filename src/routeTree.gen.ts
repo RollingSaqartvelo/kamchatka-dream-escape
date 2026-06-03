@@ -29,6 +29,7 @@ import { Route as BookingSuccessRouteImport } from './routes/booking.success'
 import { Route as AdminStaffRouteImport } from './routes/admin.staff'
 import { Route as AdminSiteRouteImport } from './routes/admin.site'
 import { Route as AdminRoomsRouteImport } from './routes/admin.rooms'
+import { Route as AdminRequisitesRouteImport } from './routes/admin.requisites'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminInboxRouteImport } from './routes/admin.inbox'
 import { Route as AdminGuestsRouteImport } from './routes/admin.guests'
@@ -150,6 +151,11 @@ const AdminSiteRoute = AdminSiteRouteImport.update({
 const AdminRoomsRoute = AdminRoomsRouteImport.update({
   id: '/rooms',
   path: '/rooms',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRequisitesRoute = AdminRequisitesRouteImport.update({
+  id: '/requisites',
+  path: '/requisites',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
@@ -284,6 +290,7 @@ export interface FileRoutesByFullPath {
   '/admin/guests': typeof AdminGuestsRoute
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/requisites': typeof AdminRequisitesRoute
   '/admin/rooms': typeof AdminRoomsRoute
   '/admin/site': typeof AdminSiteRouteWithChildren
   '/admin/staff': typeof AdminStaffRoute
@@ -327,6 +334,7 @@ export interface FileRoutesByTo {
   '/admin/guests': typeof AdminGuestsRoute
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/requisites': typeof AdminRequisitesRoute
   '/admin/rooms': typeof AdminRoomsRoute
   '/admin/staff': typeof AdminStaffRoute
   '/booking/success': typeof BookingSuccessRoute
@@ -371,6 +379,7 @@ export interface FileRoutesById {
   '/admin/guests': typeof AdminGuestsRoute
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/requisites': typeof AdminRequisitesRoute
   '/admin/rooms': typeof AdminRoomsRoute
   '/admin/site': typeof AdminSiteRouteWithChildren
   '/admin/staff': typeof AdminStaffRoute
@@ -417,6 +426,7 @@ export interface FileRouteTypes {
     | '/admin/guests'
     | '/admin/inbox'
     | '/admin/notifications'
+    | '/admin/requisites'
     | '/admin/rooms'
     | '/admin/site'
     | '/admin/staff'
@@ -460,6 +470,7 @@ export interface FileRouteTypes {
     | '/admin/guests'
     | '/admin/inbox'
     | '/admin/notifications'
+    | '/admin/requisites'
     | '/admin/rooms'
     | '/admin/staff'
     | '/booking/success'
@@ -503,6 +514,7 @@ export interface FileRouteTypes {
     | '/admin/guests'
     | '/admin/inbox'
     | '/admin/notifications'
+    | '/admin/requisites'
     | '/admin/rooms'
     | '/admin/site'
     | '/admin/staff'
@@ -694,6 +706,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRoomsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/requisites': {
+      id: '/admin/requisites'
+      path: '/requisites'
+      fullPath: '/admin/requisites'
+      preLoaderRoute: typeof AdminRequisitesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/notifications': {
       id: '/admin/notifications'
       path: '/notifications'
@@ -882,6 +901,7 @@ interface AdminRouteChildren {
   AdminGuestsRoute: typeof AdminGuestsRoute
   AdminInboxRoute: typeof AdminInboxRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
+  AdminRequisitesRoute: typeof AdminRequisitesRoute
   AdminRoomsRoute: typeof AdminRoomsRoute
   AdminSiteRoute: typeof AdminSiteRouteWithChildren
   AdminStaffRoute: typeof AdminStaffRoute
@@ -895,6 +915,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminGuestsRoute: AdminGuestsRoute,
   AdminInboxRoute: AdminInboxRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
+  AdminRequisitesRoute: AdminRequisitesRoute,
   AdminRoomsRoute: AdminRoomsRoute,
   AdminSiteRoute: AdminSiteRouteWithChildren,
   AdminStaffRoute: AdminStaffRoute,

@@ -27,6 +27,7 @@ const NAV = [
   { to: "/admin/inbox", label: "Инбокс", icon: "💬" },
   { to: "/admin/rooms", label: "Номера", icon: "🛏️" },
   { to: "/admin/site", label: "Управление отелем", icon: "🏨", adminOnly: true },
+  { to: "/admin/requisites", label: "Реквизиты", icon: "🧾", adminOnly: true },
   { to: "/admin/staff", label: "Сотрудники", icon: "👥", adminOnly: true },
   { to: "/admin/notifications", label: "Уведомления", icon: "🔔" },
 ] as const;

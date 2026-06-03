@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/layout/SiteLayout";
 import { LegalDoc, LegalH } from "@/components/legal/LegalDoc";
+import { useRequisites } from "@/lib/requisites";
 
 export const Route = createFileRoute("/privacy")({
   component: PrivacyPage,
@@ -13,9 +14,10 @@ export const Route = createFileRoute("/privacy")({
 });
 
 function PrivacyPage() {
+  const r = useRequisites();
   return (
     <SiteLayout>
-      <LegalDoc title="Политика в отношении обработки персональных данных" updated="3 июня 2026 г.">
+      <LegalDoc title="Политика в отношении обработки персональных данных" updated="3 июня 2026 г." requisites={r}>
         <p>
           Настоящая Политика разработана в соответствии с Федеральным законом от 27.07.2006
           № 152-ФЗ «О персональных данных» и определяет порядок обработки и меры по обеспечению
@@ -24,10 +26,9 @@ function PrivacyPage() {
 
         <LegalH>1. Оператор</LegalH>
         <p>
-          Оператор персональных данных — Индивидуальный предприниматель Смирнов Роман Яковлевич
-          (ИНН 772400271482), адрес: г. Петропавловск-Камчатский, ул. Пограничная, д. 30, кв. 36.
-          Гостиница «Полуостров»: г. Петропавловск-Камчатский, ул. Абеля, 41. Контакты:
-          +7 (914) 994-57-57, poluostrovkam@mail.ru.
+          Оператор персональных данных — {r.ipName} (ИНН {r.inn}
+          {r.ogrnip ? `, ОГРНИП ${r.ogrnip}` : ""}), адрес: {r.legalAddress}. Гостиница
+          «Полуостров»: {r.hotelAddress}. Контакты: {r.phone}, {r.email}.
         </p>
 
         <LegalH>2. Какие персональные данные обрабатываются</LegalH>

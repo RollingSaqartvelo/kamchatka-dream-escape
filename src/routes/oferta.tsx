@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/layout/SiteLayout";
 import { LegalDoc, LegalH } from "@/components/legal/LegalDoc";
+import { useRequisites } from "@/lib/requisites";
 
 export const Route = createFileRoute("/oferta")({
   component: OfertaPage,
@@ -13,14 +14,15 @@ export const Route = createFileRoute("/oferta")({
 });
 
 function OfertaPage() {
+  const r = useRequisites();
   return (
     <SiteLayout>
-      <LegalDoc title="Публичная оферта на оказание гостиничных услуг" updated="3 июня 2026 г.">
+      <LegalDoc title="Публичная оферта на оказание гостиничных услуг" updated="3 июня 2026 г." requisites={r}>
         <p>
-          Настоящий документ является публичной офертой (предложением) Индивидуального
-          предпринимателя Смирнова Романа Яковлевича (ИНН 772400271482) заключить договор на
-          оказание гостиничных услуг на изложенных ниже условиях. Бронирование и/или оплата
-          означают полное и безоговорочное принятие (акцепт) условий настоящей оферты.
+          Настоящий документ является публичной офертой (предложением) {r.ipName} (ИНН {r.inn})
+          заключить договор на оказание гостиничных услуг на изложенных ниже условиях.
+          Бронирование и/или оплата означают полное и безоговорочное принятие (акцепт) условий
+          настоящей оферты.
         </p>
 
         <LegalH>1. Термины</LegalH>
@@ -69,10 +71,9 @@ function OfertaPage() {
 
         <LegalH>7. Реквизиты Исполнителя</LegalH>
         <p>
-          ИП Смирнов Роман Яковлевич, ИНН 772400271482, адрес: г. Петропавловск-Камчатский,
-          ул. Пограничная, д. 30, кв. 36. Р/с 40802810620180000192 в ФИЛИАЛ «ХАБАРОВСКИЙ»
-          АО «АЛЬФА-БАНК», БИК 040813770, к/с 30101810800000000770. Контакты: +7 (914) 994-57-57,
-          poluostrovkam@mail.ru.
+          {r.ipName}, ИНН {r.inn}
+          {r.ogrnip ? `, ОГРНИП ${r.ogrnip}` : ""}, адрес: {r.legalAddress}. Р/с {r.account} в{" "}
+          {r.bankName}, БИК {r.bik}, к/с {r.corrAccount}. Контакты: {r.phone}, {r.email}.
         </p>
       </LegalDoc>
     </SiteLayout>
