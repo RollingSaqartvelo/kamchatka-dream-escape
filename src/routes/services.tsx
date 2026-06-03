@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { SiteLayout } from "@/components/layout/SiteLayout";
 import { PageHero } from "@/components/sections/PageHero";
-import { loadServicesContent, SERVICES_DEFAULT, type ServicesContent } from "@/lib/site-content";
+import { usePageContent } from "@/lib/site-content";
+import { BREAKFAST_DEF, DINNER_DEF, DISHES_DEF } from "@/lib/content-registry";
 
 export const Route = createFileRoute("/services")({
   component: ServicesPage,
@@ -15,15 +16,12 @@ export const Route = createFileRoute("/services")({
   }),
 });
 
-const rub = (n: number) => `${new Intl.NumberFormat("ru-RU").format(n)} ₽`;
-
 function PhotoGallery({ photos, alt }: { photos: string[]; alt: string }) {
   const [index, setIndex] = useState(0);
   const total = photos.length;
   const prev = () => setIndex((i) => (i - 1 + total) % total);
   const next = () => setIndex((i) => (i + 1) % total);
-  if (total === 0)
-    return <div className="aspect-[4/3] bg-beige" style={{ borderRadius: "2px" }} />;
+  if (total === 0) return <div className="aspect-[4/3] bg-beige" style={{ borderRadius: "2px" }} />;
   const safe = index % total;
 
   return (
@@ -69,13 +67,39 @@ function Price({ value, unit }: { value: string; unit: string }) {
   );
 }
 
+function Eyebrow({ children }: { children: string }) {
+  return <p className="text-[11px] tracking-widest-plus uppercase text-gold">{children}</p>;
+}
+
+// Карточка «название · подпись · цена/единица» (трансфер, заезд/выезд, пансионы).
+function InfoCard({
+  title,
+  note,
+  value,
+  unit,
+  bg,
+}: {
+  title: string;
+  note: string;
+  value: string;
+  unit: string;
+  bg: string;
+}) {
+  return (
+    <div className={`border border-beige ${bg} p-8`} style={{ borderRadius: "2px" }}>
+      <h3 className="font-serif text-2xl text-navy">{title}</h3>
+      <p className="mt-3 text-sm text-muted-foreground">{note}</p>
+      <div className="mt-6 flex items-baseline gap-2 border-t border-beige pt-6">
+        <span className="font-serif text-3xl text-navy">{value}</span>
+        <span className="text-sm text-muted-foreground">{unit}</span>
+      </div>
+    </div>
+  );
+}
+
 function ServicesPage() {
   const { t } = useTranslation();
-  const [c, setC] = useState<ServicesContent>(SERVICES_DEFAULT);
-  useEffect(() => {
-    void loadServicesContent().then(setC).catch(() => {});
-  }, []);
-  const p = c.prices;
+  const c = usePageContent("services");
   return (
     <SiteLayout>
       <PageHero
@@ -86,160 +110,126 @@ function ServicesPage() {
       />
 
       {/* Трансфер */}
-      <section className="bg-cream py-24 sm:py-28">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-[11px] tracking-widest-plus uppercase text-gold">Услуги</p>
-            <h2 className="mt-5 font-serif text-4xl text-navy sm:text-5xl">Трансфер</h2>
-            <p className="mt-6 text-base leading-relaxed text-muted-foreground">
-              Встретим в аэропорту Елизово (PKC) и доставим в отель — и обратно.
-              Закажите трансфер заранее при бронировании.
-            </p>
-          </div>
-          <div className="mx-auto mt-14 grid max-w-4xl gap-6 sm:grid-cols-2">
-            <div className="border border-beige bg-background p-8" style={{ borderRadius: "2px" }}>
-              <h3 className="font-serif text-2xl text-navy">Легковой автомобиль</h3>
-              <p className="mt-3 text-sm text-muted-foreground">Аэропорт Елизово ↔ отель, до 3 пассажиров</p>
-              <div className="mt-6 flex items-baseline gap-2 border-t border-beige pt-6">
-                <span className="font-serif text-3xl text-navy">{rub(p.transferCar)}</span>
-                <span className="text-sm text-muted-foreground">/ поездка</span>
-              </div>
+      {!c.hidden("transfer") && (
+        <section className="bg-cream py-24 sm:py-28">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-2xl text-center">
+              <Eyebrow>{c.text("transfer.eyebrow", "Услуги")}</Eyebrow>
+              <h2 className="mt-5 font-serif text-4xl text-navy sm:text-5xl">{c.text("transfer.title", "Трансфер")}</h2>
+              <p className="mt-6 text-base leading-relaxed text-muted-foreground">
+                {c.text("transfer.desc", "Встретим в аэропорту Елизово (PKC) и доставим в отель — и обратно. Закажите трансфер заранее при бронировании.")}
+              </p>
             </div>
-            <div className="border border-beige bg-background p-8" style={{ borderRadius: "2px" }}>
-              <h3 className="font-serif text-2xl text-navy">Микроавтобус</h3>
-              <p className="mt-3 text-sm text-muted-foreground">Аэропорт Елизово ↔ отель, для группы</p>
-              <div className="mt-6 flex items-baseline gap-2 border-t border-beige pt-6">
-                <span className="font-serif text-3xl text-navy">{rub(p.transferMinibus)}</span>
-                <span className="text-sm text-muted-foreground">/ поездка</span>
-              </div>
+            <div className="mx-auto mt-14 grid max-w-4xl gap-6 sm:grid-cols-2">
+              <InfoCard bg="bg-background" title={c.text("transfer.car.title", "Легковой автомобиль")} note={c.text("transfer.car.note", "Аэропорт Елизово ↔ отель, до 3 пассажиров")} value={c.text("transfer.car.price", "1 500 ₽")} unit={c.text("transfer.car.unit", "/ поездка")} />
+              <InfoCard bg="bg-background" title={c.text("transfer.bus.title", "Микроавтобус")} note={c.text("transfer.bus.note", "Аэропорт Елизово ↔ отель, для группы")} value={c.text("transfer.bus.price", "2 000 ₽")} unit={c.text("transfer.bus.unit", "/ поездка")} />
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Ранний заезд / поздний выезд */}
-      <section className="bg-background py-24 sm:py-28">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-[11px] tracking-widest-plus uppercase text-gold">Услуги</p>
-            <h2 className="mt-5 font-serif text-4xl text-navy sm:text-5xl">Ранний заезд и поздний выезд</h2>
-            <p className="mt-6 text-base leading-relaxed text-muted-foreground">
-              Расчётный час: заезд с 14:00, выезд до 12:00. Нужно раньше или позже —
-              доплата 50 % стоимости за ночь. Уточните возможность при бронировании.
-            </p>
-          </div>
-          <div className="mx-auto mt-14 grid max-w-4xl gap-6 sm:grid-cols-2">
-            <div className="border border-beige bg-cream p-8" style={{ borderRadius: "2px" }}>
-              <h3 className="font-serif text-2xl text-navy">Ранний заезд</h3>
-              <p className="mt-3 text-sm text-muted-foreground">Заселение до 14:00</p>
-              <div className="mt-6 flex items-baseline gap-2 border-t border-beige pt-6">
-                <span className="font-serif text-3xl text-navy">{p.earlyCheckin}</span>
-                <span className="text-sm text-muted-foreground">от стоимости за ночь</span>
-              </div>
+      {!c.hidden("earlylate") && (
+        <section className="bg-background py-24 sm:py-28">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-2xl text-center">
+              <Eyebrow>{c.text("earlylate.eyebrow", "Услуги")}</Eyebrow>
+              <h2 className="mt-5 font-serif text-4xl text-navy sm:text-5xl">{c.text("earlylate.title", "Ранний заезд и поздний выезд")}</h2>
+              <p className="mt-6 text-base leading-relaxed text-muted-foreground">
+                {c.text("earlylate.desc", "Расчётный час: заезд с 14:00, выезд до 12:00. Нужно раньше или позже — доплата 50 % стоимости за ночь. Уточните возможность при бронировании.")}
+              </p>
             </div>
-            <div className="border border-beige bg-cream p-8" style={{ borderRadius: "2px" }}>
-              <h3 className="font-serif text-2xl text-navy">Поздний выезд</h3>
-              <p className="mt-3 text-sm text-muted-foreground">Выезд после 12:00</p>
-              <div className="mt-6 flex items-baseline gap-2 border-t border-beige pt-6">
-                <span className="font-serif text-3xl text-navy">{p.lateCheckout}</span>
-                <span className="text-sm text-muted-foreground">от стоимости за ночь</span>
-              </div>
+            <div className="mx-auto mt-14 grid max-w-4xl gap-6 sm:grid-cols-2">
+              <InfoCard bg="bg-cream" title={c.text("earlylate.early.title", "Ранний заезд")} note={c.text("earlylate.early.note", "Заселение до 14:00")} value={c.text("earlylate.early.value", "50 %")} unit={c.text("earlylate.early.unit", "от стоимости за ночь")} />
+              <InfoCard bg="bg-cream" title={c.text("earlylate.late.title", "Поздний выезд")} note={c.text("earlylate.late.note", "Выезд после 12:00")} value={c.text("earlylate.late.value", "50 %")} unit={c.text("earlylate.late.unit", "от стоимости за ночь")} />
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Завтрак */}
-      <section className="bg-cream py-24 sm:py-28">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
-            <PhotoGallery photos={c.photos.breakfast} alt="Завтрак в отеле «Полуостров»" />
-            <div>
-              <p className="text-[11px] tracking-widest-plus uppercase text-gold">Гастрономия</p>
-              <h2 className="mt-5 font-serif text-4xl text-navy sm:text-5xl">Завтрак</h2>
-              <p className="mt-6 text-base leading-relaxed text-muted-foreground">
-                Комплексный завтрак по предварительному заказу — приготовлен из локальных
-                продуктов и подаётся в нашем ресторане.
-              </p>
-              <Price value={rub(p.breakfast)} unit="/ гость в сутки" />
-              <p className="mt-6 text-xs tracking-widest-plus uppercase text-muted-foreground">
-                Заказ принимается до 20:00 предыдущего дня
-              </p>
+      {!c.hidden("breakfast") && (
+        <section className="bg-cream py-24 sm:py-28">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+              <PhotoGallery photos={c.images("breakfast.photos", BREAKFAST_DEF)} alt="Завтрак в отеле «Полуостров»" />
+              <div>
+                <Eyebrow>{c.text("breakfast.eyebrow", "Гастрономия")}</Eyebrow>
+                <h2 className="mt-5 font-serif text-4xl text-navy sm:text-5xl">{c.text("breakfast.title", "Завтрак")}</h2>
+                <p className="mt-6 text-base leading-relaxed text-muted-foreground">
+                  {c.text("breakfast.desc", "Комплексный завтрак по предварительному заказу — приготовлен из локальных продуктов и подаётся в нашем ресторане.")}
+                </p>
+                <Price value={c.text("breakfast.price", "450 ₽")} unit={c.text("breakfast.unit", "/ гость в сутки")} />
+                <p className="mt-6 text-xs tracking-widest-plus uppercase text-muted-foreground">
+                  {c.text("breakfast.note", "Заказ принимается до 20:00 предыдущего дня")}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Обед */}
-      <section className="bg-background py-24 sm:py-28">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
-            <div className="lg:order-2">
-              <PhotoGallery photos={c.photos.dishes} alt="Блюда кухни отеля «Полуостров»" />
-            </div>
-            <div className="lg:order-1">
-              <p className="text-[11px] tracking-widest-plus uppercase text-gold">Гастрономия</p>
-              <h2 className="mt-5 font-serif text-4xl text-navy sm:text-5xl">Обед</h2>
-              <p className="mt-6 text-base leading-relaxed text-muted-foreground">
-                Комплексный обед из локальных продуктов — по предварительному заказу.
-              </p>
-              <Price value={rub(p.lunch)} unit="/ гость в сутки" />
+      {!c.hidden("lunch") && (
+        <section className="bg-background py-24 sm:py-28">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+              <div className="lg:order-2">
+                <PhotoGallery photos={c.images("lunch.photos", DISHES_DEF)} alt="Блюда кухни отеля «Полуостров»" />
+              </div>
+              <div className="lg:order-1">
+                <Eyebrow>{c.text("lunch.eyebrow", "Гастрономия")}</Eyebrow>
+                <h2 className="mt-5 font-serif text-4xl text-navy sm:text-5xl">{c.text("lunch.title", "Обед")}</h2>
+                <p className="mt-6 text-base leading-relaxed text-muted-foreground">
+                  {c.text("lunch.desc", "Комплексный обед из локальных продуктов — по предварительному заказу.")}
+                </p>
+                <Price value={c.text("lunch.price", "850 ₽")} unit={c.text("lunch.unit", "/ гость в сутки")} />
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Ужин */}
-      <section className="bg-cream py-24 sm:py-28">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
-            <PhotoGallery photos={c.photos.dinner} alt="Ужин в отеле «Полуостров»" />
-            <div>
-              <p className="text-[11px] tracking-widest-plus uppercase text-gold">Гастрономия</p>
-              <h2 className="mt-5 font-serif text-4xl text-navy sm:text-5xl">Ужин</h2>
-              <p className="mt-6 text-base leading-relaxed text-muted-foreground">
-                Комплексный ужин по предварительному заказу — салат, горячее блюдо,
-                гарнир и домашний напиток.
-              </p>
-              <Price value={rub(p.dinner)} unit="/ гость в сутки" />
-              <p className="mt-6 text-xs tracking-widest-plus uppercase text-muted-foreground">
-                Заказ принимается до 14:00 в день подачи
-              </p>
+      {!c.hidden("dinner") && (
+        <section className="bg-cream py-24 sm:py-28">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+              <PhotoGallery photos={c.images("dinner.photos", DINNER_DEF)} alt="Ужин в отеле «Полуостров»" />
+              <div>
+                <Eyebrow>{c.text("dinner.eyebrow", "Гастрономия")}</Eyebrow>
+                <h2 className="mt-5 font-serif text-4xl text-navy sm:text-5xl">{c.text("dinner.title", "Ужин")}</h2>
+                <p className="mt-6 text-base leading-relaxed text-muted-foreground">
+                  {c.text("dinner.desc", "Комплексный ужин по предварительному заказу — салат, горячее блюдо, гарнир и домашний напиток.")}
+                </p>
+                <Price value={c.text("dinner.price", "850 ₽")} unit={c.text("dinner.unit", "/ гость в сутки")} />
+                <p className="mt-6 text-xs tracking-widest-plus uppercase text-muted-foreground">
+                  {c.text("dinner.note", "Заказ принимается до 14:00 в день подачи")}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* Пансионы */}
-      <section className="bg-background py-24 sm:py-28">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-[11px] tracking-widest-plus uppercase text-gold">Питание</p>
-            <h2 className="mt-5 font-serif text-4xl text-navy sm:text-5xl">Пакеты питания</h2>
-            <p className="mt-6 text-base leading-relaxed text-muted-foreground">
-              Закажите питание на весь срок проживания — выгоднее, чем по отдельности.
-            </p>
-          </div>
-          <div className="mx-auto mt-14 grid max-w-4xl gap-6 sm:grid-cols-2">
-            <div className="border border-beige bg-cream p-8" style={{ borderRadius: "2px" }}>
-              <h3 className="font-serif text-2xl text-navy">Полупансион</h3>
-              <p className="mt-3 text-sm text-muted-foreground">Завтрак и ужин</p>
-              <div className="mt-6 flex items-baseline gap-2 border-t border-beige pt-6">
-                <span className="font-serif text-3xl text-navy">{rub(p.halfBoard)}</span>
-                <span className="text-sm text-muted-foreground">/ гость в сутки</span>
-              </div>
+      {/* Пакеты питания */}
+      {!c.hidden("packages") && (
+        <section className="bg-background py-24 sm:py-28">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-2xl text-center">
+              <Eyebrow>{c.text("packages.eyebrow", "Питание")}</Eyebrow>
+              <h2 className="mt-5 font-serif text-4xl text-navy sm:text-5xl">{c.text("packages.title", "Пакеты питания")}</h2>
+              <p className="mt-6 text-base leading-relaxed text-muted-foreground">
+                {c.text("packages.desc", "Закажите питание на весь срок проживания — выгоднее, чем по отдельности.")}
+              </p>
             </div>
-            <div className="border border-beige bg-cream p-8" style={{ borderRadius: "2px" }}>
-              <h3 className="font-serif text-2xl text-navy">Полный пансион</h3>
-              <p className="mt-3 text-sm text-muted-foreground">Завтрак, обед и ужин</p>
-              <div className="mt-6 flex items-baseline gap-2 border-t border-beige pt-6">
-                <span className="font-serif text-3xl text-navy">{rub(p.fullBoard)}</span>
-                <span className="text-sm text-muted-foreground">/ гость в сутки</span>
-              </div>
+            <div className="mx-auto mt-14 grid max-w-4xl gap-6 sm:grid-cols-2">
+              <InfoCard bg="bg-cream" title={c.text("packages.half.title", "Полупансион")} note={c.text("packages.half.note", "Завтрак и ужин")} value={c.text("packages.half.price", "1 200 ₽")} unit={c.text("packages.half.unit", "/ гость в сутки")} />
+              <InfoCard bg="bg-cream" title={c.text("packages.full.title", "Полный пансион")} note={c.text("packages.full.note", "Завтрак, обед и ужин")} value={c.text("packages.full.price", "1 900 ₽")} unit={c.text("packages.full.unit", "/ гость в сутки")} />
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </SiteLayout>
   );
 }

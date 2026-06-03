@@ -32,6 +32,7 @@ import { Route as AdminGuestsRouteImport } from './routes/admin.guests'
 import { Route as AdminCalendarRouteImport } from './routes/admin.calendar'
 import { Route as AdminBookingsRouteImport } from './routes/admin.bookings'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
+import { Route as AdminSiteIndexRouteImport } from './routes/admin.site.index'
 import { Route as BookingVoucherIdRouteImport } from './routes/booking.voucher.$id'
 import { Route as BookingPayIdRouteImport } from './routes/booking.pay.$id'
 import { Route as BookingChatIdRouteImport } from './routes/booking.chat.$id'
@@ -40,6 +41,7 @@ import { Route as ApiPublicTravellineTestRouteImport } from './routes/api/public
 import { Route as ApiPublicAlfaCallbackRouteImport } from './routes/api/public/alfa-callback'
 import { Route as ApiInternalCronTlSyncRouteImport } from './routes/api/internal/cron-tl-sync'
 import { Route as ApiInternalCronRemindersRouteImport } from './routes/api/internal/cron-reminders'
+import { Route as AdminSiteServicesRouteImport } from './routes/admin.site.services'
 import { Route as ApiPublicVoucherIdRouteImport } from './routes/api/public/voucher.$id'
 
 const WellnessRoute = WellnessRouteImport.update({
@@ -157,6 +159,11 @@ const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSiteIndexRoute = AdminSiteIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminSiteRoute,
+} as any)
 const BookingVoucherIdRoute = BookingVoucherIdRouteImport.update({
   id: '/voucher/$id',
   path: '/voucher/$id',
@@ -198,6 +205,11 @@ const ApiInternalCronRemindersRoute =
     path: '/api/internal/cron-reminders',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AdminSiteServicesRoute = AdminSiteServicesRouteImport.update({
+  id: '/services',
+  path: '/services',
+  getParentRoute: () => AdminSiteRoute,
+} as any)
 const ApiPublicVoucherIdRoute = ApiPublicVoucherIdRouteImport.update({
   id: '/api/public/voucher/$id',
   path: '/api/public/voucher/$id',
@@ -223,11 +235,12 @@ export interface FileRoutesByFullPath {
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/rooms': typeof AdminRoomsRoute
-  '/admin/site': typeof AdminSiteRoute
+  '/admin/site': typeof AdminSiteRouteWithChildren
   '/booking/success': typeof BookingSuccessRoute
   '/kamchatka/$slug': typeof KamchatkaSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/kamchatka/': typeof KamchatkaIndexRoute
+  '/admin/site/services': typeof AdminSiteServicesRoute
   '/api/internal/cron-reminders': typeof ApiInternalCronRemindersRoute
   '/api/internal/cron-tl-sync': typeof ApiInternalCronTlSyncRoute
   '/api/public/alfa-callback': typeof ApiPublicAlfaCallbackRoute
@@ -236,6 +249,7 @@ export interface FileRoutesByFullPath {
   '/booking/chat/$id': typeof BookingChatIdRoute
   '/booking/pay/$id': typeof BookingPayIdRoute
   '/booking/voucher/$id': typeof BookingVoucherIdRoute
+  '/admin/site/': typeof AdminSiteIndexRoute
   '/api/public/voucher/$id': typeof ApiPublicVoucherIdRoute
 }
 export interface FileRoutesByTo {
@@ -256,11 +270,11 @@ export interface FileRoutesByTo {
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/rooms': typeof AdminRoomsRoute
-  '/admin/site': typeof AdminSiteRoute
   '/booking/success': typeof BookingSuccessRoute
   '/kamchatka/$slug': typeof KamchatkaSlugRoute
   '/admin': typeof AdminIndexRoute
   '/kamchatka': typeof KamchatkaIndexRoute
+  '/admin/site/services': typeof AdminSiteServicesRoute
   '/api/internal/cron-reminders': typeof ApiInternalCronRemindersRoute
   '/api/internal/cron-tl-sync': typeof ApiInternalCronTlSyncRoute
   '/api/public/alfa-callback': typeof ApiPublicAlfaCallbackRoute
@@ -269,6 +283,7 @@ export interface FileRoutesByTo {
   '/booking/chat/$id': typeof BookingChatIdRoute
   '/booking/pay/$id': typeof BookingPayIdRoute
   '/booking/voucher/$id': typeof BookingVoucherIdRoute
+  '/admin/site': typeof AdminSiteIndexRoute
   '/api/public/voucher/$id': typeof ApiPublicVoucherIdRoute
 }
 export interface FileRoutesById {
@@ -291,11 +306,12 @@ export interface FileRoutesById {
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/rooms': typeof AdminRoomsRoute
-  '/admin/site': typeof AdminSiteRoute
+  '/admin/site': typeof AdminSiteRouteWithChildren
   '/booking/success': typeof BookingSuccessRoute
   '/kamchatka/$slug': typeof KamchatkaSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/kamchatka/': typeof KamchatkaIndexRoute
+  '/admin/site/services': typeof AdminSiteServicesRoute
   '/api/internal/cron-reminders': typeof ApiInternalCronRemindersRoute
   '/api/internal/cron-tl-sync': typeof ApiInternalCronTlSyncRoute
   '/api/public/alfa-callback': typeof ApiPublicAlfaCallbackRoute
@@ -304,6 +320,7 @@ export interface FileRoutesById {
   '/booking/chat/$id': typeof BookingChatIdRoute
   '/booking/pay/$id': typeof BookingPayIdRoute
   '/booking/voucher/$id': typeof BookingVoucherIdRoute
+  '/admin/site/': typeof AdminSiteIndexRoute
   '/api/public/voucher/$id': typeof ApiPublicVoucherIdRoute
 }
 export interface FileRouteTypes {
@@ -332,6 +349,7 @@ export interface FileRouteTypes {
     | '/kamchatka/$slug'
     | '/admin/'
     | '/kamchatka/'
+    | '/admin/site/services'
     | '/api/internal/cron-reminders'
     | '/api/internal/cron-tl-sync'
     | '/api/public/alfa-callback'
@@ -340,6 +358,7 @@ export interface FileRouteTypes {
     | '/booking/chat/$id'
     | '/booking/pay/$id'
     | '/booking/voucher/$id'
+    | '/admin/site/'
     | '/api/public/voucher/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -360,11 +379,11 @@ export interface FileRouteTypes {
     | '/admin/inbox'
     | '/admin/notifications'
     | '/admin/rooms'
-    | '/admin/site'
     | '/booking/success'
     | '/kamchatka/$slug'
     | '/admin'
     | '/kamchatka'
+    | '/admin/site/services'
     | '/api/internal/cron-reminders'
     | '/api/internal/cron-tl-sync'
     | '/api/public/alfa-callback'
@@ -373,6 +392,7 @@ export interface FileRouteTypes {
     | '/booking/chat/$id'
     | '/booking/pay/$id'
     | '/booking/voucher/$id'
+    | '/admin/site'
     | '/api/public/voucher/$id'
   id:
     | '__root__'
@@ -399,6 +419,7 @@ export interface FileRouteTypes {
     | '/kamchatka/$slug'
     | '/admin/'
     | '/kamchatka/'
+    | '/admin/site/services'
     | '/api/internal/cron-reminders'
     | '/api/internal/cron-tl-sync'
     | '/api/public/alfa-callback'
@@ -407,6 +428,7 @@ export interface FileRouteTypes {
     | '/booking/chat/$id'
     | '/booking/pay/$id'
     | '/booking/voucher/$id'
+    | '/admin/site/'
     | '/api/public/voucher/$id'
   fileRoutesById: FileRoutesById
 }
@@ -595,6 +617,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAnalyticsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/site/': {
+      id: '/admin/site/'
+      path: '/'
+      fullPath: '/admin/site/'
+      preLoaderRoute: typeof AdminSiteIndexRouteImport
+      parentRoute: typeof AdminSiteRoute
+    }
     '/booking/voucher/$id': {
       id: '/booking/voucher/$id'
       path: '/voucher/$id'
@@ -651,6 +680,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiInternalCronRemindersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/site/services': {
+      id: '/admin/site/services'
+      path: '/services'
+      fullPath: '/admin/site/services'
+      preLoaderRoute: typeof AdminSiteServicesRouteImport
+      parentRoute: typeof AdminSiteRoute
+    }
     '/api/public/voucher/$id': {
       id: '/api/public/voucher/$id'
       path: '/api/public/voucher/$id'
@@ -661,6 +697,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AdminSiteRouteChildren {
+  AdminSiteServicesRoute: typeof AdminSiteServicesRoute
+  AdminSiteIndexRoute: typeof AdminSiteIndexRoute
+}
+
+const AdminSiteRouteChildren: AdminSiteRouteChildren = {
+  AdminSiteServicesRoute: AdminSiteServicesRoute,
+  AdminSiteIndexRoute: AdminSiteIndexRoute,
+}
+
+const AdminSiteRouteWithChildren = AdminSiteRoute._addFileChildren(
+  AdminSiteRouteChildren,
+)
+
 interface AdminRouteChildren {
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminBookingsRoute: typeof AdminBookingsRoute
@@ -669,7 +719,7 @@ interface AdminRouteChildren {
   AdminInboxRoute: typeof AdminInboxRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminRoomsRoute: typeof AdminRoomsRoute
-  AdminSiteRoute: typeof AdminSiteRoute
+  AdminSiteRoute: typeof AdminSiteRouteWithChildren
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -681,7 +731,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminInboxRoute: AdminInboxRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminRoomsRoute: AdminRoomsRoute,
-  AdminSiteRoute: AdminSiteRoute,
+  AdminSiteRoute: AdminSiteRouteWithChildren,
   AdminIndexRoute: AdminIndexRoute,
 }
 
