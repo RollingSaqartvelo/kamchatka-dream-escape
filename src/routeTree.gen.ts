@@ -33,6 +33,7 @@ import { Route as AdminRequisitesRouteImport } from './routes/admin.requisites'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminInboxRouteImport } from './routes/admin.inbox'
 import { Route as AdminGuestsRouteImport } from './routes/admin.guests'
+import { Route as AdminCompaniesRouteImport } from './routes/admin.companies'
 import { Route as AdminCalendarRouteImport } from './routes/admin.calendar'
 import { Route as AdminBookingsRouteImport } from './routes/admin.bookings'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
@@ -51,6 +52,7 @@ import { Route as AdminSiteNavRouteImport } from './routes/admin.site.nav'
 import { Route as AdminSiteHomeRouteImport } from './routes/admin.site.home'
 import { Route as AdminSiteContactsRouteImport } from './routes/admin.site.contacts'
 import { Route as AdminSiteAboutRouteImport } from './routes/admin.site.about'
+import { Route as AdminDocumentIdRouteImport } from './routes/admin.document.$id'
 import { Route as ApiPublicVoucherIdRouteImport } from './routes/api/public/voucher.$id'
 
 const WellnessRoute = WellnessRouteImport.update({
@@ -173,6 +175,11 @@ const AdminGuestsRoute = AdminGuestsRouteImport.update({
   path: '/guests',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCompaniesRoute = AdminCompaniesRouteImport.update({
+  id: '/companies',
+  path: '/companies',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCalendarRoute = AdminCalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
@@ -264,6 +271,11 @@ const AdminSiteAboutRoute = AdminSiteAboutRouteImport.update({
   path: '/about',
   getParentRoute: () => AdminSiteRoute,
 } as any)
+const AdminDocumentIdRoute = AdminDocumentIdRouteImport.update({
+  id: '/document/$id',
+  path: '/document/$id',
+  getParentRoute: () => AdminRoute,
+} as any)
 const ApiPublicVoucherIdRoute = ApiPublicVoucherIdRouteImport.update({
   id: '/api/public/voucher/$id',
   path: '/api/public/voucher/$id',
@@ -287,6 +299,7 @@ export interface FileRoutesByFullPath {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/calendar': typeof AdminCalendarRoute
+  '/admin/companies': typeof AdminCompaniesRoute
   '/admin/guests': typeof AdminGuestsRoute
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/notifications': typeof AdminNotificationsRoute
@@ -298,6 +311,7 @@ export interface FileRoutesByFullPath {
   '/kamchatka/$slug': typeof KamchatkaSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/kamchatka/': typeof KamchatkaIndexRoute
+  '/admin/document/$id': typeof AdminDocumentIdRoute
   '/admin/site/about': typeof AdminSiteAboutRoute
   '/admin/site/contacts': typeof AdminSiteContactsRoute
   '/admin/site/home': typeof AdminSiteHomeRoute
@@ -331,6 +345,7 @@ export interface FileRoutesByTo {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/calendar': typeof AdminCalendarRoute
+  '/admin/companies': typeof AdminCompaniesRoute
   '/admin/guests': typeof AdminGuestsRoute
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/notifications': typeof AdminNotificationsRoute
@@ -341,6 +356,7 @@ export interface FileRoutesByTo {
   '/kamchatka/$slug': typeof KamchatkaSlugRoute
   '/admin': typeof AdminIndexRoute
   '/kamchatka': typeof KamchatkaIndexRoute
+  '/admin/document/$id': typeof AdminDocumentIdRoute
   '/admin/site/about': typeof AdminSiteAboutRoute
   '/admin/site/contacts': typeof AdminSiteContactsRoute
   '/admin/site/home': typeof AdminSiteHomeRoute
@@ -376,6 +392,7 @@ export interface FileRoutesById {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/calendar': typeof AdminCalendarRoute
+  '/admin/companies': typeof AdminCompaniesRoute
   '/admin/guests': typeof AdminGuestsRoute
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/notifications': typeof AdminNotificationsRoute
@@ -387,6 +404,7 @@ export interface FileRoutesById {
   '/kamchatka/$slug': typeof KamchatkaSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/kamchatka/': typeof KamchatkaIndexRoute
+  '/admin/document/$id': typeof AdminDocumentIdRoute
   '/admin/site/about': typeof AdminSiteAboutRoute
   '/admin/site/contacts': typeof AdminSiteContactsRoute
   '/admin/site/home': typeof AdminSiteHomeRoute
@@ -423,6 +441,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/bookings'
     | '/admin/calendar'
+    | '/admin/companies'
     | '/admin/guests'
     | '/admin/inbox'
     | '/admin/notifications'
@@ -434,6 +453,7 @@ export interface FileRouteTypes {
     | '/kamchatka/$slug'
     | '/admin/'
     | '/kamchatka/'
+    | '/admin/document/$id'
     | '/admin/site/about'
     | '/admin/site/contacts'
     | '/admin/site/home'
@@ -467,6 +487,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/bookings'
     | '/admin/calendar'
+    | '/admin/companies'
     | '/admin/guests'
     | '/admin/inbox'
     | '/admin/notifications'
@@ -477,6 +498,7 @@ export interface FileRouteTypes {
     | '/kamchatka/$slug'
     | '/admin'
     | '/kamchatka'
+    | '/admin/document/$id'
     | '/admin/site/about'
     | '/admin/site/contacts'
     | '/admin/site/home'
@@ -511,6 +533,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/bookings'
     | '/admin/calendar'
+    | '/admin/companies'
     | '/admin/guests'
     | '/admin/inbox'
     | '/admin/notifications'
@@ -522,6 +545,7 @@ export interface FileRouteTypes {
     | '/kamchatka/$slug'
     | '/admin/'
     | '/kamchatka/'
+    | '/admin/document/$id'
     | '/admin/site/about'
     | '/admin/site/contacts'
     | '/admin/site/home'
@@ -734,6 +758,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminGuestsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/companies': {
+      id: '/admin/companies'
+      path: '/companies'
+      fullPath: '/admin/companies'
+      preLoaderRoute: typeof AdminCompaniesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/calendar': {
       id: '/admin/calendar'
       path: '/calendar'
@@ -860,6 +891,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSiteAboutRouteImport
       parentRoute: typeof AdminSiteRoute
     }
+    '/admin/document/$id': {
+      id: '/admin/document/$id'
+      path: '/document/$id'
+      fullPath: '/admin/document/$id'
+      preLoaderRoute: typeof AdminDocumentIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/api/public/voucher/$id': {
       id: '/api/public/voucher/$id'
       path: '/api/public/voucher/$id'
@@ -898,6 +936,7 @@ interface AdminRouteChildren {
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminBookingsRoute: typeof AdminBookingsRoute
   AdminCalendarRoute: typeof AdminCalendarRoute
+  AdminCompaniesRoute: typeof AdminCompaniesRoute
   AdminGuestsRoute: typeof AdminGuestsRoute
   AdminInboxRoute: typeof AdminInboxRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
@@ -906,12 +945,14 @@ interface AdminRouteChildren {
   AdminSiteRoute: typeof AdminSiteRouteWithChildren
   AdminStaffRoute: typeof AdminStaffRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminDocumentIdRoute: typeof AdminDocumentIdRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminBookingsRoute: AdminBookingsRoute,
   AdminCalendarRoute: AdminCalendarRoute,
+  AdminCompaniesRoute: AdminCompaniesRoute,
   AdminGuestsRoute: AdminGuestsRoute,
   AdminInboxRoute: AdminInboxRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
@@ -920,6 +961,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSiteRoute: AdminSiteRouteWithChildren,
   AdminStaffRoute: AdminStaffRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminDocumentIdRoute: AdminDocumentIdRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)

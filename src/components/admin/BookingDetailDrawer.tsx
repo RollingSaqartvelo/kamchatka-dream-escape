@@ -279,6 +279,12 @@ export function BookingDetailDrawer({
           </Section>
 
           <a
+            href={`/admin/document/${b.id}`}
+            className="mt-4 mr-2 inline-block border border-[#C9A96E] px-4 py-2 text-[10px] uppercase tracking-widest text-[#C9A96E] hover:bg-[#C9A96E] hover:text-white"
+          >
+            Счёт / УПД
+          </a>
+          <a
             href="/admin/bookings"
             className="mt-4 inline-block border border-navy px-4 py-2 text-[10px] uppercase tracking-widest text-navy hover:bg-navy hover:text-cream"
           >
