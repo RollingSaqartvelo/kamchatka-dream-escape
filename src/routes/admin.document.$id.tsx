@@ -6,7 +6,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/useAuth";
 import { useRequisites } from "@/lib/requisites";
 
+type DocType = "invoice" | "upd" | "sf";
+
 export const Route = createFileRoute("/admin/document/$id")({
+  validateSearch: (s: Record<string, unknown>): { type?: DocType } => {
+    const t = s.type;
+    return t === "upd" || t === "sf" || t === "invoice" ? { type: t } : {};
+  },
   component: DocumentPage,
   head: () => ({
     meta: [
@@ -38,12 +44,13 @@ const dmy = (iso: string) => { try { return format(parseISO(iso), "d MMMM yyyy",
 
 function DocumentPage() {
   const { id } = Route.useParams();
+  const { type } = Route.useSearch();
   const { isStaff, loading: authLoading } = useAuth();
   const r = useRequisites();
   const [b, setB] = useState<Bk | null>(null);
   const [co, setCo] = useState<Co | null>(null);
   const [loading, setLoading] = useState(true);
-  const [docType, setDocType] = useState<"invoice" | "upd">("invoice");
+  const [docType, setDocType] = useState<DocType>(type ?? "invoice");
   const [nds, setNds] = useState(0); // 0 = без НДС (УСН), иначе ставка %
 
   useEffect(() => {
@@ -82,14 +89,14 @@ function DocumentPage() {
 
   return (
     <div className="bg-background py-8 print:py-0">
-      <style>{`@media print { header, footer, .no-print { display:none !important; } body { background:#fff !important; } .doc { box-shadow:none !important; border:none !important; margin:0 !important; max-width:100% !important; } }`}</style>
+      <style>{`@page { size: A4 landscape; margin: 0; } @media print { header, footer, .no-print { display:none !important; } body { background:#fff !important; } .doc { box-shadow:none !important; border:none !important; margin:0 !important; max-width:100% !important; padding:12mm 14mm !important; } }`}</style>
 
       {/* Панель управления (не печатается) */}
       <div className="no-print mx-auto mb-6 flex max-w-3xl flex-wrap items-center gap-3 px-4">
         <div className="flex rounded border border-border overflow-hidden text-[11px] uppercase tracking-widest">
-          {(["invoice", "upd"] as const).map((tpe) => (
+          {(["invoice", "upd", "sf"] as const).map((tpe) => (
             <button key={tpe} onClick={() => setDocType(tpe)} className={`px-4 py-2 ${docType === tpe ? "bg-navy text-cream" : "hover:bg-cream/40"}`}>
-              {tpe === "invoice" ? "Счёт" : "УПД"}
+              {tpe === "invoice" ? "Счёт" : tpe === "upd" ? "УПД" : "Сч-фактура"}
             </button>
           ))}
         </div>
@@ -108,7 +115,7 @@ function DocumentPage() {
       </div>
 
       <div className="doc mx-auto max-w-3xl border border-border bg-white px-8 py-8 text-sm text-navy sm:px-12">
-        {docType === "invoice" ? (
+        {docType === "invoice" && (
           <>
             <h1 className="font-serif text-2xl">Счёт на оплату № {docNo} от {dmy(today.toISOString())}</h1>
             <div className="mt-6 border border-border">
@@ -160,7 +167,9 @@ function DocumentPage() {
               <div>М.П.</div>
             </div>
           </>
-        ) : (
+        )}
+
+        {docType === "upd" && (
           <>
             <div className="flex items-start justify-between">
               <h1 className="font-serif text-xl">Универсальный передаточный документ</h1>
@@ -221,6 +230,105 @@ function DocumentPage() {
               <div>
                 <p>Товар (услуги) получил: ____________________</p>
                 <p className="mt-1 text-muted-foreground">{buyer}</p>
+              </div>
+            </div>
+          </>
+        )}
+
+        {docType === "sf" && (
+          <>
+            <p className="text-right text-[10px] text-muted-foreground">
+              Приложение № 1 к постановлению Правительства РФ от 26.12.2011 № 1137
+            </p>
+            <h1 className="mt-2 font-serif text-xl">
+              Счёт-фактура № {docNo} от {dmy(today.toISOString())} <span className="text-xs text-muted-foreground">(1)</span>
+            </h1>
+            <p className="text-xs text-muted-foreground">Исправление № — от — (1а)</p>
+
+            <div className="mt-3 space-y-0.5 text-xs">
+              <p>Продавец: <b>{r.ipName}</b> <span className="text-muted-foreground">(2)</span></p>
+              <p>Адрес: {r.legalAddress} <span className="text-muted-foreground">(2а)</span></p>
+              <p>ИНН/КПП продавца: {r.inn} <span className="text-muted-foreground">(2б)</span></p>
+              <p>Грузоотправитель и его адрес: он же <span className="text-muted-foreground">(3)</span></p>
+              <p>Грузополучатель и его адрес: {buyer}{buyerAddr ? `, ${buyerAddr}` : ""} <span className="text-muted-foreground">(4)</span></p>
+              <p>К платёжно-расчётному документу № — от — <span className="text-muted-foreground">(5)</span></p>
+              <p>Покупатель: <b>{buyer}</b> <span className="text-muted-foreground">(6)</span></p>
+              <p>Адрес: {buyerAddr || "—"} <span className="text-muted-foreground">(6а)</span></p>
+              <p>ИНН/КПП покупателя: {buyerInn || "—"}{buyerKpp ? `/${buyerKpp}` : ""} <span className="text-muted-foreground">(6б)</span></p>
+              <p>Валюта: наименование, код: Российский рубль, 643 <span className="text-muted-foreground">(7)</span></p>
+              <p>Идентификатор государственного контракта (при наличии): — <span className="text-muted-foreground">(8)</span></p>
+            </div>
+
+            <table className="mt-4 w-full border border-border text-[10px]">
+              <thead className="bg-cream/40 text-navy">
+                <tr>
+                  <th className="border border-border px-1 py-1">№ п/п</th>
+                  <th className="border border-border px-1 py-1 text-left">Наименование товара (работ, услуг)</th>
+                  <th className="border border-border px-1 py-1">Ед. изм.</th>
+                  <th className="border border-border px-1 py-1">Кол-во</th>
+                  <th className="border border-border px-1 py-1">Цена за ед.</th>
+                  <th className="border border-border px-1 py-1">Стоимость без налога</th>
+                  <th className="border border-border px-1 py-1">В т.ч. акциз</th>
+                  <th className="border border-border px-1 py-1">Ставка</th>
+                  <th className="border border-border px-1 py-1">Сумма налога</th>
+                  <th className="border border-border px-1 py-1">Стоимость с налогом</th>
+                  <th className="border border-border px-1 py-1">Страна происх.</th>
+                  <th className="border border-border px-1 py-1">Рег. № декларации / РНПТ</th>
+                </tr>
+                <tr className="text-[8px] text-muted-foreground">
+                  <td className="border border-border text-center">1</td>
+                  <td className="border border-border text-center">1б</td>
+                  <td className="border border-border text-center">2 / 2а</td>
+                  <td className="border border-border text-center">3</td>
+                  <td className="border border-border text-center">4</td>
+                  <td className="border border-border text-center">5</td>
+                  <td className="border border-border text-center">6</td>
+                  <td className="border border-border text-center">7</td>
+                  <td className="border border-border text-center">8</td>
+                  <td className="border border-border text-center">9</td>
+                  <td className="border border-border text-center">10 / 10а</td>
+                  <td className="border border-border text-center">11</td>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="border border-border px-1 py-1 text-center">1</td>
+                  <td className="border border-border px-1 py-1">{desc}</td>
+                  <td className="border border-border px-1 py-1 text-center">сут</td>
+                  <td className="border border-border px-1 py-1 text-center">{nights}</td>
+                  <td className="border border-border px-1 py-1 text-right">{fmt(unitPrice)}</td>
+                  <td className="border border-border px-1 py-1 text-right">{fmt(total - ndsSum)}</td>
+                  <td className="border border-border px-1 py-1 text-center">без акциза</td>
+                  <td className="border border-border px-1 py-1 text-center">{nds > 0 ? `${nds}%` : "без НДС"}</td>
+                  <td className="border border-border px-1 py-1 text-right">{nds > 0 ? fmt(ndsSum) : "без НДС"}</td>
+                  <td className="border border-border px-1 py-1 text-right">{fmt(total)}</td>
+                  <td className="border border-border px-1 py-1 text-center">—</td>
+                  <td className="border border-border px-1 py-1 text-center">—</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr className="font-semibold">
+                  <td className="border border-border px-1 py-1 text-right" colSpan={5}>Всего к оплате:</td>
+                  <td className="border border-border px-1 py-1 text-right">{fmt(total - ndsSum)}</td>
+                  <td className="border border-border px-1 py-1"></td>
+                  <td className="border border-border px-1 py-1"></td>
+                  <td className="border border-border px-1 py-1 text-right">{nds > 0 ? fmt(ndsSum) : "—"}</td>
+                  <td className="border border-border px-1 py-1 text-right">{fmt(total)}</td>
+                  <td className="border border-border px-1 py-1" colSpan={2}></td>
+                </tr>
+              </tfoot>
+            </table>
+
+            <div className="mt-8 grid grid-cols-2 gap-8 text-xs">
+              <div>
+                <p>Руководитель организации<br />или иное уполномоченное лицо ____________ <span className="text-muted-foreground">/ Смирнов Р.Я. /</span></p>
+                <p className="mt-3">Главный бухгалтер<br />или иное уполномоченное лицо ____________</p>
+              </div>
+              <div>
+                <p>Индивидуальный предприниматель<br />или иное уполномоченное лицо ____________ <span className="text-muted-foreground">/ Смирнов Р.Я. /</span></p>
+                <p className="mt-3 text-[10px] text-muted-foreground">
+                  Реквизиты свидетельства о государственной регистрации ИП: {r.ogrnip || "—"}
+                </p>
               </div>
             </div>
           </>

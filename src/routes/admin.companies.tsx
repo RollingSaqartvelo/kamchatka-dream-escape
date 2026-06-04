@@ -186,7 +186,13 @@ function CompaniesPage() {
                         <td className="px-4 py-3"><div className="text-navy">{`${b.last_name ?? ""} ${b.first_name ?? ""}`.trim() || "Гость"}</div><div className="text-xs text-muted-foreground">{b.room_name}</div></td>
                         <td className="px-4 py-3 text-xs text-muted-foreground">{fmtDate(b.check_in)} — {fmtDate(b.check_out)}</td>
                         <td className="px-4 py-3 text-navy">{fmtRub(b.total_price ?? 0)}</td>
-                        <td className="px-4 py-3 text-right"><Link to="/admin/document/$id" params={{ id: b.id }} className="border border-navy px-3 py-1.5 text-[10px] uppercase tracking-widest text-navy hover:bg-navy hover:text-cream">Счёт / УПД</Link></td>
+                        <td className="px-4 py-3">
+                          <div className="flex flex-wrap justify-end gap-2">
+                            <Link to="/admin/document/$id" params={{ id: b.id }} search={{ type: "invoice" }} className="border border-navy px-3 py-1.5 text-[10px] uppercase tracking-widest text-navy hover:bg-navy hover:text-cream whitespace-nowrap">Счёт</Link>
+                            <Link to="/admin/document/$id" params={{ id: b.id }} search={{ type: "upd" }} className="border border-navy px-3 py-1.5 text-[10px] uppercase tracking-widest text-navy hover:bg-navy hover:text-cream whitespace-nowrap">УПД</Link>
+                            <Link to="/admin/document/$id" params={{ id: b.id }} search={{ type: "sf" }} className="border border-navy px-3 py-1.5 text-[10px] uppercase tracking-widest text-navy hover:bg-navy hover:text-cream whitespace-nowrap">Сч-Ф</Link>
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
