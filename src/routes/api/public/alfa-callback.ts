@@ -63,9 +63,13 @@ async function handle(request: Request) {
   // Проверка подписи (симметричная HMAC). Включается, когда задан ALFA_CALLBACK_SECRET.
   const secret = process.env.ALFA_CALLBACK_SECRET;
   if (secret) {
-    if (!verifyAlfaChecksum(params, secret)) {
-      console.error("alfa-callback: invalid checksum", { orderNumber: params.orderNumber, mdOrder });
-      return new Response("invalid signature", { status: 401 });
+    const ok = verifyAlfaChecksum(params, secret);
+    if (!ok) {
+      // Строгий режим включается флагом ALFA_VERIFY_STRICT=1 (после проверки интеграции).
+      const strict = process.env.ALFA_VERIFY_STRICT === "1";
+      console.error("alfa-callback: checksum mismatch", { strict, orderNumber: params.orderNumber, mdOrder });
+      if (strict) return new Response("invalid signature", { status: 401 });
+      // нестрогий период: пропускаем, чтобы первый платёж не завис, но факт логируем
     }
   } else {
     console.warn("alfa-callback: ALFA_CALLBACK_SECRET не задан — подпись не проверяется");
