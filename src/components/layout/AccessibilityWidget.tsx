@@ -52,7 +52,7 @@ export function AccessibilityWidget() {
         onClick={() => setOpen((v) => !v)}
         aria-label="Настройки доступности"
         title="Настройки доступности"
-        className="fixed bottom-6 left-6 z-50 grid h-12 w-12 place-items-center bg-navy text-cream shadow-lg ring-2 ring-gold/30 transition-transform hover:scale-105"
+        className="fixed bottom-6 left-6 z-50 grid h-12 w-12 place-items-center bg-navy text-cream shadow-lg ring-2 ring-gold/30 transition-transform hover:scale-105 print:hidden"
         style={{ borderRadius: "999px" }}
       >
         <Eye className="h-5 w-5" strokeWidth={1.75} aria-hidden />
@@ -61,7 +61,7 @@ export function AccessibilityWidget() {
       {/* Панель */}
       {open && (
         <div
-          className="fixed bottom-24 left-6 z-50 w-72 bg-background border border-border shadow-2xl overflow-hidden"
+          className="fixed bottom-24 left-6 z-50 w-72 bg-background border border-border shadow-2xl overflow-hidden print:hidden"
           style={{ borderRadius: "4px" }}
           role="dialog"
           aria-label="Настройки доступности"

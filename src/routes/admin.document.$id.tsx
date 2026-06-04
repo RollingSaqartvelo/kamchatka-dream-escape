@@ -52,6 +52,7 @@ function DocumentPage() {
   const [loading, setLoading] = useState(true);
   const [docType, setDocType] = useState<DocType>(type ?? "invoice");
   const [nds, setNds] = useState(0); // 0 = без НДС (УСН), иначе ставка %
+  const [outFmt, setOutFmt] = useState<"pdf" | "word">("pdf");
 
   useEffect(() => {
     void (supabase as any)
@@ -87,9 +88,34 @@ function DocumentPage() {
   const docNo = b.booking_number || b.id.slice(0, 8);
   const desc = `Услуги по проживанию в гостинице «Полуостров», ${b.room_name ?? "номер"}, ${dmy(b.check_in)} — ${dmy(b.check_out)} (${nights} сут.)`;
 
+  const docTitle = docType === "invoice" ? "Счёт" : docType === "upd" ? "УПД" : "Счёт-фактура";
+  const fileBase = `${docTitle} ${docNo}`;
+
+  // Выгрузка документа в Word (.doc) — HTML-обёртка, открывается в MS Word/редакторах.
+  const downloadWord = () => {
+    const el = document.querySelector(".doc") as HTMLElement | null;
+    if (!el) return;
+    const clone = el.cloneNode(true) as HTMLElement;
+    clone.querySelectorAll(".no-print").forEach((n) => n.remove());
+    const styles =
+      "<style>body{font-family:'Times New Roman',serif;font-size:11pt;color:#000;margin:0}table{border-collapse:collapse;width:100%;margin:8px 0}td,th{border:1px solid #000;padding:4px;font-size:10pt;vertical-align:top}h1{font-size:14pt;font-weight:bold;margin:0 0 6px}p{margin:3px 0}</style>";
+    const html =
+      "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'>" +
+      styles +
+      "</head><body>" +
+      clone.innerHTML +
+      "</body></html>";
+    const blob = new Blob(["﻿", html], { type: "application/msword" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = fileBase + ".doc";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  };
+
   return (
     <div className="bg-background py-8 print:py-0">
-      <style>{`@page { size: A4 landscape; margin: 0; } @media print { header, footer, .no-print { display:none !important; } body { background:#fff !important; } .doc { box-shadow:none !important; border:none !important; margin:0 !important; max-width:100% !important; padding:12mm 14mm !important; } }`}</style>
+      <style>{`@page { size: A4 landscape; margin: 0; } @media print { header, footer, .no-print { display:none !important; } [id*="lovable" i], [class*="lovable" i], a[href*="lovable" i], gpt-engineer, [id*="gpt-eng" i] { display:none !important; } body { background:#fff !important; } .doc { box-shadow:none !important; border:none !important; margin:0 !important; max-width:100% !important; padding:12mm 14mm !important; } }`}</style>
 
       {/* Панель управления (не печатается) */}
       <div className="no-print mx-auto mb-6 flex max-w-3xl flex-wrap items-center gap-3 px-4">
@@ -109,8 +135,15 @@ function DocumentPage() {
             <option value={20}>20%</option>
           </select>
         </label>
-        <button onClick={() => window.print()} className="ml-auto bg-navy px-5 py-2 text-[11px] uppercase tracking-widest text-cream hover:bg-[#C9A96E]">
-          Скачать / Печать PDF
+        <div className="flex rounded border border-border overflow-hidden text-[11px] uppercase tracking-widest">
+          {(["pdf", "word"] as const).map((f) => (
+            <button key={f} onClick={() => setOutFmt(f)} className={`px-4 py-2 ${outFmt === f ? "bg-navy text-cream" : "hover:bg-cream/40"}`}>
+              {f === "pdf" ? "PDF" : "Word (.doc)"}
+            </button>
+          ))}
+        </div>
+        <button onClick={() => (outFmt === "pdf" ? window.print() : downloadWord())} className="ml-auto bg-navy px-5 py-2 text-[11px] uppercase tracking-widest text-cream hover:bg-[#C9A96E]">
+          {outFmt === "pdf" ? "Скачать / Печать PDF" : "Скачать Word"}
         </button>
       </div>
 
