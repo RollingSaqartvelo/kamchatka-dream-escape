@@ -64,6 +64,11 @@ function fmtRub(n: number) {
   return "₽ " + new Intl.NumberFormat("ru-RU").format(n);
 }
 
+// Статический СБП-QR Альфы (любая сумма) — временный приём оплаты, пока
+// не активирован API-пользователь для register.do.
+const SBP_QR_URL =
+  "https://qr.nspk.ru/AS1A0068736SLJ8K8S0BN9DDPGRSHT36?type=01&bank=100000000008&crc=F179";
+
 function PayPage() {
   const { t, i18n } = useTranslation();
   const loc = dfLocale(i18n.language);
@@ -80,6 +85,7 @@ function PayPage() {
   const [error, setError] = useState<string | null>(null);
   const [method, setMethod] = useState<Method>("card");
   const [paying, setPaying] = useState(false);
+  const [showSbpQr, setShowSbpQr] = useState(false);
 
   async function load(email: string) {
     setLoading(true);
@@ -102,8 +108,13 @@ function PayPage() {
 
   async function pay() {
     if (!booking) return;
-    setPaying(true);
     setError(null);
+    // СБП — временно через статический QR (без API). Просто показываем QR.
+    if (method === "sbp") {
+      setShowSbpQr(true);
+      return;
+    }
+    setPaying(true);
     try {
       const result = await startPayment({
         data: { booking_id: booking.id, email: booking.email, method },
@@ -212,7 +223,10 @@ function PayPage() {
                   <button
                     key={m.id}
                     type="button"
-                    onClick={() => setMethod(m.id)}
+                    onClick={() => {
+                      setMethod(m.id);
+                      setShowSbpQr(false);
+                    }}
                     className={cn(
                       "flex items-center gap-4 border bg-card p-5 text-left transition-colors",
                       method === m.id
@@ -249,8 +263,43 @@ function PayPage() {
                   ? t("booking.pay.paying")
                   : method === "invoice"
                     ? t("booking.pay.requestInvoice")
-                    : t("booking.pay.payBtn", { amount: fmtRub(booking.prepayment_amount) })}
+                    : method === "sbp"
+                      ? "Показать QR для оплаты по СБП"
+                      : t("booking.pay.payBtn", { amount: fmtRub(booking.prepayment_amount) })}
               </button>
+
+              {/* СБП-QR (временный приём оплаты) */}
+              {method === "sbp" && showSbpQr && (
+                <div className="mt-6 border border-[#C9A96E] bg-cream/40 p-6 text-center">
+                  <p className="text-sm text-navy">
+                    Отсканируйте QR-код в приложении вашего банка (через СБП)
+                  </p>
+                  <img
+                    src="/sbp-qr.svg"
+                    alt="СБП QR-код для оплаты"
+                    className="mx-auto my-4 h-56 w-56"
+                  />
+                  <p className="text-sm text-navy">
+                    Сумма к оплате:{" "}
+                    <b className="text-base">{fmtRub(booking.prepayment_amount)}</b>
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    В комментарии к платежу укажите номер брони:{" "}
+                    <b className="text-navy">№ {booking.booking_number}</b>
+                  </p>
+                  <a
+                    href={SBP_QR_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 inline-block bg-[#1a1a1a] px-6 py-3 text-[11px] uppercase tracking-[2px] text-white hover:bg-[#C9A96E]"
+                  >
+                    Открыть в приложении банка
+                  </a>
+                  <p className="mt-4 text-xs text-muted-foreground">
+                    После оплаты бронь подтвердит администратор. Чек придёт от банка.
+                  </p>
+                </div>
+              )}
 
               <p className="mt-4 flex items-center gap-2 text-[11px] text-muted-foreground">
                 <ShieldCheck className="h-3.5 w-3.5" strokeWidth={1.5} />
