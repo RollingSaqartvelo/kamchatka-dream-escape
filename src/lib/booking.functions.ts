@@ -168,9 +168,12 @@ export const createBooking = createServerFn({ method: "POST" })
     const prepaymentAmount = calcPrepayment(totalPrice, data.nights);
     const remainingAmount = Math.max(0, totalPrice - prepaymentAmount);
 
+    // Серверная функция: пишем под service-role (RLS обходится осознанно).
+    // Безопасно: вход валидирован zod, цена считается на сервере, есть rate-limit.
     const supabase = createClient(
       process.env.SUPABASE_URL!,
-      process.env.SUPABASE_PUBLISHABLE_KEY!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false } },
     );
 
     const { data: row, error } = await supabase
