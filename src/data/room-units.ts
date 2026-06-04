@@ -37,7 +37,28 @@ const ROOM_NUMBERS: Record<string, string[]> = {
   "dvuhmestnyy-komfort-dop-mesto": ["11", "13", "14", "15"],
 };
 
-// Развёрнутый список физических юнитов в порядке типов (как в ROOMS).
+// Порядок типов в КАЛЕНДАРЕ: одиночные номера сверху, затем Двухместный
+// «Стандарт» (16 комнат) прямо над хостелами, хостелы — в самом низу.
+// Большие сворачиваемые группы внизу → их раскрытие не выталкивает одиночные.
+const CALENDAR_TYPE_ORDER = [
+  "comfort-3-shower",
+  "dvuhmestnyy-komfort",
+  "dvuhmestnyy-komfort-dop-mesto",
+  "semeynyy-delux",
+  "dvuhmestnyy-ekonom",
+  "dvuhmestnyy-ekonom-dop-mesto",
+  "dvuhmestnyy-standart",
+  "hostel-10-mest",
+  "hostel-10-mest-b",
+  "hostel-4-mesta",
+  "hostel-12-mest",
+];
+const typeOrderIdx = (t: string) => {
+  const i = CALENDAR_TYPE_ORDER.indexOf(t);
+  return i === -1 ? 999 : i;
+};
+
+// Развёрнутый список физических юнитов (порядок типов — как в календаре выше).
 export const ROOM_UNITS: RoomUnit[] = ROOMS.flatMap((room): RoomUnit[] => {
   const beds = HOSTEL_BEDS[room.id];
   if (beds) {
@@ -84,7 +105,7 @@ export const ROOM_UNITS: RoomUnit[] = ROOMS.flatMap((room): RoomUnit[] => {
       hostelBed: false,
     },
   ];
-});
+}).sort((a, b) => typeOrderIdx(a.typeId) - typeOrderIdx(b.typeId));
 
 // Юниты, сгруппированные по типу (в порядке ROOMS).
 export const UNITS_BY_TYPE: { typeId: string; units: RoomUnit[] }[] = ROOMS.map((r) => ({

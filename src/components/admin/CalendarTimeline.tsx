@@ -404,7 +404,9 @@ export function CalendarTimeline({
                     style={{ width: LABEL_W }}
                     title={isCollapsed ? "Развернуть номера" : "Свернуть"}
                   >
-                    <span className="text-[10px] text-muted-foreground">{isCollapsed ? "▸" : "▾"}</span>
+                    <span className="grid h-5 w-5 shrink-0 place-items-center rounded bg-navy text-cream text-[11px] font-black leading-none">
+                      {isCollapsed ? "▸" : "▾"}
+                    </span>
                     <span className="line-clamp-2 text-[11px] font-semibold leading-tight">{g.groupName}</span>
                     <span className="ml-auto shrink-0 rounded bg-navy/10 px-1.5 py-0.5 text-[10px] font-bold text-navy">
                       {total}
@@ -446,6 +448,7 @@ export function CalendarTimeline({
 
             // Unit row
             const r = item;
+            const isSingle = r.room.id === r.room.typeId; // одиночный тип (сам себе номер)
             return (
               <div
                 key={r.room.id}
@@ -458,13 +461,15 @@ export function CalendarTimeline({
               >
                 <div
                   className={cn(
-                    "sticky left-0 z-10 flex shrink-0 flex-col justify-center border-r border-border bg-background px-3 text-navy",
-                    r.room.id !== r.room.typeId && "pl-7", // отступ для юнитов внутри группы
+                    "sticky left-0 z-10 flex shrink-0 flex-col justify-center border-r border-border px-3 text-navy",
+                    isSingle ? "bg-cream/70" : "bg-background pl-7", // одиночный — выделенный прямоугольник; вложенный — с отступом
                   )}
                   style={{ width: LABEL_W }}
                 >
-                  <div className="line-clamp-2 text-xs">{r.room.unitLabel}</div>
-                  {r.room.unitLabel === r.room.groupName && r.room.price_from_rub > 0 && (
+                  <div className={cn("line-clamp-2", isSingle ? "text-[11px] font-semibold leading-tight" : "text-xs")}>
+                    {r.room.unitLabel}
+                  </div>
+                  {isSingle && r.room.price_from_rub > 0 && (
                     <div className="mt-0.5 text-[10px] text-muted-foreground">от {r.room.price_from_rub} ₽</div>
                   )}
                 </div>
