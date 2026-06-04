@@ -28,7 +28,10 @@ type Bk = {
   total_price: number | null;
   created_at: string | null;
   special_requests: unknown;
+  company_id: string | null;
 };
+
+type Co = { name: string; inn: string | null; kpp: string | null; ogrn: string | null; legal_address: string | null };
 
 const fmt = (n: number) => new Intl.NumberFormat("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 const dmy = (iso: string) => { try { return format(parseISO(iso), "d MMMM yyyy", { locale: ru }); } catch { return iso; } };
@@ -38,17 +41,26 @@ function DocumentPage() {
   const { isStaff, loading: authLoading } = useAuth();
   const r = useRequisites();
   const [b, setB] = useState<Bk | null>(null);
+  const [co, setCo] = useState<Co | null>(null);
   const [loading, setLoading] = useState(true);
   const [docType, setDocType] = useState<"invoice" | "upd">("invoice");
   const [nds, setNds] = useState(0); // 0 = без НДС (УСН), иначе ставка %
 
   useEffect(() => {
-    void supabase
+    void (supabase as any)
       .from("bookings")
-      .select("id,booking_number,first_name,last_name,room_name,check_in,check_out,nights,total_price,created_at,special_requests")
+      .select("id,booking_number,first_name,last_name,room_name,check_in,check_out,nights,total_price,created_at,special_requests,company_id")
       .eq("id", id)
       .single()
-      .then(({ data }) => { setB((data as Bk) ?? null); setLoading(false); });
+      .then(async ({ data }: any) => {
+        const bk = (data as Bk) ?? null;
+        setB(bk);
+        if (bk?.company_id) {
+          const { data: c } = await (supabase as any).from("companies").select("name,inn,kpp,ogrn,legal_address").eq("id", bk.company_id).single();
+          setCo((c as Co) ?? null);
+        }
+        setLoading(false);
+      });
   }, [id]);
 
   if (authLoading || loading) return <div className="p-10 text-sm text-muted-foreground">Загрузка…</div>;
@@ -56,8 +68,10 @@ function DocumentPage() {
   if (!b) return <div className="p-10 text-center text-muted-foreground">Бронь не найдена</div>;
 
   const meta = (b.special_requests && typeof b.special_requests === "object" && !Array.isArray(b.special_requests) ? b.special_requests : {}) as any;
-  const buyer = (meta.company ?? "").trim() || "—";
-  const buyerInn = (meta.inn ?? "").trim();
+  const buyer = (co?.name ?? meta.company ?? "").trim() || "—";
+  const buyerInn = (co?.inn ?? meta.inn ?? "").trim();
+  const buyerKpp = (co?.kpp ?? "").trim();
+  const buyerAddr = (co?.legal_address ?? "").trim();
   const total = b.total_price ?? 0;
   const nights = Math.max(1, b.nights ?? 1);
   const unitPrice = total / nights;
@@ -106,7 +120,10 @@ function DocumentPage() {
                 Р/с {r.account}, к/с {r.corrAccount}
               </div>
               <div className="border-y border-border bg-cream/40 px-4 py-2 text-[11px] uppercase tracking-widest text-muted-foreground">Покупатель (Заказчик)</div>
-              <div className="px-4 py-3">{buyer}{buyerInn ? `, ИНН ${buyerInn}` : ""}</div>
+              <div className="px-4 py-3">
+                {buyer}{buyerInn ? `, ИНН ${buyerInn}` : ""}{buyerKpp ? `, КПП ${buyerKpp}` : ""}
+                {buyerAddr && <><br />{buyerAddr}</>}
+              </div>
             </div>
 
             <table className="mt-6 w-full border border-border text-sm">
@@ -159,7 +176,8 @@ function DocumentPage() {
               </div>
               <div className="border border-border p-3">
                 <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Покупатель</div>
-                {buyer}{buyerInn ? `, ИНН ${buyerInn}` : ""}
+                {buyer}{buyerInn ? `, ИНН ${buyerInn}` : ""}{buyerKpp ? `, КПП ${buyerKpp}` : ""}
+                {buyerAddr && <><br />{buyerAddr}</>}
               </div>
             </div>
 

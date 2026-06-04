@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { ru } from "date-fns/locale";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { sourceIcon, sourceLabel } from "@/lib/channels";
 import { inspectTravellineOffer } from "@/lib/travelline-booking.functions";
 
@@ -102,6 +103,18 @@ export function BookingDetailDrawer({
   const inspectTl = useServerFn(inspectTravellineOffer);
   const [tlResult, setTlResult] = useState<string | null>(null);
   const [tlLoading, setTlLoading] = useState(false);
+  const [companies, setCompanies] = useState<{ id: string; name: string; inn: string | null }[]>([]);
+  const [companyId, setCompanyId] = useState<string>("");
+  useEffect(() => {
+    (supabase as any).from("companies").select("id,name,inn").order("name").then(({ data }: any) => setCompanies(data ?? []));
+    (supabase as any).from("bookings").select("company_id").eq("id", b.id).single().then(({ data }: any) => setCompanyId(data?.company_id ?? ""));
+  }, [b.id]);
+  async function assignCompany(id: string) {
+    setCompanyId(id);
+    const { error } = await (supabase as any).from("bookings").update({ company_id: id || null }).eq("id", b.id);
+    if (error) toast.error("Не сохранилось");
+    else toast.success(id ? "Юр. лицо привязано" : "Привязка снята");
+  }
   async function runTlDiagnose() {
     setTlLoading(true);
     try {
@@ -261,6 +274,23 @@ export function BookingDetailDrawer({
               </div>
             </Section>
           )}
+
+          {/* Юр. лицо для счёта/УПД */}
+          <Section title="Юр. лицо (для счёта / УПД)">
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                value={companyId}
+                onChange={(e) => void assignCompany(e.target.value)}
+                className="border border-border bg-background px-3 py-2 text-sm text-navy outline-none focus:border-navy"
+              >
+                <option value="">— не выбрано —</option>
+                {companies.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}{c.inn ? ` (ИНН ${c.inn})` : ""}</option>
+                ))}
+              </select>
+              <a href="/admin/companies" className="text-[11px] uppercase tracking-widest text-navy underline">+ Добавить</a>
+            </div>
+          </Section>
 
           {/* TravelLine — диагностика предложения (безопасно, только поиск) */}
           <Section title="TravelLine (диагностика)">
