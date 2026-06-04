@@ -19,7 +19,7 @@ async function downloadVoucherPdf(element: HTMLElement, filename: string) {
   pdf.save(filename);
 }
 
-export const Route = createFileRoute("/booking/voucher/$id")({
+export const Route = createFileRoute("/booking_/voucher/$id")({
   validateSearch: z.object({ e: z.string().optional() }),
   component: VoucherPage,
   head: () => ({ meta: [{ title: "Ваучер — Гостиница Полуостров" }] }),

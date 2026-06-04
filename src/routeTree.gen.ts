@@ -25,7 +25,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as KamchatkaIndexRouteImport } from './routes/kamchatka.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as KamchatkaSlugRouteImport } from './routes/kamchatka.$slug'
-import { Route as BookingSuccessRouteImport } from './routes/booking.success'
+import { Route as BookingSuccessRouteImport } from './routes/booking_.success'
 import { Route as AdminStaffRouteImport } from './routes/admin.staff'
 import { Route as AdminSiteRouteImport } from './routes/admin.site'
 import { Route as AdminRoomsRouteImport } from './routes/admin.rooms'
@@ -38,9 +38,9 @@ import { Route as AdminCalendarRouteImport } from './routes/admin.calendar'
 import { Route as AdminBookingsRouteImport } from './routes/admin.bookings'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminSiteIndexRouteImport } from './routes/admin.site.index'
-import { Route as BookingVoucherIdRouteImport } from './routes/booking.voucher.$id'
-import { Route as BookingPayIdRouteImport } from './routes/booking.pay.$id'
-import { Route as BookingChatIdRouteImport } from './routes/booking.chat.$id'
+import { Route as BookingVoucherIdRouteImport } from './routes/booking_.voucher.$id'
+import { Route as BookingPayIdRouteImport } from './routes/booking_.pay.$id'
+import { Route as BookingChatIdRouteImport } from './routes/booking_.chat.$id'
 import { Route as ApiTelegramWebhookRouteImport } from './routes/api/telegram/webhook'
 import { Route as ApiPublicTravellineTestRouteImport } from './routes/api/public/travelline-test'
 import { Route as ApiPublicAlfaCallbackRouteImport } from './routes/api/public/alfa-callback'
@@ -136,9 +136,9 @@ const KamchatkaSlugRoute = KamchatkaSlugRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const BookingSuccessRoute = BookingSuccessRouteImport.update({
-  id: '/success',
-  path: '/success',
-  getParentRoute: () => BookingRoute,
+  id: '/booking_/success',
+  path: '/booking/success',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminStaffRoute = AdminStaffRouteImport.update({
   id: '/staff',
@@ -201,19 +201,19 @@ const AdminSiteIndexRoute = AdminSiteIndexRouteImport.update({
   getParentRoute: () => AdminSiteRoute,
 } as any)
 const BookingVoucherIdRoute = BookingVoucherIdRouteImport.update({
-  id: '/voucher/$id',
-  path: '/voucher/$id',
-  getParentRoute: () => BookingRoute,
+  id: '/booking_/voucher/$id',
+  path: '/booking/voucher/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const BookingPayIdRoute = BookingPayIdRouteImport.update({
-  id: '/pay/$id',
-  path: '/pay/$id',
-  getParentRoute: () => BookingRoute,
+  id: '/booking_/pay/$id',
+  path: '/booking/pay/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const BookingChatIdRoute = BookingChatIdRouteImport.update({
-  id: '/chat/$id',
-  path: '/chat/$id',
-  getParentRoute: () => BookingRoute,
+  id: '/booking_/chat/$id',
+  path: '/booking/chat/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiTelegramWebhookRoute = ApiTelegramWebhookRouteImport.update({
   id: '/api/telegram/webhook',
@@ -287,7 +287,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRouteWithChildren
-  '/booking': typeof BookingRouteWithChildren
+  '/booking': typeof BookingRoute
   '/contacts': typeof ContactsRoute
   '/login': typeof LoginRoute
   '/oferta': typeof OfertaRoute
@@ -333,7 +333,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/account': typeof AccountRoute
-  '/booking': typeof BookingRouteWithChildren
+  '/booking': typeof BookingRoute
   '/contacts': typeof ContactsRoute
   '/login': typeof LoginRoute
   '/oferta': typeof OfertaRoute
@@ -380,7 +380,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRouteWithChildren
-  '/booking': typeof BookingRouteWithChildren
+  '/booking': typeof BookingRoute
   '/contacts': typeof ContactsRoute
   '/login': typeof LoginRoute
   '/oferta': typeof OfertaRoute
@@ -400,7 +400,7 @@ export interface FileRoutesById {
   '/admin/rooms': typeof AdminRoomsRoute
   '/admin/site': typeof AdminSiteRouteWithChildren
   '/admin/staff': typeof AdminStaffRoute
-  '/booking/success': typeof BookingSuccessRoute
+  '/booking_/success': typeof BookingSuccessRoute
   '/kamchatka/$slug': typeof KamchatkaSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/kamchatka/': typeof KamchatkaIndexRoute
@@ -416,9 +416,9 @@ export interface FileRoutesById {
   '/api/public/alfa-callback': typeof ApiPublicAlfaCallbackRoute
   '/api/public/travelline-test': typeof ApiPublicTravellineTestRoute
   '/api/telegram/webhook': typeof ApiTelegramWebhookRoute
-  '/booking/chat/$id': typeof BookingChatIdRoute
-  '/booking/pay/$id': typeof BookingPayIdRoute
-  '/booking/voucher/$id': typeof BookingVoucherIdRoute
+  '/booking_/chat/$id': typeof BookingChatIdRoute
+  '/booking_/pay/$id': typeof BookingPayIdRoute
+  '/booking_/voucher/$id': typeof BookingVoucherIdRoute
   '/admin/site/': typeof AdminSiteIndexRoute
   '/api/public/voucher/$id': typeof ApiPublicVoucherIdRoute
 }
@@ -541,7 +541,7 @@ export interface FileRouteTypes {
     | '/admin/rooms'
     | '/admin/site'
     | '/admin/staff'
-    | '/booking/success'
+    | '/booking_/success'
     | '/kamchatka/$slug'
     | '/admin/'
     | '/kamchatka/'
@@ -557,9 +557,9 @@ export interface FileRouteTypes {
     | '/api/public/alfa-callback'
     | '/api/public/travelline-test'
     | '/api/telegram/webhook'
-    | '/booking/chat/$id'
-    | '/booking/pay/$id'
-    | '/booking/voucher/$id'
+    | '/booking_/chat/$id'
+    | '/booking_/pay/$id'
+    | '/booking_/voucher/$id'
     | '/admin/site/'
     | '/api/public/voucher/$id'
   fileRoutesById: FileRoutesById
@@ -569,7 +569,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AccountRoute: typeof AccountRoute
   AdminRoute: typeof AdminRouteWithChildren
-  BookingRoute: typeof BookingRouteWithChildren
+  BookingRoute: typeof BookingRoute
   ContactsRoute: typeof ContactsRoute
   LoginRoute: typeof LoginRoute
   OfertaRoute: typeof OfertaRoute
@@ -578,6 +578,7 @@ export interface RootRouteChildren {
   ServicesRoute: typeof ServicesRoute
   SignupRoute: typeof SignupRoute
   WellnessRoute: typeof WellnessRoute
+  BookingSuccessRoute: typeof BookingSuccessRoute
   KamchatkaSlugRoute: typeof KamchatkaSlugRoute
   KamchatkaIndexRoute: typeof KamchatkaIndexRoute
   ApiInternalCronRemindersRoute: typeof ApiInternalCronRemindersRoute
@@ -585,6 +586,9 @@ export interface RootRouteChildren {
   ApiPublicAlfaCallbackRoute: typeof ApiPublicAlfaCallbackRoute
   ApiPublicTravellineTestRoute: typeof ApiPublicTravellineTestRoute
   ApiTelegramWebhookRoute: typeof ApiTelegramWebhookRoute
+  BookingChatIdRoute: typeof BookingChatIdRoute
+  BookingPayIdRoute: typeof BookingPayIdRoute
+  BookingVoucherIdRoute: typeof BookingVoucherIdRoute
   ApiPublicVoucherIdRoute: typeof ApiPublicVoucherIdRoute
 }
 
@@ -702,12 +706,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KamchatkaSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/booking/success': {
-      id: '/booking/success'
-      path: '/success'
+    '/booking_/success': {
+      id: '/booking_/success'
+      path: '/booking/success'
       fullPath: '/booking/success'
       preLoaderRoute: typeof BookingSuccessRouteImport
-      parentRoute: typeof BookingRoute
+      parentRoute: typeof rootRouteImport
     }
     '/admin/staff': {
       id: '/admin/staff'
@@ -793,26 +797,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSiteIndexRouteImport
       parentRoute: typeof AdminSiteRoute
     }
-    '/booking/voucher/$id': {
-      id: '/booking/voucher/$id'
-      path: '/voucher/$id'
+    '/booking_/voucher/$id': {
+      id: '/booking_/voucher/$id'
+      path: '/booking/voucher/$id'
       fullPath: '/booking/voucher/$id'
       preLoaderRoute: typeof BookingVoucherIdRouteImport
-      parentRoute: typeof BookingRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/booking/pay/$id': {
-      id: '/booking/pay/$id'
-      path: '/pay/$id'
+    '/booking_/pay/$id': {
+      id: '/booking_/pay/$id'
+      path: '/booking/pay/$id'
       fullPath: '/booking/pay/$id'
       preLoaderRoute: typeof BookingPayIdRouteImport
-      parentRoute: typeof BookingRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/booking/chat/$id': {
-      id: '/booking/chat/$id'
-      path: '/chat/$id'
+    '/booking_/chat/$id': {
+      id: '/booking_/chat/$id'
+      path: '/booking/chat/$id'
       fullPath: '/booking/chat/$id'
       preLoaderRoute: typeof BookingChatIdRouteImport
-      parentRoute: typeof BookingRoute
+      parentRoute: typeof rootRouteImport
     }
     '/api/telegram/webhook': {
       id: '/api/telegram/webhook'
@@ -966,29 +970,12 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
-interface BookingRouteChildren {
-  BookingSuccessRoute: typeof BookingSuccessRoute
-  BookingChatIdRoute: typeof BookingChatIdRoute
-  BookingPayIdRoute: typeof BookingPayIdRoute
-  BookingVoucherIdRoute: typeof BookingVoucherIdRoute
-}
-
-const BookingRouteChildren: BookingRouteChildren = {
-  BookingSuccessRoute: BookingSuccessRoute,
-  BookingChatIdRoute: BookingChatIdRoute,
-  BookingPayIdRoute: BookingPayIdRoute,
-  BookingVoucherIdRoute: BookingVoucherIdRoute,
-}
-
-const BookingRouteWithChildren =
-  BookingRoute._addFileChildren(BookingRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AccountRoute: AccountRoute,
   AdminRoute: AdminRouteWithChildren,
-  BookingRoute: BookingRouteWithChildren,
+  BookingRoute: BookingRoute,
   ContactsRoute: ContactsRoute,
   LoginRoute: LoginRoute,
   OfertaRoute: OfertaRoute,
@@ -997,6 +984,7 @@ const rootRouteChildren: RootRouteChildren = {
   ServicesRoute: ServicesRoute,
   SignupRoute: SignupRoute,
   WellnessRoute: WellnessRoute,
+  BookingSuccessRoute: BookingSuccessRoute,
   KamchatkaSlugRoute: KamchatkaSlugRoute,
   KamchatkaIndexRoute: KamchatkaIndexRoute,
   ApiInternalCronRemindersRoute: ApiInternalCronRemindersRoute,
@@ -1004,6 +992,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicAlfaCallbackRoute: ApiPublicAlfaCallbackRoute,
   ApiPublicTravellineTestRoute: ApiPublicTravellineTestRoute,
   ApiTelegramWebhookRoute: ApiTelegramWebhookRoute,
+  BookingChatIdRoute: BookingChatIdRoute,
+  BookingPayIdRoute: BookingPayIdRoute,
+  BookingVoucherIdRoute: BookingVoucherIdRoute,
   ApiPublicVoucherIdRoute: ApiPublicVoucherIdRoute,
 }
 export const routeTree = rootRouteImport

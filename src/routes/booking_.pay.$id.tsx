@@ -14,7 +14,7 @@ const searchSchema = z.object({
   failed: z.string().optional(),
 });
 
-export const Route = createFileRoute("/booking/pay/$id")({
+export const Route = createFileRoute("/booking_/pay/$id")({
   validateSearch: searchSchema,
   component: PayPage,
   head: () => ({

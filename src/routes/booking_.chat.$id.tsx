@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getGuestChat, sendGuestMessage } from "@/lib/inbox.functions";
 
-export const Route = createFileRoute("/booking/chat/$id")({
+export const Route = createFileRoute("/booking_/chat/$id")({
   validateSearch: z.object({ e: z.string().optional() }),
   component: GuestChatPage,
   head: () => ({

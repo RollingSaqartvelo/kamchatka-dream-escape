@@ -8,7 +8,7 @@ const searchSchema = z.object({
   e: z.string().optional(),
 });
 
-export const Route = createFileRoute("/booking/success")({
+export const Route = createFileRoute("/booking_/success")({
   validateSearch: searchSchema,
   component: SuccessPage,
   head: () => ({
