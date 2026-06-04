@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { sendPaymentConfirmation } from "@/lib/email.functions";
@@ -26,6 +27,24 @@ export const Route = createFileRoute("/api/public/alfa-callback")({
   },
 });
 
+/**
+ * Симметричная подпись Альфы: параметры (кроме checksum) сортируются по имени и
+ * склеиваются как "name;value;", затем HMAC-SHA256 на callback-токене, hex в верхнем регистре.
+ */
+function verifyAlfaChecksum(params: Record<string, string>, secret: string): boolean {
+  const received = params.checksum;
+  if (!received) return false;
+  const data = Object.keys(params)
+    .filter((k) => k !== "checksum")
+    .sort()
+    .map((k) => `${k};${params[k]};`)
+    .join("");
+  const calc = crypto.createHmac("sha256", secret).update(data, "utf8").digest("hex").toUpperCase();
+  const a = Buffer.from(calc);
+  const b = Buffer.from(received.toUpperCase());
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
 async function handle(request: Request) {
   const url = new URL(request.url);
   const params =
@@ -41,9 +60,16 @@ async function handle(request: Request) {
     return new Response("missing orderId", { status: 400 });
   }
 
-  // TODO: проверка checksum/HMAC после получения секрета от Альфы
-  // const valid = verifyAlfaSignature(params, process.env.ALFA_CALLBACK_SECRET!)
-  // if (!valid) return new Response('invalid signature', { status: 401 })
+  // Проверка подписи (симметричная HMAC). Включается, когда задан ALFA_CALLBACK_SECRET.
+  const secret = process.env.ALFA_CALLBACK_SECRET;
+  if (secret) {
+    if (!verifyAlfaChecksum(params, secret)) {
+      console.error("alfa-callback: invalid checksum", { orderNumber: params.orderNumber, mdOrder });
+      return new Response("invalid signature", { status: 401 });
+    }
+  } else {
+    console.warn("alfa-callback: ALFA_CALLBACK_SECRET не задан — подпись не проверяется");
+  }
 
   const supabase = createClient(
     process.env.SUPABASE_URL!,
