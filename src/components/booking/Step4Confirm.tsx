@@ -1,7 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { format } from "date-fns";
 import type { BookingState } from "./types";
@@ -25,7 +24,6 @@ type Props = {
 
 export function Step4Confirm({ state, patch, onEditStep, onBack }: Props) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const submit = useServerFn(createBooking);
   const fetchProfile = useServerFn(getMyProfile);
   const saveProfile = useServerFn(upsertMyProfile);
@@ -148,11 +146,12 @@ export function Step4Confirm({ state, patch, onEditStep, onBack }: Props) {
 
       if (booking_number) toast.success(`Бронирование создано: № ${booking_number}`);
 
-      navigate({
-        to: "/booking/pay/$id",
-        params: { id },
-        search: { e: guest.email.trim() },
-      });
+      // Полная навигация на страницу оплаты (не SPA): грузим страницу заново,
+      // что исключает редкий рассинхрон гидрации при клиентском переходе.
+      window.location.assign(
+        `/booking/pay/${id}?e=${encodeURIComponent(guest.email.trim())}`,
+      );
+      return;
     } catch (err) {
       console.error(err);
       toast.error(t("booking.step4.errorSubmit"));
