@@ -144,7 +144,10 @@ export const createAlfaPayment = createServerFn({ method: "POST" })
     };
 
     if (json.errorCode && json.errorCode !== "0") {
-      throw new Error(json.errorMessage ?? `Alfa error ${json.errorCode}`);
+      // Временная диагностика: показываем логин/URL (не секретны) и код ошибки Альфы.
+      throw new Error(
+        `Alfa[code=${json.errorCode}] login="${login}" url="${apiUrl}" msg=${json.errorMessage ?? ""}`,
+      );
     }
     if (!json.orderId || !json.formUrl) {
       throw new Error("Некорректный ответ Альфа-Банка");
