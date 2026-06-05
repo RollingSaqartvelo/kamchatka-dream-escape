@@ -25,6 +25,7 @@ export type Database = {
           check_out: string
           children: number
           city: string | null
+          company_id: string | null
           country: string | null
           created_at: string
           custom_request: string | null
@@ -67,6 +68,7 @@ export type Database = {
           check_out: string
           children?: number
           city?: string | null
+          company_id?: string | null
           country?: string | null
           created_at?: string
           custom_request?: string | null
@@ -109,6 +111,7 @@ export type Database = {
           check_out?: string
           children?: number
           city?: string | null
+          company_id?: string | null
           country?: string | null
           created_at?: string
           custom_request?: string | null
@@ -140,6 +143,65 @@ export type Database = {
           total_price?: number
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      companies: {
+        Row: {
+          account: string | null
+          bank_name: string | null
+          bik: string | null
+          contact_person: string | null
+          corr_account: string | null
+          created_at: string
+          email: string | null
+          id: string
+          inn: string | null
+          kpp: string | null
+          legal_address: string | null
+          name: string
+          ogrn: string | null
+          phone: string | null
+        }
+        Insert: {
+          account?: string | null
+          bank_name?: string | null
+          bik?: string | null
+          contact_person?: string | null
+          corr_account?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          inn?: string | null
+          kpp?: string | null
+          legal_address?: string | null
+          name: string
+          ogrn?: string | null
+          phone?: string | null
+        }
+        Update: {
+          account?: string | null
+          bank_name?: string | null
+          bik?: string | null
+          contact_person?: string | null
+          corr_account?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          inn?: string | null
+          kpp?: string | null
+          legal_address?: string | null
+          name?: string
+          ogrn?: string | null
+          phone?: string | null
         }
         Relationships: []
       }
