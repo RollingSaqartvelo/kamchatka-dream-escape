@@ -94,18 +94,14 @@ function RoomsPage() {
               {t("rooms.noResults")}
             </p>
           ) : (
-            <div className="grid gap-8">
-              {rooms.map((room) => (
-                <RoomCard key={room.id} room={room} bookingSearch={bookingSearch} />
-              ))}
-            </div>
-          )}
-
-          <p className="mt-12 text-center text-xs uppercase tracking-widest text-muted-foreground">
-            {t("rooms.morePromise")}
-          </p>
-        </div>
-      </section>
-    </SiteLayout>
-  );
+          <div className="grid gap-8">
+            {rooms.map((room) => (
+              <RoomCard key={room.id} room={room} bookingSearch={bookingSearch} />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  </SiteLayout>
+);
 }
