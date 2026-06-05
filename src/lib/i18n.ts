@@ -25,7 +25,7 @@ const ru = {
     subtitle:
       "Бутик-отель на берегу Авачинской бухты — ваш дом на краю света.",
     cta: "Забронировать номер",
-    ctaSecondary: "Открыть номера",
+    ctaSecondary: "Показать номера",
     scroll: "Прокрутите",
     soundOn: "Включить звук",
     soundOff: "Выключить звук",
@@ -523,7 +523,7 @@ const en: typeof ru = {
     subtitle:
       "A boutique hotel on Avacha Bay — your home at the edge of the world.",
     cta: "Book your stay",
-    ctaSecondary: "Explore rooms",
+    ctaSecondary: "Show rooms",
     scroll: "Scroll",
     soundOn: "Unmute",
     soundOff: "Mute",
@@ -1022,7 +1022,7 @@ const zh: typeof ru = {
     title: "海洋与火山相遇之处",
     subtitle: "阿瓦查湾畔的精品酒店 — 您在世界尽头的家。",
     cta: "立即预订",
-    ctaSecondary: "查看客房",
+    ctaSecondary: "浏览客房",
     scroll: "向下滚动",
     soundOn: "开启声音",
     soundOff: "关闭声音",
