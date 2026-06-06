@@ -40,7 +40,7 @@ const SOURCE_ICON: Record<string, string> = {
   offline: "✏️",
 };
 
-const DAY_W = 44;
+const DAY_W = 56;
 const LANE_H = 26;
 const GROUP_H = 40; // высота строки-заголовка типа (с занятостью по дням)
 const LABEL_W = 210;
@@ -552,9 +552,11 @@ export function CalendarTimeline({
                         <span className="truncate text-[10px] font-bold leading-tight">
                           {b.last_name && b.last_name !== "—" ? b.last_name : "Гость"}
                         </span>
-                        <span className="ml-auto shrink-0 text-[9px] opacity-70">
-                          {SOURCE_ICON[b.source ?? "manual"] ?? "✏️"}
-                        </span>
+                        {width >= 70 && (
+                          <span className="ml-auto shrink-0 text-[9px] opacity-70">
+                            {SOURCE_ICON[b.source ?? "manual"] ?? "✏️"}
+                          </span>
+                        )}
                         <span
                           className="absolute right-0 top-0 h-full w-1.5 cursor-ew-resize bg-black/0 hover:bg-black/20"
                           onPointerDown={(e) => startDrag(e, b, "resize-r")}
