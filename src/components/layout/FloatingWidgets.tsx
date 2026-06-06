@@ -7,7 +7,7 @@ import { auroraChat } from "@/lib/aurora.functions";
 type Msg = { role: "user" | "assistant"; content: string };
 
 export function FloatingWidgets() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const greeting: Msg = { role: "assistant", content: t("widget.greeting") };
   const [chatOpen, setChatOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([greeting]);
@@ -40,6 +40,7 @@ export function FloatingWidgets() {
       const stream = await callChat({
         data: {
           messages: next.map((m) => ({ role: m.role, content: m.content })),
+          lang: i18n.language,
         },
       });
       for await (const chunk of stream as AsyncIterable<{ delta: string }>) {

@@ -1,6 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { checkRateLimit } from "./rate-limit";
+import { matchFaq, normalizeLang } from "./aurora-faq";
+
+const LANG_NAME: Record<string, string> = { ru: "русский", en: "English", zh: "中文" };
 
 const SYSTEM_PROMPT = `Ты — «Аврора», AI-консьерж гостиницы «Полуостров» в Петропавловске-Камчатском (Россия, Камчатка).
 
@@ -61,12 +64,23 @@ export const auroraChat = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
       messages: z.array(MessageSchema).min(1).max(40),
+      lang: z.string().max(10).optional(), // язык сайта гостя (ru/en/zh)
     })
   )
   .handler(async function* ({ data }) {
     // Антиспам/защита кредитов: не более 20 запросов за минуту с одного IP.
     if (!(await checkRateLimit("aurora", { max: 20, windowSec: 60 }))) {
       yield { delta: "Слишком много сообщений. Пожалуйста, подождите минуту." };
+      return;
+    }
+
+    // FAQ-перехват: типовые вопросы (трансфер, питание, заезд…) отвечаем
+    // готовым текстом на языке гостя — без обращения к Gemini (экономия токенов).
+    const uiLang = normalizeLang(data.lang);
+    const lastUser = [...data.messages].reverse().find((m) => m.role === "user");
+    const faq = lastUser ? matchFaq(lastUser.content, data.lang) : null;
+    if (faq) {
+      yield { delta: faq };
       return;
     }
 
@@ -92,6 +106,12 @@ export const auroraChat = createServerFn({ method: "POST" })
           stream: true,
           messages: [
             { role: "system", content: SYSTEM_PROMPT },
+            ...(uiLang
+              ? [{
+                  role: "system",
+                  content: `Язык сайта, который выбрал гость: ${LANG_NAME[uiLang]}. Отвечай на этом языке, если в сообщении гостя нет явно другого языка.`,
+                }]
+              : []),
             ...data.messages,
           ],
         }),
