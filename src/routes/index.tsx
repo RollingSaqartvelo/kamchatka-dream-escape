@@ -10,7 +10,7 @@ export const Route = createFileRoute("/")({
   component: Home,
   head: () => ({
     meta: [
-      { title: "Отель «Полуостров» — бутик-отель на Камчатке | Poluostrov Hotel Kamchatka" },
+      { title: "Отель «Полуостров» — гостиница на Камчатке | Poluostrov Hotel Kamchatka" },
       {
         name: "description",
         content:
