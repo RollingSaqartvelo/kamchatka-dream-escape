@@ -359,7 +359,7 @@ const ru = {
       prepayNow: "Предоплата сейчас",
       remaining: "К доплате при заезде",
       paymentNote:
-        "Карта · СБП · SberPay · оплата по счёту — выберете на следующем шаге. Предоплата = бо́льшее из 30% стоимости и цены одной ночи.",
+        "Карта · СБП · оплата по счёту — выберете на следующем шаге. Предоплата = бо́льшее из 30% стоимости и цены одной ночи.",
       consentId:
         "Я предъявлю документ, удостоверяющий личность, при регистрации.",
       consentTerms:
@@ -859,7 +859,7 @@ const en: typeof ru = {
       prepayNow: "Prepayment now",
       remaining: "Due at check-in",
       paymentNote:
-        "Card · SBP · SberPay · invoice — pick on the next step. Prepayment = greater of 30% of total and one night's rate.",
+        "Card · SBP · invoice — pick on the next step. Prepayment = greater of 30% of total and one night's rate.",
       consentId:
         "I will present an ID document at check-in.",
       consentTerms:
@@ -1342,7 +1342,7 @@ const zh: typeof ru = {
       prepayNow: "现在预付",
       remaining: "入住时支付",
       paymentNote:
-        "银行卡 · SBP · SberPay · 发票付款 — 下一步选择。预付金 = 总价 30% 与一晚价格的较大值。",
+        "银行卡 · SBP · 发票付款 — 下一步选择。预付金 = 总价 30% 与一晚价格的较大值。",
       consentId: "我将在入住时出示身份证件。",
       consentTerms: "我已阅读并同意《预订条款》与《隐私政策》。",
       back: "← 返回",

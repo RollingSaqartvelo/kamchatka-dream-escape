@@ -48,7 +48,7 @@ export const createAlfaPayment = createServerFn({ method: "POST" })
     z.object({
       booking_id: z.string().uuid(),
       email: z.string().trim().email().max(255),
-      method: z.enum(["card", "sbp", "sberpay", "invoice"]),
+      method: z.enum(["card", "sbp", "invoice"]),
     }).parse(input),
   )
   .handler(async ({ data }) => {

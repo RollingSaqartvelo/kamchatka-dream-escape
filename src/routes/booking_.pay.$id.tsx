@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { format, parseISO } from "date-fns";
-import { CreditCard, Smartphone, Wallet, FileText, ShieldCheck } from "lucide-react";
+import { CreditCard, Smartphone, FileText, ShieldCheck } from "lucide-react";
 import { getPublicBooking, createAlfaPayment } from "@/lib/payment.functions";
 import { dfLocale } from "@/components/booking/Step1Dates";
 import { cn } from "@/lib/utils";
@@ -26,7 +26,7 @@ export const Route = createFileRoute("/booking_/pay/$id")({
 });
 
 type Booking = Awaited<ReturnType<typeof getPublicBooking>>;
-type Method = "card" | "sbp" | "sberpay" | "invoice";
+type Method = "card" | "sbp" | "invoice";
 
 const METHODS: Array<{
   id: Method;
@@ -45,12 +45,6 @@ const METHODS: Array<{
     titleKey: "booking.pay.methodSbp",
     subKey: "booking.pay.methodSbpSub",
     icon: <Smartphone className="h-5 w-5 text-[#C9A96E]" strokeWidth={1.5} />,
-  },
-  {
-    id: "sberpay",
-    titleKey: "booking.pay.methodSber",
-    subKey: "booking.pay.methodSberSub",
-    icon: <Wallet className="h-5 w-5 text-[#C9A96E]" strokeWidth={1.5} />,
   },
   {
     id: "invoice",

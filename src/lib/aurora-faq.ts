@@ -82,9 +82,9 @@ const FAQ: FaqEntry[] = [
       "pay", "payment", "card", "付款", "支付",
     ],
     answer: {
-      ru: "Оплатить можно банковской картой, через СБП или SberPay — безопасно, через Альфа-Банк. При бронировании вносится предоплата 30 % или стоимость одной ночи (что больше).",
-      en: "You can pay by bank card, SBP, or SberPay — securely via Alfa-Bank. A prepayment of 30% or one night's cost (whichever is greater) is taken at booking.",
-      zh: "可使用银行卡、SBP快捷支付或SberPay付款（经Alfa银行安全处理）。预订时需预付30%或一晚房费（取较高者）。",
+      ru: "Оплатить можно банковской картой или через СБП — безопасно, через Альфа-Банк. При бронировании вносится предоплата 30 % или стоимость одной ночи (что больше).",
+      en: "You can pay by bank card or SBP — securely via Alfa-Bank. A prepayment of 30% or one night's cost (whichever is greater) is taken at booking.",
+      zh: "可使用银行卡或SBP快捷支付付款（经Alfa银行安全处理）。预订时需预付30%或一晚房费（取较高者）。",
     },
   },
   {
