@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
-import { sendPaymentConfirmation } from "@/lib/email.functions";
+import { sendPaymentConfirmation, sendNewBookingToStaff } from "@/lib/email.functions";
 import { notifyPaymentReceived } from "@/lib/telegram.functions";
 import { pushBookingToTravelline } from "@/lib/travelline-booking.functions";
 
@@ -100,6 +100,10 @@ async function handle(request: Request) {
       // Email + Telegram при успешной оплате (fire-and-forget)
       sendPaymentConfirmation(updated.id).catch((e) =>
         console.error("sendPaymentConfirmation failed:", e),
+      );
+      // Уведомление персоналу: бронь оплачена → занести в TravelLine вручную
+      sendNewBookingToStaff(updated.id, { paid: true }).catch((e) =>
+        console.error("sendNewBookingToStaff (paid) failed:", e),
       );
       // Получаем детали брони для Telegram
       const { data: bk } = await supabase

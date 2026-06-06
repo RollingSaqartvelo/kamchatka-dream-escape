@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { markBookingEnteredInTl } from "@/lib/booking.functions";
 import { format, formatDistanceToNow, parseISO } from "date-fns";
 import { ru } from "date-fns/locale";
 
@@ -26,6 +28,8 @@ type Item = {
   payment_status: string;
   created_at: string;
   paid_at: string | null;
+  source: string | null;
+  tl_entered_at: string | null;
 };
 
 function AdminNotificationsPage() {
@@ -56,7 +60,7 @@ function AdminNotificationsPage() {
     const { data, error } = await supabase
       .from("bookings")
       .select(
-        "id, booking_number, first_name, last_name, room_name, check_in, check_out, total_price, payment_status, created_at, paid_at",
+        "id, booking_number, first_name, last_name, room_name, check_in, check_out, total_price, payment_status, created_at, paid_at, source, tl_entered_at",
       )
       .order("created_at", { ascending: false })
       .limit(40);
@@ -73,6 +77,13 @@ function AdminNotificationsPage() {
   const arrivingToday = items.filter(
     (b) => b.check_in === today && b.payment_status !== "cancelled",
   );
+  // Оплаченные брони с сайта, ещё не внесённые в TravelLine вручную.
+  const needTlEntry = items.filter(
+    (b) =>
+      (b.source ?? "") === "website" &&
+      b.payment_status === "paid" &&
+      !b.tl_entered_at,
+  );
 
   return (
     <div className="min-h-screen">
@@ -84,11 +95,20 @@ function AdminNotificationsPage() {
           <h1 className="mt-2 font-serif text-4xl text-navy">Уведомления</h1>
         </div>
 
-        <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-4">
+          <Tile title="Занести в TravelLine" value={needTlEntry.length} highlight={needTlEntry.length > 0} />
           <Tile title="Новых заявок" value={newBookings.length} />
           <Tile title="Оплачено сегодня" value={todayPaid.length} />
           <Tile title="Заезжают сегодня" value={arrivingToday.length} />
         </div>
+
+        {needTlEntry.length > 0 && (
+          <Section title="Оплачено на сайте — занести в TravelLine">
+            {needTlEntry.map((b) => (
+              <TlEntryCard key={b.id} item={b} onDone={load} />
+            ))}
+          </Section>
+        )}
 
         <Section title="Новые заявки (ждут обработки)">
           {loading && <Empty>Загрузка…</Empty>}
@@ -115,11 +135,53 @@ function AdminNotificationsPage() {
   );
 }
 
-function Tile({ title, value }: { title: string; value: number }) {
+function Tile({ title, value, highlight }: { title: string; value: number; highlight?: boolean }) {
   return (
-    <div className="border border-border bg-background p-5">
+    <div className={`border p-5 ${highlight ? "border-[#C9A96E] bg-amber-50/50" : "border-border bg-background"}`}>
       <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{title}</p>
-      <p className="mt-2 font-serif text-4xl text-navy">{value}</p>
+      <p className={`mt-2 font-serif text-4xl ${highlight ? "text-[#7a5b00]" : "text-navy"}`}>{value}</p>
+    </div>
+  );
+}
+
+function TlEntryCard({ item, onDone }: { item: Item; onDone: () => void }) {
+  const mark = useServerFn(markBookingEnteredInTl);
+  const [busy, setBusy] = useState(false);
+  async function done() {
+    setBusy(true);
+    try {
+      await mark({ data: { bookingId: item.id, entered: true } });
+      onDone();
+    } catch (e) {
+      console.error(e);
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="flex items-center justify-between gap-4 border border-border border-l-4 border-l-[#C9A96E] bg-amber-50/40 px-4 py-3 text-sm">
+      <Link to="/admin/bookings" className="min-w-0 hover:underline">
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-xs text-navy">{item.booking_number}</span>
+          <span className="border border-[#C9A96E] bg-[#C9A96E]/10 px-2 py-0.5 text-[10px] uppercase tracking-widest text-[#7a5b00]">
+            Сайт · оплачено
+          </span>
+        </div>
+        <div className="mt-1 text-navy">
+          {item.last_name} {item.first_name} · {item.room_name}
+        </div>
+        <div className="text-xs text-muted-foreground">
+          {format(parseISO(item.check_in), "d MMM", { locale: ru })} —{" "}
+          {format(parseISO(item.check_out), "d MMM yyyy", { locale: ru })} ·{" "}
+          ₽ {new Intl.NumberFormat("ru-RU").format(item.total_price)}
+        </div>
+      </Link>
+      <button
+        onClick={done}
+        disabled={busy}
+        className="shrink-0 bg-[#1a1a2e] px-3 py-2 text-[11px] uppercase tracking-widest text-white transition-colors hover:bg-[#C9A96E] disabled:opacity-50"
+      >
+        {busy ? "…" : "✓ Занесено в TL"}
+      </button>
     </div>
   );
 }

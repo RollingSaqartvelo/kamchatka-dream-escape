@@ -342,7 +342,7 @@ const SOURCE_LABEL: Record<string, string> = {
   website: "Сайт", travelline: "TravelLine", manual: "Вручную", offline: "Вручную",
 };
 
-export async function sendNewBookingToStaff(bookingId: string) {
+export async function sendNewBookingToStaff(bookingId: string, opts?: { paid?: boolean }) {
   const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
     auth: { persistSession: false },
   });
@@ -357,15 +357,23 @@ export async function sendNewBookingToStaff(bookingId: string) {
   if (!recipients.length) return;
 
   const fmt = (n: number | null | undefined) => `${new Intl.NumberFormat("ru-RU").format(Number(n ?? 0))} ₽`;
-  const adminUrl = "https://poluostrov-hotel.ru/admin/calendar";
+  const adminUrl = "https://poluostrov-hotel.ru/admin/notifications";
+  const paid = opts?.paid === true;
+  const isSite = (b.source ?? "website") === "website";
+  const tlReminderBox = paid && isSite
+    ? `<div style="background:#fff8e1;border-left:4px solid #C9A96E;padding:14px 18px;margin:0 0 18px;border-radius:2px;">
+         <p style="margin:0;color:#7a5b00;font-size:13px;line-height:1.6;"><b>⚠ Занесите эту бронь в TravelLine вручную</b><br>Оплата прошла. Чтобы закрыть наличие на всех каналах (Booking, Островок и т.д.), создайте эту бронь в TravelLine.</p>
+       </div>`
+    : "";
   const html = `<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"></head>
 <body style="font-family:Georgia,serif;background:#f5f2ee;margin:0;padding:0;">
   <div style="max-width:600px;margin:32px auto;background:#fff;border-radius:4px;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,0.08);">
     <div style="background:#1a1a2e;padding:24px 32px;">
-      <p style="color:#C9A96E;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 6px;">Новое бронирование</p>
+      <p style="color:#C9A96E;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 6px;">${paid ? "Бронь оплачена" : "Новое бронирование"}</p>
       <h1 style="color:#fff;font-size:22px;margin:0;font-weight:400;">№ ${esc(b.booking_number)}</h1>
     </div>
     <div style="padding:28px 32px;color:#1a1a2e;font-size:14px;line-height:1.8;">
+      ${tlReminderBox}
       <p style="margin:0 0 12px;"><b>Гость:</b> ${esc(b.last_name)} ${esc(b.first_name)}<br>
       <b>Телефон:</b> ${esc(b.phone) || "—"} · <b>Email:</b> ${esc(b.email) || "—"}</p>
       <p style="margin:0 0 12px;"><b>Номер:</b> ${esc(b.room_name)}<br>
@@ -378,8 +386,11 @@ export async function sendNewBookingToStaff(bookingId: string) {
   </div>
 </body></html>`;
 
+  const subject = paid
+    ? `Оплачено — ${b.booking_number} · занести в TravelLine`
+    : `Новая бронь — ${b.booking_number} · ${b.room_name}`;
   for (const to of recipients) {
-    await sendViaResend(to, `Новая бронь — ${b.booking_number} · ${b.room_name}`, html);
+    await sendViaResend(to, subject, html);
   }
 }
 

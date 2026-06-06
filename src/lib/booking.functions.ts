@@ -7,6 +7,7 @@ import { sendBookingConfirmation, sendNewBookingToStaff } from "./email.function
 import { notifyNewBooking } from "./telegram.functions";
 import { createConversationForBooking } from "./inbox.functions";
 import { enforceRateLimit } from "./rate-limit";
+import { requireStaff } from "@/integrations/supabase/staff-middleware";
 
 const BREAKFAST_PER_PERSON = 500;
 
@@ -258,4 +259,24 @@ export const createBooking = createServerFn({ method: "POST" })
       id: row.id as string,
       booking_number: row.booking_number as string,
     };
+  });
+
+// Персонал отмечает, что бронь с сайта внесена в TravelLine вручную (или снимает отметку).
+export const markBookingEnteredInTl = createServerFn({ method: "POST" })
+  .middleware([requireStaff])
+  .inputValidator(
+    z.object({ bookingId: z.string().uuid(), entered: z.boolean().default(true) }),
+  )
+  .handler(async ({ data }) => {
+    const supabase = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false } },
+    );
+    const { error } = await supabase
+      .from("bookings")
+      .update({ tl_entered_at: data.entered ? new Date().toISOString() : null })
+      .eq("id", data.bookingId);
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
   });
