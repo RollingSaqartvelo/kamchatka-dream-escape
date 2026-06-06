@@ -95,31 +95,39 @@ function AdminDevPage() {
           Служебные кнопки. Нажимайте, только если точно понимаете, что делаете.
         </p>
 
-        <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-3">
-          <NukeButton
-            label="Сброс + свежие"
-            sub="Сброс курсора TravelLine"
-            icon="↻↻"
-            busy={busy === "sync"}
-            disabled={busy !== null}
-            onClick={() => void resetSync()}
-          />
-          <NukeButton
-            label="Тест email"
-            sub={TEST_EMAIL_TO}
-            icon="✉"
-            busy={busy === "email"}
-            disabled={busy !== null}
-            onClick={() => void testEmail()}
-          />
-          <NukeButton
-            label="Тест TG"
-            sub="Telegram-бот"
-            icon="✈"
-            busy={busy === "tg"}
-            disabled={busy !== null}
-            onClick={() => void testTelegram()}
-          />
+        <div className="relative mt-10 overflow-hidden rounded-2xl border-2 border-dashed border-yellow-500/70 bg-yellow-50/40 p-6">
+          {/* фоновый ковёр из мелких значков радиации */}
+          <div aria-hidden className="pointer-events-none absolute inset-0 select-none overflow-hidden text-[11px] leading-[18px] tracking-[0.25em] text-yellow-500/20">
+            {Array.from({ length: 22 }).map((_, i) => (
+              <div key={i}>☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️</div>
+            ))}
+          </div>
+          <div className="relative grid grid-cols-1 gap-6 sm:grid-cols-3">
+            <NukeButton
+              label="Сброс + свежие"
+              sub="Сброс курсора TravelLine"
+              icon="↻↻"
+              busy={busy === "sync"}
+              disabled={busy !== null}
+              onClick={() => void resetSync()}
+            />
+            <NukeButton
+              label="Тест email"
+              sub={TEST_EMAIL_TO}
+              icon="✉"
+              busy={busy === "email"}
+              disabled={busy !== null}
+              onClick={() => void testEmail()}
+            />
+            <NukeButton
+              label="Тест TG"
+              sub="Telegram-бот"
+              icon="✈"
+              busy={busy === "tg"}
+              disabled={busy !== null}
+              onClick={() => void testTelegram()}
+            />
+          </div>
         </div>
 
         <p className="mt-12 text-center text-sm font-bold text-navy">
