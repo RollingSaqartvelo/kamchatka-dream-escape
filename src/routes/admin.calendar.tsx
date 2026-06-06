@@ -22,8 +22,6 @@ import { CalendarTimeline } from "@/components/admin/CalendarTimeline";
 import { BookingDetailDrawer } from "@/components/admin/BookingDetailDrawer";
 import { sourceIcon, sourceLabel } from "@/lib/channels";
 import { syncTravellineReservations } from "@/lib/travelline-sync.functions";
-import { sendTestEmail } from "@/lib/email.functions";
-import { sendTelegramTest } from "@/lib/telegram.functions";
 
 export const Route = createFileRoute("/admin/calendar")({
   component: AdminCalendarPage,
@@ -131,10 +129,6 @@ function AdminCalendarPage() {
   const [bookings, setBookings] = useState<Bk[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
-  const [testEmailSending, setTestEmailSending] = useState(false);
-  const [testTgSending, setTestTgSending] = useState(false);
-  const sendTestEmailFn = useServerFn(sendTestEmail);
-  const sendTelegramTestFn = useServerFn(sendTelegramTest);
   const [modalDate, setModalDate] = useState<Date | null>(null);
   const [modalRoom, setModalRoom] = useState<string | undefined>(undefined);
   const [selected, setSelected] = useState<Bk | null>(null);
@@ -251,41 +245,6 @@ function AdminCalendarPage() {
     if (error) toast.error("Не удалось изменить статус");
     else { toast.success(`Статус изменён: ${STATUS_LABEL[status]}`); void load(); }
     setCtxMenu(null);
-  }
-
-  async function handleTestEmail() {
-    setTestEmailSending(true);
-    try {
-      const res = await sendTestEmailFn({ data: { to: "rolling_saqartvelo@outlook.com" } });
-      const r = res as any;
-      if (r.ok) {
-        toast.success("Тестовое письмо отправлено!");
-      } else {
-        toast.error(`Ошибка отправки: ${r.error}`);
-      }
-    } catch (e) {
-      toast.error("Не удалось отправить письмо");
-      console.error(e);
-    } finally {
-      setTestEmailSending(false);
-    }
-  }
-
-  async function handleTestTelegram() {
-    setTestTgSending(true);
-    try {
-      const res = await sendTelegramTestFn({});
-      if (res.ok) {
-        toast.success("Тестовое сообщение отправлено в Telegram!");
-      } else {
-        toast.error("Ошибка: проверь TELEGRAM_BOT_TOKEN и TELEGRAM_ADMIN_CHAT_ID");
-      }
-    } catch (e) {
-      toast.error("Не удалось отправить в Telegram");
-      console.error(e);
-    } finally {
-      setTestTgSending(false);
-    }
   }
 
   async function syncTravelline(full = false) {
@@ -535,31 +494,6 @@ function AdminCalendarPage() {
               className="border border-[#C9A96E] px-5 py-2 text-[11px] uppercase tracking-widest text-[#C9A96E] hover:bg-[#C9A96E] hover:text-white disabled:opacity-50"
             >
               {syncing ? "Синхронизация…" : "↻ TravelLine"}
-            </button>
-            <button
-              onClick={() => {
-                if (confirm("Сбросить курсор и начать импорт со свежих модификаций (последние 30 дней)? Это быстро подтянет текущие брони."))
-                  void syncTravelline(true);
-              }}
-              disabled={syncing}
-              title="Сбросить курсор и начать со свежих броней"
-              className="border border-zinc-400 px-4 py-2 text-[11px] uppercase tracking-widest text-zinc-500 hover:bg-zinc-100 disabled:opacity-50"
-            >
-              ↻↻ Сброс + свежие
-            </button>
-            <button
-              onClick={() => void handleTestEmail()}
-              disabled={testEmailSending}
-              className="border border-zinc-400 px-5 py-2 text-[11px] uppercase tracking-widest text-zinc-500 hover:bg-zinc-100 disabled:opacity-50"
-            >
-              {testEmailSending ? "Отправка…" : "✉ Тест email"}
-            </button>
-            <button
-              onClick={() => void handleTestTelegram()}
-              disabled={testTgSending}
-              className="border border-sky-400 px-5 py-2 text-[11px] uppercase tracking-widest text-sky-600 hover:bg-sky-50 disabled:opacity-50"
-            >
-              {testTgSending ? "Отправка…" : "✈ Тест TG"}
             </button>
             <button
               onClick={() => {

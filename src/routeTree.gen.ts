@@ -33,6 +33,7 @@ import { Route as AdminRequisitesRouteImport } from './routes/admin.requisites'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminInboxRouteImport } from './routes/admin.inbox'
 import { Route as AdminGuestsRouteImport } from './routes/admin.guests'
+import { Route as AdminDevRouteImport } from './routes/admin.dev'
 import { Route as AdminCompaniesRouteImport } from './routes/admin.companies'
 import { Route as AdminCalendarRouteImport } from './routes/admin.calendar'
 import { Route as AdminBookingsRouteImport } from './routes/admin.bookings'
@@ -175,6 +176,11 @@ const AdminGuestsRoute = AdminGuestsRouteImport.update({
   path: '/guests',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminDevRoute = AdminDevRouteImport.update({
+  id: '/dev',
+  path: '/dev',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCompaniesRoute = AdminCompaniesRouteImport.update({
   id: '/companies',
   path: '/companies',
@@ -300,6 +306,7 @@ export interface FileRoutesByFullPath {
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/companies': typeof AdminCompaniesRoute
+  '/admin/dev': typeof AdminDevRoute
   '/admin/guests': typeof AdminGuestsRoute
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/notifications': typeof AdminNotificationsRoute
@@ -346,6 +353,7 @@ export interface FileRoutesByTo {
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/companies': typeof AdminCompaniesRoute
+  '/admin/dev': typeof AdminDevRoute
   '/admin/guests': typeof AdminGuestsRoute
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/notifications': typeof AdminNotificationsRoute
@@ -393,6 +401,7 @@ export interface FileRoutesById {
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/companies': typeof AdminCompaniesRoute
+  '/admin/dev': typeof AdminDevRoute
   '/admin/guests': typeof AdminGuestsRoute
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/notifications': typeof AdminNotificationsRoute
@@ -442,6 +451,7 @@ export interface FileRouteTypes {
     | '/admin/bookings'
     | '/admin/calendar'
     | '/admin/companies'
+    | '/admin/dev'
     | '/admin/guests'
     | '/admin/inbox'
     | '/admin/notifications'
@@ -488,6 +498,7 @@ export interface FileRouteTypes {
     | '/admin/bookings'
     | '/admin/calendar'
     | '/admin/companies'
+    | '/admin/dev'
     | '/admin/guests'
     | '/admin/inbox'
     | '/admin/notifications'
@@ -534,6 +545,7 @@ export interface FileRouteTypes {
     | '/admin/bookings'
     | '/admin/calendar'
     | '/admin/companies'
+    | '/admin/dev'
     | '/admin/guests'
     | '/admin/inbox'
     | '/admin/notifications'
@@ -762,6 +774,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminGuestsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/dev': {
+      id: '/admin/dev'
+      path: '/dev'
+      fullPath: '/admin/dev'
+      preLoaderRoute: typeof AdminDevRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/companies': {
       id: '/admin/companies'
       path: '/companies'
@@ -941,6 +960,7 @@ interface AdminRouteChildren {
   AdminBookingsRoute: typeof AdminBookingsRoute
   AdminCalendarRoute: typeof AdminCalendarRoute
   AdminCompaniesRoute: typeof AdminCompaniesRoute
+  AdminDevRoute: typeof AdminDevRoute
   AdminGuestsRoute: typeof AdminGuestsRoute
   AdminInboxRoute: typeof AdminInboxRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
@@ -957,6 +977,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminBookingsRoute: AdminBookingsRoute,
   AdminCalendarRoute: AdminCalendarRoute,
   AdminCompaniesRoute: AdminCompaniesRoute,
+  AdminDevRoute: AdminDevRoute,
   AdminGuestsRoute: AdminGuestsRoute,
   AdminInboxRoute: AdminInboxRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
