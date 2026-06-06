@@ -219,7 +219,7 @@ const sendEmailSchema = z.object({
   html: z.string(),
 });
 
-async function sendViaResend(
+export async function sendViaResend(
   to: string,
   subject: string,
   html: string,
