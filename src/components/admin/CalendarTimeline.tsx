@@ -366,9 +366,9 @@ export function CalendarTimeline({
     <div ref={wrapRef} className="mt-6 overflow-x-auto border border-border bg-background text-xs">
       <div style={{ width: fullWidth }}>
         {/* Header */}
-        <div className="sticky top-0 z-20 flex bg-cream/70">
+        <div className="sticky top-0 z-20 flex bg-cream">
           <div
-            className="sticky left-0 z-10 shrink-0 border-b border-r border-border bg-cream/90 px-3 py-2 text-[10px] uppercase tracking-widest text-navy"
+            className="sticky left-0 z-10 shrink-0 border-b border-r border-border bg-cream px-3 py-2 text-[10px] uppercase tracking-widest text-navy"
             style={{ width: LABEL_W }}
           >
             Номер
@@ -400,7 +400,7 @@ export function CalendarTimeline({
                   <button
                     type="button"
                     onClick={() => toggleGroup(g.typeId)}
-                    className="sticky left-0 z-10 flex shrink-0 items-center gap-1.5 border-r border-border bg-cream/70 px-3 text-left text-navy hover:bg-cream"
+                    className="sticky left-0 z-10 flex shrink-0 items-center gap-1.5 border-r border-border bg-cream px-3 text-left text-navy hover:bg-cream"
                     style={{ width: LABEL_W }}
                     title={isCollapsed ? "Развернуть номера" : "Свернуть"}
                   >
@@ -433,7 +433,10 @@ export function CalendarTimeline({
                                 className={cn("absolute bottom-0 left-0 w-full", hostelBg(ratio))}
                                 style={{ height: `${Math.round(ratio * 100)}%` }}
                               />
-                              <span className={cn("relative z-10 text-[10px] font-bold", hostelText(ratio))}>
+                              <span
+                                className="relative z-10 text-[10px] font-bold text-navy"
+                                style={{ textShadow: "0 0 2px #fff, 0 0 3px #fff, 0 0 4px #fff" }}
+                              >
                                 {occ}/{total}
                               </span>
                             </>
@@ -462,7 +465,7 @@ export function CalendarTimeline({
                 <div
                   className={cn(
                     "sticky left-0 z-10 flex shrink-0 flex-col justify-center border-r border-border px-3 text-navy",
-                    isSingle ? "bg-cream/70" : "bg-background pl-7", // одиночный — выделенный прямоугольник; вложенный — с отступом
+                    isSingle ? "bg-cream" : "bg-background pl-7", // одиночный — выделенный прямоугольник; вложенный — с отступом
                   )}
                   style={{ width: LABEL_W }}
                 >
@@ -565,9 +568,9 @@ export function CalendarTimeline({
           })}
 
           {/* Occupancy footer */}
-          <div className="flex border-t-2 border-border bg-cream/40">
+          <div className="flex border-t-2 border-border bg-cream">
             <div
-              className="sticky left-0 z-10 shrink-0 border-r border-border bg-cream/80 px-3 py-2 text-[10px] uppercase tracking-widest text-navy"
+              className="sticky left-0 z-10 shrink-0 border-r border-border bg-cream px-3 py-2 text-[10px] uppercase tracking-widest text-navy"
               style={{ width: LABEL_W }}
             >
               Занято
