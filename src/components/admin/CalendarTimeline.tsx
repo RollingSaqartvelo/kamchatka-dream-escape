@@ -42,10 +42,10 @@ const SOURCE_ICON: Record<string, string> = {
 
 const DAY_W = 56;
 const LANE_H = 26;
-const GROUP_H = 40; // высота строки-заголовка типа (с занятостью по дням)
-const LABEL_W = 210;
+const GROUP_H = 48; // высота строки-заголовка типа (с занятостью по дням)
+const LABEL_W = 320;
 // Minimum row height so a booking bar never overlaps the next row.
-const MIN_ROW_H = 36;
+const MIN_ROW_H = 48;
 
 // Юнит = физическая комната или койка. Несколько юнитов одного типа образуют
 // сворачиваемую группу.
@@ -407,7 +407,7 @@ export function CalendarTimeline({
                     <span className="grid h-5 w-5 shrink-0 place-items-center rounded bg-navy text-cream text-[11px] font-black leading-none">
                       {isCollapsed ? "▸" : "▾"}
                     </span>
-                    <span className="line-clamp-2 text-[11px] font-semibold leading-tight">{g.groupName}</span>
+                    <span className="line-clamp-3 text-[11px] font-semibold leading-tight">{g.groupName}</span>
                     <span className="ml-auto shrink-0 rounded bg-navy/10 px-1.5 py-0.5 text-[10px] font-bold text-navy">
                       {total}
                     </span>
@@ -428,18 +428,10 @@ export function CalendarTimeline({
                           title={`${occ}/${total} занято`}
                         >
                           {occ > 0 && (
-                            <>
-                              <div
-                                className={cn("absolute bottom-0 left-0 w-full", hostelBg(ratio))}
-                                style={{ height: `${Math.round(ratio * 100)}%` }}
-                              />
-                              <span
-                                className="relative z-10 text-[10px] font-bold text-navy"
-                                style={{ textShadow: "0 0 2px #fff, 0 0 3px #fff, 0 0 4px #fff" }}
-                              >
-                                {occ}/{total}
-                              </span>
-                            </>
+                            <div
+                              className={cn("absolute bottom-0 left-0 w-full", hostelBg(ratio))}
+                              style={{ height: `${Math.round(ratio * 100)}%` }}
+                            />
                           )}
                         </div>
                       );
@@ -469,7 +461,7 @@ export function CalendarTimeline({
                   )}
                   style={{ width: LABEL_W }}
                 >
-                  <div className={cn("line-clamp-2", isSingle ? "text-[11px] font-semibold leading-tight" : "text-xs")}>
+                  <div className={cn("line-clamp-3", isSingle ? "text-[11px] font-semibold leading-tight" : "text-xs")}>
                     {r.room.unitLabel}
                   </div>
                   {isSingle && r.room.price_from_rub > 0 && (
