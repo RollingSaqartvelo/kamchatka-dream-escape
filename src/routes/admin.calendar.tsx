@@ -338,6 +338,18 @@ function AdminCalendarPage() {
       ROOMS.find((r) => r.id === typeId)?.name_ru ??
       customRooms.find((c) => `custom-${c.id}` === typeId)?.name ??
       orig.room_name;
+
+    // Подтверждение переноса — без него бронь не двигается.
+    const fmtD = (s: string) => format(parseISO(s), "d MMM yyyy", { locale: ru });
+    const guest = `${orig.last_name ?? ""} ${orig.first_name ?? ""}`.trim() || "Гость";
+    const ok = window.confirm(
+      `Перенести бронь №${orig.booking_number}?\n\n` +
+        `Гость: ${guest}\n` +
+        `Номер: ${roomName}\n` +
+        `Даты: ${fmtD(checkIn)} — ${fmtD(checkOut)}`,
+    );
+    if (!ok) return; // менеджер отказался — бронь остаётся на месте
+
     const nights = Math.max(1, differenceInCalendarDays(parseISO(checkOut), parseISO(checkIn)));
     setBookings((prev) =>
       prev.map((x) =>
