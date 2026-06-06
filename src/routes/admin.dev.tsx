@@ -89,7 +89,7 @@ function AdminDevPage() {
   return (
     <div className="relative min-h-screen overflow-hidden">
       {/* радиационный фон на всю страницу */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 z-0 select-none overflow-hidden whitespace-nowrap text-4xl leading-[3rem] tracking-[0.55em] text-yellow-500/15">
+      <div aria-hidden className="pointer-events-none absolute inset-0 z-0 select-none overflow-hidden whitespace-nowrap text-4xl leading-[3rem] tracking-[0.55em] opacity-50">
         {Array.from({ length: 44 }).map((_, i) => (
           <div key={i}>☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️</div>
         ))}
