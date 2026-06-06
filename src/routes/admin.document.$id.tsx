@@ -114,7 +114,7 @@ function DocumentPage() {
   };
 
   return (
-    <div className="bg-background py-8 print:py-0">
+    <div className="overflow-x-auto bg-background py-8 print:overflow-visible print:py-0">
       <style>{`@page { size: A4 landscape; margin: 0; } @media print { html, body { background:#fff !important; } body * { visibility: hidden !important; } .doc, .doc * { visibility: visible !important; } .doc { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; max-width: 100% !important; box-shadow:none !important; border:none !important; margin:0 !important; padding: 10mm 12mm !important; } [id*="lovable" i], [class*="lovable" i], a[href*="lovable" i], gpt-engineer, [id*="gpt-eng" i] { display:none !important; } }`}</style>
 
       {/* Панель управления (не печатается) */}
@@ -147,7 +147,7 @@ function DocumentPage() {
         </button>
       </div>
 
-      <div className="doc mx-auto max-w-3xl border border-border bg-white px-8 py-8 text-sm text-navy sm:px-12">
+      <div className="doc mx-auto w-[1123px] min-h-[760px] max-w-full border border-border bg-white px-10 py-10 text-sm text-navy sm:px-14">
         {docType === "invoice" && (
           <>
             <h1 className="font-serif text-2xl">Счёт на оплату № {docNo} от {dmy(today.toISOString())}</h1>
@@ -367,9 +367,6 @@ function DocumentPage() {
           </>
         )}
 
-        <p className="no-print mt-8 text-[10px] text-muted-foreground">
-          ⚠️ Шаблон документа. Перед отправкой клиенту проверьте у бухгалтера (особенно НДС и статус УПД).
-        </p>
       </div>
     </div>
   );
