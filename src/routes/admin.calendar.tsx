@@ -304,7 +304,7 @@ function AdminCalendarPage() {
 
   // Брони, разложенные по физическим комнатам/койкам (room_id → id юнита).
   // Хостельные брони реплицируются по койкам с ключами `id__bK`.
-  const assignedBookings = useMemo(() => assignToUnits(visibleBookings), [visibleBookings]);
+  const assignedBookings = useMemo(() => assignToUnits(visibleBookings, maint), [visibleBookings, maint]);
 
   // Индекс «юнит|дата → брони»: строится один раз за изменение
   // assignedBookings, а не фильтрует весь массив в каждой из ~1800 ячеек.

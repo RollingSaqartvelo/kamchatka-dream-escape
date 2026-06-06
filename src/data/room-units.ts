@@ -186,9 +186,15 @@ type Assignable = {
  *   полоса с ключом `${id}__bK` (реальный id восстанавливается realBookingId()).
  * Возвращает новый массив того же типа с переопределёнными `id`/`room_id`.
  */
-export function assignToUnits<T extends Assignable>(bookings: T[]): T[] {
+export function assignToUnits<T extends Assignable>(bookings: T[], skipKeys?: Set<string>): T[] {
   const unitsByType = new Map<string, RoomUnit[]>();
-  for (const t of UNITS_BY_TYPE) unitsByType.set(t.typeId, t.units);
+  for (const t of UNITS_BY_TYPE) {
+    // Номера/койки «в ремонте» исключаем из раскладки — брони уходят на свободные.
+    const units = skipKeys && skipKeys.size
+      ? t.units.filter((u) => !skipKeys.has(unitMaintKey(u)))
+      : t.units;
+    unitsByType.set(t.typeId, units);
+  }
 
   const byType = new Map<string, T[]>();
   for (const b of bookings) {

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { ROOMS } from "@/data/rooms";
-import { MANAGED_ROOMS, MANAGED_BY_TYPE } from "@/data/room-units";
+import { MANAGED_ROOMS, MANAGED_BY_TYPE, unitTypeId } from "@/data/room-units";
 import { supabase } from "@/integrations/supabase/client";
 import { CustomRoomEditor } from "@/components/admin/CustomRoomEditor";
 
@@ -78,6 +78,35 @@ function AdminRoomsPage() {
 
   async function toggle(key: string, label: string) {
     const inMaint = maint.has(key);
+
+    // При отправке В РЕМОНТ — предупреждаем, если на номер есть активные брони
+    // (чтобы их не «потерять»: их нужно распределить по другим номерам в Календаре).
+    if (!inMaint) {
+      const typeId = unitTypeId(key);
+      const unitsOfType = MANAGED_ROOMS.filter((m) => m.typeId === typeId);
+      const isHostel = unitsOfType[0]?.hostel ?? false;
+      const remaining = isHostel
+        ? 0
+        : unitsOfType.filter((m) => m.key !== key && !maint.has(m.key)).length;
+      const today = new Date().toISOString().slice(0, 10);
+      const { count } = await (supabase as any)
+        .from("bookings")
+        .select("id", { count: "exact", head: true })
+        .eq("room_id", typeId)
+        .gte("check_out", today)
+        .neq("payment_status", "cancelled");
+      const bookings = count ?? 0;
+      if (bookings > remaining) {
+        const ok = window.confirm(
+          `На номер «${label}» есть активные брони: ${bookings}.\n` +
+            `Свободных номеров этого типа останется: ${remaining}.\n\n` +
+            `Брони не пропадут, но часть может остаться без номера. Откройте «Календарь» и ` +
+            `распределите их по другим номерам, затем отправляйте в ремонт.\n\nВсё равно отправить в ремонт?`,
+        );
+        if (!ok) return;
+      }
+    }
+
     // optimistic
     setMaint((prev) => {
       const next = new Set(prev);
