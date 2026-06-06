@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Eye } from "lucide-react";
+
+const POS_KEY = "a11y_btn_pos";
 
 type FontSize = "normal" | "large" | "xlarge";
 type Theme = "normal" | "contrast";
@@ -26,13 +28,48 @@ export function AccessibilityWidget() {
   const [open, setOpen] = useState(false);
   const [fontSize, setFontSize] = useState<FontSize>("normal");
   const [theme, setTheme] = useState<Theme>("normal");
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number; moved: boolean } | null>(null);
 
   useEffect(() => {
     const prefs = loadPrefs();
     setFontSize(prefs.fontSize);
     setTheme(prefs.theme);
     applyPrefs(prefs.fontSize, prefs.theme);
+    try {
+      const raw = localStorage.getItem(POS_KEY);
+      if (raw) setPos(JSON.parse(raw));
+    } catch {}
   }, []);
+
+  function onPointerDown(e: React.PointerEvent<HTMLButtonElement>) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    dragRef.current = { startX: e.clientX, startY: e.clientY, origX: rect.left, origY: rect.top, moved: false };
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+  }
+  function onPointerMove(e: React.PointerEvent<HTMLButtonElement>) {
+    const d = dragRef.current;
+    if (!d) return;
+    const dx = e.clientX - d.startX;
+    const dy = e.clientY - d.startY;
+    if (!d.moved && Math.hypot(dx, dy) < 5) return;
+    d.moved = true;
+    const x = Math.min(window.innerWidth - 52, Math.max(4, d.origX + dx));
+    const y = Math.min(window.innerHeight - 52, Math.max(4, d.origY + dy));
+    setPos({ x, y });
+  }
+  function onPointerUp() {
+    const d = dragRef.current;
+    dragRef.current = null;
+    if (d?.moved) {
+      setPos((prev) => {
+        if (prev) { try { localStorage.setItem(POS_KEY, JSON.stringify(prev)); } catch {} }
+        return prev;
+      });
+    } else {
+      setOpen((v) => !v); // не двигали — это клик
+    }
+  }
 
   function update(newSize: FontSize, newTheme: Theme) {
     setFontSize(newSize);
@@ -49,11 +86,13 @@ export function AccessibilityWidget() {
     <>
       {/* Кнопка */}
       <button
-        onClick={() => setOpen((v) => !v)}
-        aria-label="Настройки доступности"
-        title="Настройки доступности"
-        className="fixed bottom-6 left-6 z-50 grid h-12 w-12 place-items-center bg-navy text-cream shadow-lg ring-2 ring-gold/30 transition-transform hover:scale-105 print:hidden"
-        style={{ borderRadius: "999px" }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        aria-label="Настройки доступности (можно перетащить)"
+        title="Настройки доступности · потяните, чтобы передвинуть"
+        className={`fixed z-50 grid h-12 w-12 cursor-grab place-items-center bg-navy text-cream shadow-lg ring-2 ring-gold/30 transition-transform hover:scale-105 active:cursor-grabbing print:hidden ${pos ? "" : "bottom-6 left-6"}`}
+        style={pos ? { left: pos.x, top: pos.y, borderRadius: "999px", touchAction: "none" } : { borderRadius: "999px", touchAction: "none" }}
       >
         <Eye className="h-5 w-5" strokeWidth={1.75} aria-hidden />
       </button>
@@ -61,8 +100,10 @@ export function AccessibilityWidget() {
       {/* Панель */}
       {open && (
         <div
-          className="fixed bottom-24 left-6 z-50 w-72 bg-background border border-border shadow-2xl overflow-hidden print:hidden"
-          style={{ borderRadius: "4px" }}
+          className={`fixed z-50 w-72 bg-background border border-border shadow-2xl overflow-hidden print:hidden ${pos ? "" : "bottom-24 left-6"}`}
+          style={pos
+            ? { left: Math.min(window.innerWidth - 296, Math.max(8, pos.x)), top: Math.max(8, pos.y - 330), borderRadius: "4px" }
+            : { borderRadius: "4px" }}
           role="dialog"
           aria-label="Настройки доступности"
         >
