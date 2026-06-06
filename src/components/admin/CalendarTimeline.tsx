@@ -452,6 +452,9 @@ export function CalendarTimeline({
             // Unit row
             const r = item;
             const isSingle = r.room.id === r.room.typeId; // одиночный тип (сам себе номер)
+            // Плашки броней заполняют всю высоту строки (делим поровну между дорожками).
+            const laneCount = Math.max(1, ...r.placed.map((p) => p.lane + 1));
+            const laneH = r.height / laneCount;
             return (
               <div
                 key={r.room.id}
@@ -534,7 +537,7 @@ export function CalendarTimeline({
                           matched && "z-20 ring-2 ring-amber-400 ring-offset-1",
                           dimmed && "opacity-20",
                         )}
-                        style={{ left: left + 1, width, top: lane * LANE_H + 3, height: LANE_H - 4 }}
+                        style={{ left: left + 1, width, top: lane * laneH + 2, height: laneH - 4 }}
                         title={`${b.last_name} ${b.first_name}`}
                         onPointerDown={(e) => startDrag(e, b, "move")}
                         onContextMenu={(e) => {
