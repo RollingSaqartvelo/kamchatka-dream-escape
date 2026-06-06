@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { ROOMS } from "@/data/rooms";
 import { MANAGED_ROOMS, MANAGED_BY_TYPE } from "@/data/room-units";
 import { supabase } from "@/integrations/supabase/client";
+import { CustomRoomEditor } from "@/components/admin/CustomRoomEditor";
 
 export const Route = createFileRoute("/admin/rooms")({
   component: AdminRoomsPage,
@@ -22,6 +23,7 @@ function AdminRoomsPage() {
   const [newName, setNewName] = useState("");
   const [newPrice, setNewPrice] = useState("");
   const [adding, setAdding] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
 
   useEffect(() => {
     void load();
@@ -164,12 +166,16 @@ function AdminRoomsPage() {
                 key={c.id}
                 className="flex items-center justify-between gap-2 border border-[#C9A96E]/50 bg-cream/30 px-3 py-2.5 text-sm"
               >
-                <div className="min-w-0">
-                  <div className="truncate font-medium text-navy">{c.name}</div>
+                <button
+                  onClick={() => setEditId(c.id)}
+                  title="Открыть карточку номера (фото, цены, удобства)"
+                  className="min-w-0 grow text-left"
+                >
+                  <div className="truncate font-medium text-navy hover:text-[#C9A96E]">{c.name}</div>
                   <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                    {c.price > 0 ? `от ${c.price} ₽` : "цена не указана"}
+                    {c.price > 0 ? `от ${c.price} ₽` : "цена не указана"} · ✎ заполнить карточку
                   </div>
-                </div>
+                </button>
                 <button
                   onClick={() => void removeCustomRoom(c.id, c.name)}
                   title="Удалить номер"
@@ -251,6 +257,10 @@ function AdminRoomsPage() {
           ))}
         </div>
       </div>
+
+      {editId && (
+        <CustomRoomEditor id={editId} onClose={() => setEditId(null)} onSaved={loadCustom} />
+      )}
     </div>
   );
 }

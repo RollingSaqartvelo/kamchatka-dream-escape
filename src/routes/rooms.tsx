@@ -1,10 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { SiteLayout } from "@/components/layout/SiteLayout";
-import { ROOMS } from "@/data/rooms";
+import { ROOMS, type Room } from "@/data/rooms";
 import { RoomCard } from "@/components/rooms/RoomCard";
 import { RoomFilterBar } from "@/components/rooms/RoomFilterBar";
+import { supabase } from "@/integrations/supabase/client";
+import { customRoomToRoom, type CustomRoomRow } from "@/lib/custom-rooms";
 import type { DateRange } from "@/components/booking/types";
 
 
@@ -33,11 +35,28 @@ function RoomsPage() {
   const [guests, setGuests] = useState(2);
   const [range, setRange] = useState<DateRange>({});
   const [filterActive, setFilterActive] = useState(false);
+  const [customRooms, setCustomRooms] = useState<Room[]>([]);
+
+  // Добавленные в кабинете номера (опубликованные, с фото) — в конец списка.
+  useEffect(() => {
+    void (async () => {
+      const { data } = await (supabase as any)
+        .from("custom_rooms")
+        .select("*")
+        .eq("published", true)
+        .order("sort_order")
+        .order("created_at");
+      const rows = ((data as CustomRoomRow[]) ?? []).filter((c) => (c.photos ?? []).length > 0);
+      setCustomRooms(rows.map(customRoomToRoom));
+    })();
+  }, []);
+
+  const allRooms = useMemo(() => [...ROOMS, ...customRooms], [customRooms]);
 
   const rooms = useMemo(() => {
-    if (!filterActive) return ROOMS;
-    return ROOMS.filter((r) => r.max_guests >= guests);
-  }, [filterActive, guests]);
+    if (!filterActive) return allRooms;
+    return allRooms.filter((r) => r.max_guests >= guests);
+  }, [filterActive, guests, allRooms]);
 
   // Carry the chosen dates + party into the booking wizard via search params.
   const bookingSearch = useMemo(
