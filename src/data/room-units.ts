@@ -37,16 +37,17 @@ const ROOM_NUMBERS: Record<string, string[]> = {
   "dvuhmestnyy-komfort-dop-mesto": ["11", "13", "14", "15"],
 };
 
-// Порядок типов в КАЛЕНДАРЕ: одиночные номера сверху, затем Двухместный
-// «Стандарт» (16 комнат) прямо над хостелами, хостелы — в самом низу.
-// Большие сворачиваемые группы внизу → их раскрытие не выталкивает одиночные.
+// Порядок типов в КАЛЕНДАРЕ: сначала одиночные номера (по одной комнате),
+// затем многокомнатные сворачиваемые группы со скроллом — «Комфорт с доп.
+// местом» (4), «Стандарт» (16) — и хостелы в самом низу. Большие группы внизу →
+// их раскрытие/скролл не выталкивает одиночные номера.
 const CALENDAR_TYPE_ORDER = [
   "comfort-3-shower",
   "dvuhmestnyy-komfort",
-  "dvuhmestnyy-komfort-dop-mesto",
   "semeynyy-delux",
   "dvuhmestnyy-ekonom",
   "dvuhmestnyy-ekonom-dop-mesto",
+  "dvuhmestnyy-komfort-dop-mesto",
   "dvuhmestnyy-standart",
   "hostel-10-mest",
   "hostel-10-mest-b",
