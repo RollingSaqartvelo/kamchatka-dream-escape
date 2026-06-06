@@ -9,6 +9,7 @@ type Props = {
   onCreated?: () => void;
   initialRoomId?: string;
   initialCheckIn?: Date;
+  customRooms?: { id: string; name: string }[];
 };
 
 const STATUSES = [
@@ -23,6 +24,7 @@ export function OfflineBookingModal({
   onCreated,
   initialRoomId,
   initialCheckIn,
+  customRooms = [],
 }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,8 +66,10 @@ export function OfflineBookingModal({
       return;
     }
 
-    const room = ROOMS.find((r) => r.id === form.room_id);
-    if (!room) {
+    const roomName =
+      ROOMS.find((r) => r.id === form.room_id)?.name_ru ??
+      customRooms.find((c) => `custom-${c.id}` === form.room_id)?.name;
+    if (!roomName) {
       setError("Выберите номер");
       return;
     }
@@ -77,7 +81,7 @@ export function OfflineBookingModal({
       phone: form.phone.trim() || "—",
       email: form.email.trim() || "offline@poluostrov.local",
       room_id: form.room_id,
-      room_name: room.name_ru,
+      room_name: roomName,
       check_in: form.check_in,
       check_out: form.check_out,
       nights,
@@ -175,6 +179,15 @@ export function OfflineBookingModal({
                   {r.name_ru}
                 </option>
               ))}
+              {customRooms.length > 0 && (
+                <optgroup label="Добавленные номера">
+                  {customRooms.map((c) => (
+                    <option key={c.id} value={`custom-${c.id}`}>
+                      {c.name}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
             </select>
           </Field>
 

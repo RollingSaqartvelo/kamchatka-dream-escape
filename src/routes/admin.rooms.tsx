@@ -18,10 +18,51 @@ export const Route = createFileRoute("/admin/rooms")({
 function AdminRoomsPage() {
   const [maint, setMaint] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [customRooms, setCustomRooms] = useState<{ id: string; name: string; price: number }[]>([]);
+  const [newName, setNewName] = useState("");
+  const [newPrice, setNewPrice] = useState("");
+  const [adding, setAdding] = useState(false);
 
   useEffect(() => {
     void load();
+    void loadCustom();
   }, []);
+
+  async function loadCustom() {
+    const { data, error } = await (supabase as any)
+      .from("custom_rooms")
+      .select("id, name, price")
+      .order("sort_order")
+      .order("created_at");
+    if (error) console.error(error);
+    else setCustomRooms((data as { id: string; name: string; price: number }[]) ?? []);
+  }
+
+  async function addCustomRoom() {
+    const name = newName.trim();
+    if (!name) return;
+    setAdding(true);
+    const price = Math.max(0, parseInt(newPrice, 10) || 0);
+    const { error } = await (supabase as any).from("custom_rooms").insert({ name, price });
+    setAdding(false);
+    if (error) {
+      toast.error("Не удалось добавить номер");
+    } else {
+      toast.success(`Номер «${name}» добавлен — появится строкой в календаре`);
+      setNewName("");
+      setNewPrice("");
+      void loadCustom();
+    }
+  }
+
+  async function removeCustomRoom(id: string, name: string) {
+    const { error } = await (supabase as any).from("custom_rooms").delete().eq("id", id);
+    if (error) toast.error("Не удалось удалить номер");
+    else {
+      toast.success(`Номер «${name}» удалён`);
+      void loadCustom();
+    }
+  }
 
   async function load() {
     setLoading(true);
@@ -77,6 +118,69 @@ function AdminRoomsPage() {
           <Kpi label="В работе" value={String(activeCount)} tone="ok" />
           <Kpi label="В ремонте" value={String(inMaintCount)} tone={inMaintCount ? "warn" : undefined} />
         </div>
+
+        {/* Добавленные номера — появляются отдельными строками в календаре */}
+        <h2 className="mt-10 font-serif text-2xl text-navy">Добавленные номера</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Добавьте номер с произвольным названием — он появится отдельной строкой в календаре,
+          и на него можно ставить брони.
+        </p>
+        <div className="mt-4 flex flex-wrap items-end gap-3">
+          <div className="grow">
+            <label className="text-[10px] uppercase tracking-widest text-muted-foreground">Название номера</label>
+            <input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") void addCustomRoom(); }}
+              placeholder="Напр. Апартаменты на 2 этаже"
+              className="mt-1 w-full border border-border bg-background px-3 py-2 text-sm outline-none focus:border-[#C9A96E]"
+            />
+          </div>
+          <div className="w-36">
+            <label className="text-[10px] uppercase tracking-widest text-muted-foreground">Цена от, ₽ (необяз.)</label>
+            <input
+              type="number"
+              min={0}
+              value={newPrice}
+              onChange={(e) => setNewPrice(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") void addCustomRoom(); }}
+              placeholder="0"
+              className="mt-1 w-full border border-border bg-background px-3 py-2 text-sm outline-none focus:border-[#C9A96E]"
+            />
+          </div>
+          <button
+            onClick={() => void addCustomRoom()}
+            disabled={adding || !newName.trim()}
+            className="border border-navy bg-navy px-5 py-2 text-[11px] uppercase tracking-widest text-cream hover:bg-[#C9A96E] hover:border-[#C9A96E] disabled:opacity-50"
+          >
+            {adding ? "Добавляем…" : "Добавить номер"}
+          </button>
+        </div>
+        {customRooms.length > 0 && (
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+            {customRooms.map((c) => (
+              <div
+                key={c.id}
+                className="flex items-center justify-between gap-2 border border-[#C9A96E]/50 bg-cream/30 px-3 py-2.5 text-sm"
+              >
+                <div className="min-w-0">
+                  <div className="truncate font-medium text-navy">{c.name}</div>
+                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                    {c.price > 0 ? `от ${c.price} ₽` : "цена не указана"}
+                  </div>
+                </div>
+                <button
+                  onClick={() => void removeCustomRoom(c.id, c.name)}
+                  title="Удалить номер"
+                  className="shrink-0 rounded border border-rose-300 px-2 py-1 text-[10px] uppercase tracking-widest text-rose-700 hover:bg-rose-50"
+                >
+                  Удалить
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Все физические номера */}
         <h2 className="mt-10 font-serif text-2xl text-navy">Все номера</h2>

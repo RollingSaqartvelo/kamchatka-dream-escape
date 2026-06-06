@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { ROOMS } from "@/data/rooms";
-import { ROOM_UNITS, assignToUnits, unitTypeId, realBookingId, unitMaintKey } from "@/data/room-units";
+import { ROOM_UNITS, assignToUnits, unitTypeId, realBookingId, unitMaintKey, type RoomUnit } from "@/data/room-units";
 import { OfflineBookingModal } from "@/components/admin/OfflineBookingModal";
 import { CalendarTimeline } from "@/components/admin/CalendarTimeline";
 import { BookingDetailDrawer } from "@/components/admin/BookingDetailDrawer";
@@ -148,10 +148,25 @@ function AdminCalendarPage() {
   const nonceRef = useRef(0);
   const [blocks, setBlocks] = useState<{ room_id: string; date: string }[]>([]);
   const [maint, setMaint] = useState<Set<string>>(new Set());
+  const [customRooms, setCustomRooms] = useState<{ id: string; name: string; price: number }[]>([]);
   const syncFn = useServerFn(syncTravellineReservations);
 
-  // Физические номера «в ремонте» скрываются из шахматки.
-  const activeUnits = useMemo(() => ROOM_UNITS.filter((u) => !maint.has(unitMaintKey(u))), [maint]);
+  // Физические номера «в ремонте» скрываются из шахматки. Кастомные номера
+  // (добавленные на странице «Номера») — отдельными строками внизу.
+  const activeUnits = useMemo(() => {
+    const base = ROOM_UNITS.filter((u) => !maint.has(unitMaintKey(u)));
+    const custom: RoomUnit[] = customRooms.map((c) => ({
+      id: `custom-${c.id}`,
+      typeId: `custom-${c.id}`,
+      number: "",
+      groupName: c.name,
+      unitLabel: c.name,
+      name_ru: c.name,
+      price_from_rub: c.price,
+      hostelBed: false,
+    }));
+    return [...base, ...custom];
+  }, [maint, customRooms]);
 
   // Автосинхронизация TravelLine каждые 15 минут
   useEffect(() => {
@@ -174,12 +189,23 @@ function AdminCalendarPage() {
 
   useEffect(() => {
     void loadMaint();
+    void loadCustomRooms();
   }, []);
 
   async function loadMaint() {
     const { data, error } = await (supabase as any).from("room_maintenance").select("room_key");
     if (error) console.error(error);
     else setMaint(new Set((data ?? []).map((r: { room_key: string }) => r.room_key)));
+  }
+
+  async function loadCustomRooms() {
+    const { data, error } = await (supabase as any)
+      .from("custom_rooms")
+      .select("id, name, price")
+      .order("sort_order")
+      .order("created_at");
+    if (error) console.error(error);
+    else setCustomRooms((data as { id: string; name: string; price: number }[]) ?? []);
   }
 
   async function loadBlocks() {
@@ -349,7 +375,10 @@ function AdminCalendarPage() {
     const orig = bookings.find((x) => x.id === realId);
     if (!orig) return;
     if (orig.room_id === typeId && orig.check_in === checkIn && orig.check_out === checkOut) return;
-    const roomName = ROOMS.find((r) => r.id === typeId)?.name_ru ?? orig.room_name;
+    const roomName =
+      ROOMS.find((r) => r.id === typeId)?.name_ru ??
+      customRooms.find((c) => `custom-${c.id}` === typeId)?.name ??
+      orig.room_name;
     const nights = Math.max(1, differenceInCalendarDays(parseISO(checkOut), parseISO(checkIn)));
     setBookings((prev) =>
       prev.map((x) =>
@@ -689,6 +718,7 @@ function AdminCalendarPage() {
         onClose={() => setModalDate(null)}
         initialRoomId={modalRoom}
         initialCheckIn={modalDate ?? undefined}
+        customRooms={customRooms}
         onCreated={() => void load()}
       />
 
