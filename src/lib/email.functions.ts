@@ -231,6 +231,7 @@ async function sendViaResend(
     },
     body: JSON.stringify({
       from: process.env.EMAIL_FROM ?? "Гостиница Полуостров <onboarding@resend.dev>",
+      reply_to: process.env.EMAIL_REPLY_TO ?? "poluostrovkam@mail.ru",
       to,
       subject,
       html,

@@ -46,6 +46,7 @@ async function sendReplyEmail(to: string, guestName: string, body: string) {
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       from: process.env.EMAIL_FROM ?? "Гостиница Полуостров <onboarding@resend.dev>",
+      reply_to: process.env.EMAIL_REPLY_TO ?? "poluostrovkam@mail.ru",
       to,
       subject: "Ответ от гостиницы «Полуостров»",
       html,
