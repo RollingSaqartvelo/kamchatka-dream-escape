@@ -110,12 +110,12 @@ export function bookingConfirmationHtml(b: {
 
     <div style="margin:24px 0;text-align:center;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
       ${b.booking_id && b.email ? `
-      <a href="https://kamchatka-dream-escape.lovable.app/api/public/voucher/${b.booking_id}?e=${encodeURIComponent(b.email)}"
+      <a href="https://poluostrov-hotel.ru/api/public/voucher/${b.booking_id}?e=${encodeURIComponent(b.email)}"
          style="display:inline-block;background:#C9A96E;color:#fff;padding:14px 28px;text-decoration:none;font-size:11px;letter-spacing:3px;text-transform:uppercase;">
         ⬇ Скачать ваучер PDF
       </a>` : ""}
       ${b.booking_id && b.email ? `
-      <a href="https://kamchatka-dream-escape.lovable.app/booking/chat/${b.booking_id}?e=${encodeURIComponent(b.email)}"
+      <a href="https://poluostrov-hotel.ru/booking/chat/${b.booking_id}?e=${encodeURIComponent(b.email)}"
          style="display:inline-block;background:#1a1a2e;color:#fff;padding:14px 28px;text-decoration:none;font-size:11px;letter-spacing:3px;text-transform:uppercase;">
         ✉ Написать нам
       </a>` : ""}
@@ -230,7 +230,7 @@ async function sendViaResend(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "Гостиница Полуостров <onboarding@resend.dev>",
+      from: process.env.EMAIL_FROM ?? "Гостиница Полуостров <onboarding@resend.dev>",
       to,
       subject,
       html,
@@ -262,7 +262,7 @@ export async function sendBookingConfirmation(bookingId: string) {
 
   if (!b?.email) return;
 
-  const voucherUrl = `https://kamchatka-dream-escape.lovable.app/booking/voucher/${bookingId}?e=${encodeURIComponent(b.email)}`;
+  const voucherUrl = `https://poluostrov-hotel.ru/booking/voucher/${bookingId}?e=${encodeURIComponent(b.email)}`;
   const tgBotUsername = process.env.TELEGRAM_BOT_USERNAME;
   const html = bookingConfirmationHtml({
     ...b,
@@ -348,7 +348,7 @@ export async function sendNewBookingToStaff(bookingId: string) {
   if (!recipients.length) return;
 
   const fmt = (n: number | null | undefined) => `${new Intl.NumberFormat("ru-RU").format(Number(n ?? 0))} ₽`;
-  const adminUrl = "https://kamchatka-dream-escape.lovable.app/admin/calendar";
+  const adminUrl = "https://poluostrov-hotel.ru/admin/calendar";
   const html = `<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"></head>
 <body style="font-family:Georgia,serif;background:#f5f2ee;margin:0;padding:0;">
   <div style="max-width:600px;margin:32px auto;background:#fff;border-radius:4px;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,0.08);">

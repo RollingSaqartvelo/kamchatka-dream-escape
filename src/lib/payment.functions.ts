@@ -93,7 +93,7 @@ export const createAlfaPayment = createServerFn({ method: "POST" })
     const origin =
       process.env.PUBLIC_APP_URL ??
       process.env.VITE_PUBLIC_APP_URL ??
-      "https://kamchatka-dream-escape.lovable.app";
+      "https://poluostrov-hotel.ru";
 
     // Если ключи не настроены — мок: имитируем платёж и возвращаем success
     if (!apiUrl || !login || !password) {

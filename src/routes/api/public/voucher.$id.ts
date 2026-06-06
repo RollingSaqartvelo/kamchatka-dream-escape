@@ -183,11 +183,11 @@ async function buildPdf(b: any, bookingId: string, email: string): Promise<Uint8
   page.drawText("Hotel Poluostrov", { x: 240, y: height - 248, font: helveticaBold, size: 9, color: NAVY });
   page.drawText("ul. Abelya, 41, Petropavlovsk-Kamchatsky", { x: 240, y: height - 262, font: helvetica, size: 8, color: GREY });
   page.drawText("+7 (914) 994-57-57", { x: 240, y: height - 276, font: helvetica, size: 8, color: GREY });
-  page.drawText("kamchatka-dream-escape.lovable.app", { x: 240, y: height - 290, font: helvetica, size: 8, color: GOLD });
+  page.drawText("poluostrov-hotel.ru", { x: 240, y: height - 290, font: helvetica, size: 8, color: GOLD });
 
   // QR код
   try {
-    const chatUrl = `https://kamchatka-dream-escape.lovable.app/booking/chat/${bookingId}?e=${encodeURIComponent(email)}`;
+    const chatUrl = `https://poluostrov-hotel.ru/booking/chat/${bookingId}?e=${encodeURIComponent(email)}`;
     const qrDataUrl = await QRCode.toDataURL(chatUrl, { width: 64, margin: 1 });
     const qrBase64 = qrDataUrl.replace("data:image/png;base64,", "");
     const qrBytes = Uint8Array.from(atob(qrBase64), c => c.charCodeAt(0));

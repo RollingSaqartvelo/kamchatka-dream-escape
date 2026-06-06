@@ -8,7 +8,7 @@ import { sendReminderEmails } from "@/lib/email.functions";
  * Защищён секретным ключом CRON_SECRET.
  *
  * Пример вызова (cron-job.org или Supabase cron):
- *   GET https://kamchatka-dream-escape.lovable.app/api/internal/cron-reminders
+ *   GET https://poluostrov-hotel.ru/api/internal/cron-reminders
  *   Header: x-cron-secret: <значение CRON_SECRET>
  */
 export const Route = createFileRoute("/api/internal/cron-reminders")({

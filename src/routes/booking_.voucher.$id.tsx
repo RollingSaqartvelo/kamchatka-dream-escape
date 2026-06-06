@@ -105,8 +105,8 @@ function VoucherPage() {
   const salut = data.salutation === "mrs" ? "MRS." : "MR.";
   const guests = `${data.adults} взр.${data.children ? ` + ${data.children} дет.` : ""}`;
   const qrValue = isDemo
-    ? "https://kamchatka-dream-escape.lovable.app"
-    : `https://kamchatka-dream-escape.lovable.app/booking/chat/${id}?e=${encodeURIComponent(emailParam ?? "")}`;
+    ? "https://poluostrov-hotel.ru"
+    : `https://poluostrov-hotel.ru/booking/chat/${id}?e=${encodeURIComponent(emailParam ?? "")}`;
 
   return (
     <>

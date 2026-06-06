@@ -284,7 +284,7 @@ export function VoucherDocument({ b }: { b: VoucherData }) {
               {"ул. Абеля, 41\n"}
               {"Петропавловск-Камчатский\n"}
               {"+7 (914) 994-57-57\n"}
-              {"kamchatka-dream-escape.lovable.app"}
+              {"poluostrov-hotel.ru"}
             </Text>
           </View>
           <View style={s.footerRight}>

@@ -77,7 +77,7 @@ export async function notifyNewBooking(b: {
     `💰 Итого: <b>₽ ${price}</b>`,
     `💳 Предоплата: ₽ ${prepay}`,
     ``,
-    `🔗 <a href="https://kamchatka-dream-escape.lovable.app/admin/calendar">Открыть календарь</a>`,
+    `🔗 <a href="https://poluostrov-hotel.ru/admin/calendar">Открыть календарь</a>`,
   ].join("\n");
 
   const chatId = process.env.TELEGRAM_ADMIN_CHAT_ID ?? "";
@@ -105,7 +105,7 @@ export async function notifyPaymentReceived(b: {
     `🛏 ${b.room_name}  •  заезд ${fmt(b.check_in)}`,
     `💰 <b>₽ ${price}</b>`,
     ``,
-    `🔗 <a href="https://kamchatka-dream-escape.lovable.app/admin/calendar">Открыть календарь</a>`,
+    `🔗 <a href="https://poluostrov-hotel.ru/admin/calendar">Открыть календарь</a>`,
   ].join("\n");
 
   const chatId = process.env.TELEGRAM_ADMIN_CHAT_ID ?? "";

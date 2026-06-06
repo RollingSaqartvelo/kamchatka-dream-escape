@@ -45,7 +45,7 @@ async function sendReplyEmail(to: string, guestName: string, body: string) {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "Гостиница Полуостров <onboarding@resend.dev>",
+      from: process.env.EMAIL_FROM ?? "Гостиница Полуостров <onboarding@resend.dev>",
       to,
       subject: "Ответ от гостиницы «Полуостров»",
       html,
@@ -370,7 +370,7 @@ async function notifyAdminNewGuestMessage(b: {
     ``,
     `"${b.body.slice(0, 300)}"`,
     ``,
-    `🔗 <a href="https://kamchatka-dream-escape.lovable.app/admin/inbox">Открыть инбокс</a>`,
+    `🔗 <a href="https://poluostrov-hotel.ru/admin/inbox">Открыть инбокс</a>`,
   ].join("\n");
   await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: "POST",
