@@ -49,6 +49,26 @@ function AboutPage() {
         </section>
       )}
 
+      {/* Реестровая запись (классификация средства размещения) — компактный блок */}
+      <section className="bg-background pb-12">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-xl border border-beige bg-cream/30 px-6 py-5 text-center">
+            <p className="text-[11px] uppercase tracking-[3px] text-gold-ink">
+              Классификация средства размещения
+            </p>
+            <p className="mt-3 text-navy">
+              Реестровая запись № <span className="font-semibold">C412024017760</span>
+              <span className="ml-2 inline-block rounded-full border border-emerald-500 px-2 py-0.5 text-[10px] uppercase tracking-wider text-emerald-700">
+                действует до 25.04.2028
+              </span>
+            </p>
+            <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+              Согласно 132-ФЗ «Об основах туристской деятельности в Российской Федерации».
+            </p>
+          </div>
+        </div>
+      </section>
+
       {!c.hidden("conditions") && (
       <section className="bg-cream py-24">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
