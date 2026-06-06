@@ -130,9 +130,21 @@ function AdminDevPage() {
           </div>
         </div>
 
-        <p className="mt-12 text-center text-sm font-bold text-navy">
+        <p className="mt-12 text-center text-2xl font-black leading-snug text-navy sm:text-3xl">
           Кнопки предназначены исключительно для пользователя Смирнов Сергей Романович.
           При нажатии Вы рискуете взорвать систему 💥
+        </p>
+      </div>
+
+      {/* Портрет разработчика — справа снизу */}
+      <div className="absolute bottom-4 right-4 z-10 w-44 text-center sm:w-56">
+        <img
+          src="/dev.jpeg"
+          alt="Смирнов Сергей Романович"
+          className="w-full rounded-xl border-2 border-yellow-500/70 shadow-lg"
+        />
+        <p className="mt-2 text-xs font-semibold leading-snug text-navy">
+          Смирнов Сергей Романович — гений, филантроп, нищеброд 😎
         </p>
       </div>
     </div>
