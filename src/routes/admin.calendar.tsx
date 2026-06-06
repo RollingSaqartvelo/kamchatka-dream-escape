@@ -709,6 +709,15 @@ function AdminCalendarPage() {
               isMatch={isMatch}
               scrollTarget={scrollTarget}
             />
+            {/* Легенда заливки занятости (для строк-типов и нижней строки %) */}
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-muted-foreground">
+              <span className="font-semibold uppercase tracking-widest text-navy">Заполненность:</span>
+              <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-4 border border-border bg-white" /> свободно</span>
+              <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-4 bg-sky-300" /> до 50%</span>
+              <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-4 bg-blue-500" /> 50–80%</span>
+              <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-4 bg-orange-500" /> 80–100%</span>
+              <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-4 bg-red-600" /> заполнено</span>
+            </div>
           </>
         )}
       </div>

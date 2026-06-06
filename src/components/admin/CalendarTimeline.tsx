@@ -428,10 +428,18 @@ export function CalendarTimeline({
                           title={`${occ}/${total} занято`}
                         >
                           {occ > 0 && (
-                            <div
-                              className={cn("absolute bottom-0 left-0 w-full", hostelBg(ratio))}
-                              style={{ height: `${Math.round(ratio * 100)}%` }}
-                            />
+                            <>
+                              <div
+                                className={cn("absolute bottom-0 left-0 w-full", hostelBg(ratio))}
+                                style={{ height: `${Math.round(ratio * 100)}%` }}
+                              />
+                              <span
+                                className="relative z-10 text-[10px] font-bold text-navy"
+                                style={{ textShadow: "0 0 2px #fff, 0 0 3px #fff, 0 0 4px #fff" }}
+                              >
+                                {occ}/{total}
+                              </span>
+                            </>
                           )}
                         </div>
                       );
