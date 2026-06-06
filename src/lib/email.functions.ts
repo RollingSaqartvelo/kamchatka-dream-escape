@@ -29,9 +29,17 @@ function emailWrapper(content: string): string {
     </div>
     <!-- Подвал -->
     <div style="background:#f5f2ee;padding:24px 40px;text-align:center;border-top:1px solid #e8e4de;">
+      <p style="color:#999;font-size:11px;line-height:1.7;margin:0 0 14px;">
+        Это автоматическое письмо — отвечать на него не нужно.<br>
+        Чтобы связаться с нами, пишите на
+        <a href="mailto:poluostrovkam@mail.ru" style="color:#C9A96E;text-decoration:none;">poluostrovkam@mail.ru</a>
+        или звоните по телефону ниже.
+      </p>
       <p style="color:#888;font-size:12px;margin:0 0 4px;">Гостиница «Полуостров» · ул. Абеля, 41, Петропавловск-Камчатский</p>
       <p style="color:#888;font-size:12px;margin:0;">
         <a href="tel:+79149945757" style="color:#C9A96E;text-decoration:none;">+7 (914) 994-57-57</a>
+        &nbsp;·&nbsp;
+        <a href="mailto:poluostrovkam@mail.ru" style="color:#C9A96E;text-decoration:none;">poluostrovkam@mail.ru</a>
       </p>
     </div>
   </div>
