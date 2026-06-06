@@ -664,6 +664,16 @@ function AdminCalendarPage() {
               <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-4 bg-orange-500" /> 80–100%</span>
               <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-4 bg-red-600" /> заполнено</span>
             </div>
+            <p className="mt-2 max-w-4xl text-[11px] leading-relaxed text-muted-foreground">
+              ℹ️ Шкала заполненности (цвета выше) — это занятость номеров, у которых несколько комнат
+              или коек (например «Стандарт», хостелы): сколько занято из общего числа. У одиночного
+              номера процента нет — он либо свободен, либо занят, и его бронь показана полосой с
+              фамилией гостя. <b>Цвет полосы брони — это её статус:</b>{" "}
+              <span className="font-semibold text-amber-600">жёлтый</span> — новая (ждёт оплаты),{" "}
+              <span className="font-semibold text-blue-600">синий</span> — подтверждена,{" "}
+              <span className="font-semibold text-emerald-600">зелёный</span> — оплачена. Поэтому
+              занятый одиночный номер с подтверждённой бронью синий — это статус, а не «50–80%».
+            </p>
           </>
         )}
       </div>
