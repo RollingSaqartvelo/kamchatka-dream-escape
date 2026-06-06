@@ -87,22 +87,22 @@ function AdminDevPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="mx-auto max-w-3xl px-6 py-10">
+    <div className="relative min-h-screen overflow-hidden">
+      {/* радиационный фон на всю страницу */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 z-0 select-none overflow-hidden whitespace-nowrap text-4xl leading-[3rem] tracking-[0.55em] text-yellow-500/15">
+        {Array.from({ length: 44 }).map((_, i) => (
+          <div key={i}>☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️</div>
+        ))}
+      </div>
+      <div className="relative z-10 mx-auto max-w-3xl px-6 py-10">
         <p className="text-[11px] uppercase tracking-widest text-red-600">⚠ Зона повышенной опасности</p>
         <h1 className="mt-2 font-serif text-4xl text-navy">Для разработчика</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Служебные кнопки. Нажимайте, только если точно понимаете, что делаете.
         </p>
 
-        <div className="relative mt-10 overflow-hidden rounded-2xl border-2 border-dashed border-yellow-500/70 bg-yellow-50/40 p-6">
-          {/* фоновый ковёр из мелких значков радиации */}
-          <div aria-hidden className="pointer-events-none absolute inset-0 select-none overflow-hidden text-[11px] leading-[18px] tracking-[0.25em] text-yellow-500/20">
-            {Array.from({ length: 22 }).map((_, i) => (
-              <div key={i}>☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️☢️</div>
-            ))}
-          </div>
-          <div className="relative grid grid-cols-1 gap-6 sm:grid-cols-3">
+        <div className="mt-10 rounded-2xl border-2 border-dashed border-yellow-500/70 bg-yellow-50/70 p-6">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
             <NukeButton
               label="Сброс + свежие"
               sub="Сброс курсора TravelLine"
