@@ -95,8 +95,19 @@ function AdminDevPage() {
         ))}
       </div>
       <div className="relative z-10 mx-auto max-w-3xl px-6 py-10">
-        <p className="text-[11px] uppercase tracking-widest text-red-600">⚠ Зона повышенной опасности</p>
-        <h1 className="mt-2 font-serif text-4xl text-navy">Для разработчика</h1>
+        <style>{`@keyframes dangerPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.13); } }`}</style>
+        <p
+          className="text-center text-3xl font-black uppercase leading-tight tracking-wider text-red-600 sm:text-5xl"
+          style={{
+            animation: "dangerPulse 1s ease-in-out infinite",
+            transformOrigin: "center",
+            textShadow:
+              "0 2px 0 #b91c1c, 0 4px 0 #991b1b, 0 6px 0 #7f1d1d, 0 8px 16px rgba(0,0,0,0.45)",
+          }}
+        >
+          ⚠ Зона повышенной опасности ⚠
+        </p>
+        <h1 className="mt-6 font-serif text-4xl text-navy">Для разработчика</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Служебные кнопки. Нажимайте, только если точно понимаете, что делаете.
         </p>
