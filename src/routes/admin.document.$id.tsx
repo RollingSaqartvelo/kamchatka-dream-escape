@@ -115,7 +115,7 @@ function DocumentPage() {
 
   return (
     <div className="bg-background py-8 print:py-0">
-      <style>{`@page { size: A4 landscape; margin: 0; } @media print { header, footer, .no-print { display:none !important; } [id*="lovable" i], [class*="lovable" i], a[href*="lovable" i], gpt-engineer, [id*="gpt-eng" i] { display:none !important; } body { background:#fff !important; } .doc { box-shadow:none !important; border:none !important; margin:0 !important; max-width:100% !important; padding:12mm 14mm !important; } }`}</style>
+      <style>{`@page { size: A4 landscape; margin: 0; } @media print { html, body { background:#fff !important; } body * { visibility: hidden !important; } .doc, .doc * { visibility: visible !important; } .doc { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; max-width: 100% !important; box-shadow:none !important; border:none !important; margin:0 !important; padding: 10mm 12mm !important; } [id*="lovable" i], [class*="lovable" i], a[href*="lovable" i], gpt-engineer, [id*="gpt-eng" i] { display:none !important; } }`}</style>
 
       {/* Панель управления (не печатается) */}
       <div className="no-print mx-auto mb-6 flex max-w-3xl flex-wrap items-center gap-3 px-4">
