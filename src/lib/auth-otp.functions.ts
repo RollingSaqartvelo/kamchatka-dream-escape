@@ -130,5 +130,25 @@ export const verifyLoginCode = createServerFn({ method: "POST" })
       console.error("generateLink failed:", error);
       return { ok: false as const, error: "link_failed" };
     }
-    return { ok: true as const, tokenHash };
+
+    // Меняем token_hash на готовую сессию на сервере (надёжнее клиентского
+    // verifyOtp, который ломается в PKCE-режиме). Возвращаем токены → setSession.
+    const anon = process.env.SUPABASE_PUBLISHABLE_KEY!;
+    const vr = await fetch(`${process.env.SUPABASE_URL}/auth/v1/verify`, {
+      method: "POST",
+      headers: { apikey: anon, "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "magiclink", token_hash: tokenHash }),
+    });
+    const session = (await vr.json().catch(() => null)) as
+      | { access_token?: string; refresh_token?: string }
+      | null;
+    if (!vr.ok || !session?.access_token || !session?.refresh_token) {
+      console.error("verify token_hash failed:", vr.status, session);
+      return { ok: false as const, error: "link_failed" };
+    }
+    return {
+      ok: true as const,
+      accessToken: session.access_token,
+      refreshToken: session.refresh_token,
+    };
   });

@@ -62,9 +62,9 @@ function LoginPage() {
         setError(map[(res as { error?: string }).error ?? ""] ?? "Не удалось войти.");
         return;
       }
-      const { error: vErr } = await supabase.auth.verifyOtp({
-        token_hash: res.tokenHash,
-        type: "magiclink",
+      const { error: vErr } = await supabase.auth.setSession({
+        access_token: res.accessToken,
+        refresh_token: res.refreshToken,
       });
       if (vErr) {
         setError("Не удалось войти. Запросите новый код.");
