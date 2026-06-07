@@ -20,11 +20,20 @@ export function CustomRoomEditor({
   id,
   onClose,
   onSaved,
+  mode = "custom",
+  typeId,
+  title,
+  seed,
 }: {
   id: string;
   onClose: () => void;
   onSaved: () => void;
+  mode?: "custom" | "builtin";
+  typeId?: string; // для встроенных номеров (room_overrides.type_id)
+  title?: string; // заголовок для встроенных (имя из ROOMS)
+  seed?: { description?: string; area_sqm?: number | null; max_guests?: number | null; beds?: string; photos?: string[] };
 }) {
+  const builtin = mode === "builtin";
   const [tab, setTab] = useState<Tab>("main");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -44,21 +53,33 @@ export function CustomRoomEditor({
   useEffect(() => {
     void (async () => {
       setLoading(true);
-      const { data } = await (supabase as any).from("custom_rooms").select("*").eq("id", id).maybeSingle();
-      if (data) {
-        setName(data.name ?? "");
-        setDescription(data.description ?? "");
-        setArea(data.area_sqm != null ? String(data.area_sqm) : "");
-        setGuests(data.max_guests != null ? String(data.max_guests) : "");
-        setBeds(data.beds ?? "");
-        setAmenities(data.amenities ?? []);
-        setPhotos(data.photos ?? []);
-        setPeriods((data.price_periods?.length ? data.price_periods : DEFAULT_PERIODS) as PricePeriod[]);
-        setPublished(data.published ?? true);
+      if (builtin) {
+        const { data } = await (supabase as any).from("room_overrides").select("*").eq("type_id", typeId).maybeSingle();
+        setName(title ?? "");
+        setDescription(data?.description ?? seed?.description ?? "");
+        setArea(data?.area_sqm != null ? String(data.area_sqm) : seed?.area_sqm != null ? String(seed.area_sqm) : "");
+        setGuests(data?.max_guests != null ? String(data.max_guests) : seed?.max_guests != null ? String(seed.max_guests) : "");
+        setBeds(data?.beds ?? seed?.beds ?? "");
+        setAmenities(data?.amenities ?? []);
+        setPhotos(data?.photos?.length ? data.photos : seed?.photos ?? []);
+        setPeriods((data?.price_periods?.length ? data.price_periods : DEFAULT_PERIODS) as PricePeriod[]);
+      } else {
+        const { data } = await (supabase as any).from("custom_rooms").select("*").eq("id", id).maybeSingle();
+        if (data) {
+          setName(data.name ?? "");
+          setDescription(data.description ?? "");
+          setArea(data.area_sqm != null ? String(data.area_sqm) : "");
+          setGuests(data.max_guests != null ? String(data.max_guests) : "");
+          setBeds(data.beds ?? "");
+          setAmenities(data.amenities ?? []);
+          setPhotos(data.photos ?? []);
+          setPeriods((data.price_periods?.length ? data.price_periods : DEFAULT_PERIODS) as PricePeriod[]);
+          setPublished(data.published ?? true);
+        }
       }
       setLoading(false);
     })();
-  }, [id]);
+  }, [id, builtin, typeId, title]);
 
   function toggleAmenity(key: string) {
     setAmenities((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
@@ -98,7 +119,7 @@ export function CustomRoomEditor({
   }
 
   async function save() {
-    if (!name.trim()) {
+    if (!builtin && !name.trim()) {
       toast.error("Укажите название номера");
       setTab("main");
       return;
@@ -106,21 +127,27 @@ export function CustomRoomEditor({
     setSaving(true);
     // сохраняем только заполненные периоды (цена > 0)
     const cleanPeriods = periods.filter((p) => Number(p.price) > 0 && p.from && p.to);
-    const { error } = await (supabase as any)
-      .from("custom_rooms")
-      .update({
-        name: name.trim(),
-        description: description.trim(),
-        area_sqm: area ? parseInt(area, 10) : null,
-        max_guests: guests ? parseInt(guests, 10) : null,
-        beds: beds.trim(),
-        amenities,
-        photos,
-        price_periods: cleanPeriods,
-        price: cleanPeriods.length ? Math.min(...cleanPeriods.map((p) => Number(p.price))) : 0,
-        published,
-      })
-      .eq("id", id);
+    const minPrice = cleanPeriods.length ? Math.min(...cleanPeriods.map((p) => Number(p.price))) : 0;
+    const common = {
+      description: description.trim(),
+      area_sqm: area ? parseInt(area, 10) : null,
+      max_guests: guests ? parseInt(guests, 10) : null,
+      beds: beds.trim(),
+      amenities,
+      photos,
+      price_periods: cleanPeriods,
+    };
+    let error;
+    if (builtin) {
+      ({ error } = await (supabase as any)
+        .from("room_overrides")
+        .upsert({ type_id: typeId, ...common, base_price: minPrice, updated_at: new Date().toISOString() }));
+    } else {
+      ({ error } = await (supabase as any)
+        .from("custom_rooms")
+        .update({ name: name.trim(), ...common, price: minPrice, published })
+        .eq("id", id));
+    }
     setSaving(false);
     if (error) {
       toast.error("Не удалось сохранить");
@@ -168,9 +195,11 @@ export function CustomRoomEditor({
             <div className="mt-6 min-h-[260px]">
               {tab === "main" && (
                 <div className="space-y-4">
-                  <Field label="Название номера *">
-                    <input value={name} onChange={(e) => setName(e.target.value)} className={inputCls} placeholder="Напр. Апартаменты на 2 этаже" />
-                  </Field>
+                  {!builtin && (
+                    <Field label="Название номера *">
+                      <input value={name} onChange={(e) => setName(e.target.value)} className={inputCls} placeholder="Напр. Апартаменты на 2 этаже" />
+                    </Field>
+                  )}
                   <Field label="Описание">
                     <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className={inputCls} placeholder="Кратко о номере…" />
                   </Field>
@@ -185,10 +214,12 @@ export function CustomRoomEditor({
                   <Field label="Кровати">
                     <input value={beds} onChange={(e) => setBeds(e.target.value)} className={inputCls} placeholder="Напр. двуспальная кровать + софа" />
                   </Field>
-                  <label className="flex items-center gap-2 text-sm text-navy">
-                    <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} />
-                    Показывать на сайте (после загрузки фото)
-                  </label>
+                  {!builtin && (
+                    <label className="flex items-center gap-2 text-sm text-navy">
+                      <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} />
+                      Показывать на сайте (после загрузки фото)
+                    </label>
+                  )}
                 </div>
               )}
 

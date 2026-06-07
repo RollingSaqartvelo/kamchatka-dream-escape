@@ -1,9 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, Users, Ruler, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ROOMS } from "@/data/rooms";
+import { supabase } from "@/integrations/supabase/client";
+import { mergeRoomOverride, overridesMap, type RoomOverrideRow } from "@/lib/room-overrides";
 import type { BookingState, MealPlan, SelectedRate } from "./types";
 import { BREAKFAST_PER_PERSON, fmtRub, nightsBetween } from "./types";
 import { StaySummary } from "./StaySummary";
@@ -36,9 +38,21 @@ export function Step2Rooms({ state, onSelect, onEditStep, onContinue }: Props) {
   const checkIn = fmtDate(from);
   const checkOut = fmtDate(to);
 
+  // Цены/данные из кабинета (room_overrides) — чтобы в воронке цена совпадала с витриной.
+  const [ovMap, setOvMap] = useState<Record<string, RoomOverrideRow>>({});
+  useEffect(() => {
+    void (async () => {
+      const { data } = await (supabase as any).from("room_overrides").select("*");
+      setOvMap(overridesMap(data as RoomOverrideRow[]));
+    })();
+  }, []);
+
   const candidates = useMemo(
-    () => ROOMS.filter((r) => r.price_from_rub > 0 && r.max_guests >= guests),
-    [guests],
+    () =>
+      ROOMS.map((r) => mergeRoomOverride(r, ovMap[r.id])).filter(
+        (r) => r.price_from_rub > 0 && r.max_guests >= guests,
+      ),
+    [guests, ovMap],
   );
 
   // One round-trip checks live availability + price for every candidate room.

@@ -8,6 +8,7 @@ import { notifyNewBooking } from "./telegram.functions";
 import { createConversationForBooking } from "./inbox.functions";
 import { enforceRateLimit } from "./rate-limit";
 import { requireStaff } from "@/integrations/supabase/staff-middleware";
+import { priceForDate } from "./room-overrides";
 
 const BREAKFAST_PER_PERSON = 500;
 
@@ -132,8 +133,21 @@ export const createBooking = createServerFn({ method: "POST" })
 
     const guests = data.adults + data.children;
 
+    // Цена из кабинета (room_overrides) с учётом сезонного периода — если Шеф её задал.
+    const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+      auth: { persistSession: false },
+    });
+    const { data: ov } = await admin
+      .from("room_overrides")
+      .select("price_periods, base_price")
+      .eq("type_id", data.room_id)
+      .maybeSingle();
+    const catalogueNightly = ov
+      ? priceForDate((ov as any).price_periods, (ov as any).base_price ?? 0, data.check_in, room.price_from_rub)
+      : room.price_from_rub;
+
     // Try live Travelline price first; if unavailable, fall back to the
-    // catalogue price * nights. The client-supplied price values are
+    // catalogue / override price * nights. The client-supplied price values are
     // never trusted.
     let roomPriceTotal =
       (await fetchTravellineRoomTotal(
@@ -143,7 +157,7 @@ export const createBooking = createServerFn({ method: "POST" })
         data.adults,
         data.children,
         "room_only",
-      )) ?? room.price_from_rub * data.nights;
+      )) ?? catalogueNightly * data.nights;
 
     let breakfastTotal = 0;
     if (data.meal_plan === "breakfast") {

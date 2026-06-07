@@ -24,6 +24,7 @@ function AdminRoomsPage() {
   const [newPrice, setNewPrice] = useState("");
   const [adding, setAdding] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+  const [editType, setEditType] = useState<string | null>(null);
 
   useEffect(() => {
     void load();
@@ -264,17 +265,21 @@ function AdminRoomsPage() {
         </div>
         {loading && <p className="mt-4 text-sm text-muted-foreground">Загрузка статусов…</p>}
 
-        {/* Типы номеров (контент) */}
+        {/* Типы номеров — кликабельны: фото, сезонные цены, характеристики */}
         <h2 className="mt-12 font-serif text-2xl text-navy">Типы номеров</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          {ROOMS.length} видов. Контент редактируется в коде (<code className="text-xs">src/data/rooms.ts</code>).
+          {ROOMS.length} видов. Нажмите на номер, чтобы изменить фото, цены по периодам и характеристики.
         </p>
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {ROOMS.map((r) => (
-            <article key={r.id} className="flex flex-col gap-3 border border-border bg-background p-5">
+            <button
+              key={r.id}
+              onClick={() => setEditType(r.id)}
+              className="flex flex-col gap-3 border border-border bg-background p-5 text-left transition-colors hover:border-[#C9A96E]"
+            >
               <div>
                 <h3 className="font-serif text-lg leading-tight text-navy">{r.name_ru}</h3>
-                <p className="mt-1 text-[10px] uppercase tracking-widest text-muted-foreground">ID: {r.id}</p>
+                <p className="mt-1 text-[10px] uppercase tracking-widest text-muted-foreground">✎ редактировать карточку</p>
               </div>
               <dl className="grid grid-cols-3 gap-2 text-xs">
                 <Stat label="Гостей" value={r.max_guests.toString()} />
@@ -282,7 +287,7 @@ function AdminRoomsPage() {
                 <Stat label="Цена" value={r.price_from_rub > 0 ? `${r.price_from_rub} ₽` : "—"} />
               </dl>
               <p className="line-clamp-3 text-xs text-muted-foreground">{r.description_ru}</p>
-            </article>
+            </button>
           ))}
         </div>
       </div>
@@ -290,6 +295,21 @@ function AdminRoomsPage() {
       {editId && (
         <CustomRoomEditor id={editId} onClose={() => setEditId(null)} onSaved={loadCustom} />
       )}
+      {editType && (() => {
+        const r = ROOMS.find((x) => x.id === editType);
+        if (!r) return null;
+        return (
+          <CustomRoomEditor
+            mode="builtin"
+            id={r.id}
+            typeId={r.id}
+            title={r.name_ru}
+            seed={{ description: r.description_ru, area_sqm: r.area_sqm, max_guests: r.max_guests, beds: r.beds, photos: r.photos }}
+            onClose={() => setEditType(null)}
+            onSaved={() => setEditType(null)}
+          />
+        );
+      })()}
     </div>
   );
 }

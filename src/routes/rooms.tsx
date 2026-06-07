@@ -7,6 +7,7 @@ import { RoomCard } from "@/components/rooms/RoomCard";
 import { RoomFilterBar } from "@/components/rooms/RoomFilterBar";
 import { supabase } from "@/integrations/supabase/client";
 import { customRoomToRoom, type CustomRoomRow } from "@/lib/custom-rooms";
+import { mergeRoomOverride, overridesMap, type RoomOverrideRow } from "@/lib/room-overrides";
 import type { DateRange } from "@/components/booking/types";
 
 
@@ -36,22 +37,25 @@ function RoomsPage() {
   const [range, setRange] = useState<DateRange>({});
   const [filterActive, setFilterActive] = useState(false);
   const [customRooms, setCustomRooms] = useState<Room[]>([]);
+  const [ovMap, setOvMap] = useState<Record<string, RoomOverrideRow>>({});
 
-  // Добавленные в кабинете номера (опубликованные, с фото) — в конец списка.
+  // Переопределения встроенных номеров (фото/цены/характеристики) + добавленные номера.
   useEffect(() => {
     void (async () => {
-      const { data } = await (supabase as any)
-        .from("custom_rooms")
-        .select("*")
-        .eq("published", true)
-        .order("sort_order")
-        .order("created_at");
-      const rows = ((data as CustomRoomRow[]) ?? []).filter((c) => (c.photos ?? []).length > 0);
+      const [{ data: customs }, { data: overrides }] = await Promise.all([
+        (supabase as any).from("custom_rooms").select("*").eq("published", true).order("sort_order").order("created_at"),
+        (supabase as any).from("room_overrides").select("*"),
+      ]);
+      const rows = ((customs as CustomRoomRow[]) ?? []).filter((c) => (c.photos ?? []).length > 0);
       setCustomRooms(rows.map(customRoomToRoom));
+      setOvMap(overridesMap(overrides as RoomOverrideRow[]));
     })();
   }, []);
 
-  const allRooms = useMemo(() => [...ROOMS, ...customRooms], [customRooms]);
+  const allRooms = useMemo(
+    () => [...ROOMS.map((r) => mergeRoomOverride(r, ovMap[r.id])), ...customRooms],
+    [customRooms, ovMap],
+  );
 
   const rooms = useMemo(() => {
     if (!filterActive) return allRooms;
