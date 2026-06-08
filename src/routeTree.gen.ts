@@ -26,6 +26,7 @@ import { Route as KamchatkaIndexRouteImport } from './routes/kamchatka.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as KamchatkaSlugRouteImport } from './routes/kamchatka.$slug'
 import { Route as BookingSuccessRouteImport } from './routes/booking_.success'
+import { Route as AdminTariffsRouteImport } from './routes/admin.tariffs'
 import { Route as AdminStaffRouteImport } from './routes/admin.staff'
 import { Route as AdminSiteRouteImport } from './routes/admin.site'
 import { Route as AdminRoomsRouteImport } from './routes/admin.rooms'
@@ -140,6 +141,11 @@ const BookingSuccessRoute = BookingSuccessRouteImport.update({
   id: '/booking_/success',
   path: '/booking/success',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminTariffsRoute = AdminTariffsRouteImport.update({
+  id: '/tariffs',
+  path: '/tariffs',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminStaffRoute = AdminStaffRouteImport.update({
   id: '/staff',
@@ -314,6 +320,7 @@ export interface FileRoutesByFullPath {
   '/admin/rooms': typeof AdminRoomsRoute
   '/admin/site': typeof AdminSiteRouteWithChildren
   '/admin/staff': typeof AdminStaffRoute
+  '/admin/tariffs': typeof AdminTariffsRoute
   '/booking/success': typeof BookingSuccessRoute
   '/kamchatka/$slug': typeof KamchatkaSlugRoute
   '/admin/': typeof AdminIndexRoute
@@ -360,6 +367,7 @@ export interface FileRoutesByTo {
   '/admin/requisites': typeof AdminRequisitesRoute
   '/admin/rooms': typeof AdminRoomsRoute
   '/admin/staff': typeof AdminStaffRoute
+  '/admin/tariffs': typeof AdminTariffsRoute
   '/booking/success': typeof BookingSuccessRoute
   '/kamchatka/$slug': typeof KamchatkaSlugRoute
   '/admin': typeof AdminIndexRoute
@@ -409,6 +417,7 @@ export interface FileRoutesById {
   '/admin/rooms': typeof AdminRoomsRoute
   '/admin/site': typeof AdminSiteRouteWithChildren
   '/admin/staff': typeof AdminStaffRoute
+  '/admin/tariffs': typeof AdminTariffsRoute
   '/booking_/success': typeof BookingSuccessRoute
   '/kamchatka/$slug': typeof KamchatkaSlugRoute
   '/admin/': typeof AdminIndexRoute
@@ -459,6 +468,7 @@ export interface FileRouteTypes {
     | '/admin/rooms'
     | '/admin/site'
     | '/admin/staff'
+    | '/admin/tariffs'
     | '/booking/success'
     | '/kamchatka/$slug'
     | '/admin/'
@@ -505,6 +515,7 @@ export interface FileRouteTypes {
     | '/admin/requisites'
     | '/admin/rooms'
     | '/admin/staff'
+    | '/admin/tariffs'
     | '/booking/success'
     | '/kamchatka/$slug'
     | '/admin'
@@ -553,6 +564,7 @@ export interface FileRouteTypes {
     | '/admin/rooms'
     | '/admin/site'
     | '/admin/staff'
+    | '/admin/tariffs'
     | '/booking_/success'
     | '/kamchatka/$slug'
     | '/admin/'
@@ -724,6 +736,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/booking/success'
       preLoaderRoute: typeof BookingSuccessRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/tariffs': {
+      id: '/admin/tariffs'
+      path: '/tariffs'
+      fullPath: '/admin/tariffs'
+      preLoaderRoute: typeof AdminTariffsRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/staff': {
       id: '/admin/staff'
@@ -968,6 +987,7 @@ interface AdminRouteChildren {
   AdminRoomsRoute: typeof AdminRoomsRoute
   AdminSiteRoute: typeof AdminSiteRouteWithChildren
   AdminStaffRoute: typeof AdminStaffRoute
+  AdminTariffsRoute: typeof AdminTariffsRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminDocumentIdRoute: typeof AdminDocumentIdRoute
 }
@@ -985,6 +1005,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminRoomsRoute: AdminRoomsRoute,
   AdminSiteRoute: AdminSiteRouteWithChildren,
   AdminStaffRoute: AdminStaffRoute,
+  AdminTariffsRoute: AdminTariffsRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminDocumentIdRoute: AdminDocumentIdRoute,
 }
