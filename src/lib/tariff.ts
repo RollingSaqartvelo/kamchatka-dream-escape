@@ -14,6 +14,7 @@ export const TARIFFS: TariffDef[] = [
   { id: "s_zavtrakom", name: "Тариф с завтраком", board: "breakfast", note: "С завтраком" },
   { id: "polupansion", name: "Тариф полупансион", board: "halfboard", note: "Завтрак и ужин" },
   { id: "vygodnoe_predlozhenie", name: "Выгодное предложение", board: "full", note: "Полный пансион (завтрак, обед, ужин)" },
+  { id: "gov_zavtrak", name: "Тариф с завтраком GOV", board: "breakfast", note: "С завтраком (госставка)" },
 ];
 
 export const TARIFF_YEARS = [2026, 2027, 2028, 2029];
