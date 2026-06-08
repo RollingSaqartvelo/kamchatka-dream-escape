@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { ROOMS } from "@/data/rooms";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/useAuth";
-import { isHostelType, TARIFF_VYGODNY, TARIFFS, type RateBaseRow, type RateDayRow } from "@/lib/tariff";
+import { isHostelType, TARIFF_VYGODNY, TARIFFS, TARIFF_YEARS, type RateBaseRow, type RateDayRow } from "@/lib/tariff";
 
 export const Route = createFileRoute("/admin/tariffs")({
   component: AdminTariffsPage,
@@ -23,18 +23,19 @@ const pad = (n: number) => String(n).padStart(2, "0");
 
 function AdminTariffsPage() {
   const { isStaff, loading: authLoading } = useAuth();
-  const year = 2026;
+  const [year, setYear] = useState(TARIFF_YEARS[0]);
   const [tariff, setTariff] = useState(TARIFF_VYGODNY);
   const [month, setMonth] = useState(new Date().getMonth());
+  const [enabled, setEnabled] = useState<Record<string, boolean>>({});
   const [baseMap, setBaseMap] = useState<Record<string, number>>({}); // type|occ -> price
   const [dayMap, setDayMap] = useState<Record<string, number>>({}); // type|occ|YYYY-MM-DD -> price
   const [occByType, setOccByType] = useState<Record<string, number[]>>({});
   const [loading, setLoading] = useState(true);
 
-  const daysInMonth = useMemo(() => new Date(year, month + 1, 0).getDate(), [month]);
+  const daysInMonth = useMemo(() => new Date(year, month + 1, 0).getDate(), [month, year]);
   const days = useMemo(
     () => Array.from({ length: daysInMonth }, (_, i) => `${year}-${pad(month + 1)}-${pad(i + 1)}`),
-    [daysInMonth, month],
+    [daysInMonth, month, year],
   );
 
   useEffect(() => {
@@ -61,7 +62,24 @@ function AdminTariffsPage() {
       setOccByType(occSorted);
       setLoading(false);
     })();
-  }, [month, daysInMonth, tariff]);
+  }, [month, daysInMonth, tariff, year]);
+
+  // настройки тарифов (вкл/выкл)
+  useEffect(() => {
+    void (async () => {
+      const { data } = await (supabase as any).from("tariff_settings").select("tariff, enabled");
+      const m: Record<string, boolean> = {};
+      for (const r of (data as { tariff: string; enabled: boolean }[]) ?? []) m[r.tariff] = r.enabled;
+      setEnabled(m);
+    })();
+  }, []);
+
+  async function toggleTariff(id: string) {
+    const next = !(enabled[id] ?? true);
+    setEnabled((m) => ({ ...m, [id]: next }));
+    const { error } = await (supabase as any).from("tariff_settings").upsert({ tariff: id, enabled: next });
+    if (error) toast.error("Не удалось переключить тариф");
+  }
 
   // строки: тип номера × уровни занятости (в порядке ROOMS)
   const rows = useMemo(
@@ -108,22 +126,35 @@ function AdminTariffsPage() {
           Тарифы · {TARIFFS.find((x) => x.id === tariff)?.name}
         </h1>
 
-        {/* Переключатель тарифов */}
+        {/* Переключатель тарифов + тумблер вкл/выкл у каждого */}
         <div className="mt-4 flex flex-wrap gap-2">
-          {TARIFFS.map((tdef) => (
-            <button
-              key={tdef.id}
-              onClick={() => setTariff(tdef.id)}
-              className={`border px-4 py-2 text-left text-sm transition-colors ${
-                tariff === tdef.id ? "border-navy bg-navy text-cream" : "border-border text-navy hover:border-navy"
-              }`}
-            >
-              <div className="font-medium">{tdef.name}</div>
-              <div className={`text-[10px] uppercase tracking-wide ${tariff === tdef.id ? "text-cream/70" : "text-muted-foreground"}`}>
-                {tdef.note}
+          {TARIFFS.map((tdef) => {
+            const on = enabled[tdef.id] ?? true;
+            const active = tariff === tdef.id;
+            return (
+              <div
+                key={tdef.id}
+                className={`flex items-center gap-3 border px-4 py-2 transition-colors ${
+                  active ? "border-navy bg-navy text-cream" : "border-border text-navy"
+                } ${on ? "" : "opacity-60"}`}
+              >
+                <button onClick={() => setTariff(tdef.id)} className="text-left">
+                  <div className="text-sm font-medium">{tdef.name}</div>
+                  <div className={`text-[10px] uppercase tracking-wide ${active ? "text-cream/70" : "text-muted-foreground"}`}>
+                    {tdef.note}{on ? "" : " · выключен"}
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void toggleTariff(tdef.id)}
+                  title={on ? "Выключить тариф (не показывать гостям)" : "Включить тариф"}
+                  className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${on ? "bg-emerald-500" : "bg-zinc-400"}`}
+                >
+                  <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${on ? "left-[18px]" : "left-0.5"}`} />
+                </button>
               </div>
-            </button>
-          ))}
+            );
+          })}
         </div>
 
         <p className="mt-3 max-w-3xl text-sm text-muted-foreground">
@@ -132,8 +163,21 @@ function AdminTariffsPage() {
           (можно поднять/опустить). Очистите ячейку дня = вернуть к базовой.
         </p>
 
+        {/* Годы */}
+        <div className="mt-6 flex flex-wrap gap-1">
+          {TARIFF_YEARS.map((y) => (
+            <button
+              key={y}
+              onClick={() => setYear(y)}
+              className={`border px-4 py-1.5 text-sm transition-colors ${year === y ? "border-navy bg-navy text-cream" : "border-border text-navy hover:border-navy"}`}
+            >
+              {y}
+            </button>
+          ))}
+        </div>
+
         {/* Вкладки месяцев */}
-        <div className="mt-6 flex flex-wrap gap-1 border-b border-border">
+        <div className="mt-3 flex flex-wrap gap-1 border-b border-border">
           {MONTHS.map((m, i) => (
             <button
               key={m}
@@ -149,7 +193,7 @@ function AdminTariffsPage() {
           <p className="mt-6 text-sm text-muted-foreground">Загрузка…</p>
         ) : (
           <div className="mt-4 overflow-x-auto border border-border">
-            <table className="border-collapse text-xs" key={`${tariff}-${month}`}>
+            <table className="border-collapse text-xs" key={`${tariff}-${year}-${month}`}>
               <thead>
                 <tr className="bg-cream">
                   <th className="sticky left-0 z-10 min-w-[230px] border-b border-r border-border bg-cream px-3 py-2 text-left text-navy">
