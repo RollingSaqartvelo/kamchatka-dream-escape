@@ -26,7 +26,7 @@ const NAV = [
   { to: "/admin/calendar", label: "Календарь", icon: "📅" },
   { to: "/admin/inbox", label: "Инбокс", icon: "💬" },
   { to: "/admin/rooms", label: "Номера", icon: "🛏️" },
-  { to: "/admin/tariffs", label: "Тарифы", icon: "💰", adminOnly: true },
+  { to: "/admin/tariffs", label: "Тарифы", icon: "💰" },
   { to: "/admin/companies", label: "Юр. лица", icon: "🏢" },
   { to: "/admin/site", label: "Управление отелем", icon: "🏨", adminOnly: true },
   { to: "/admin/requisites", label: "Реквизиты", icon: "🧾", adminOnly: true },

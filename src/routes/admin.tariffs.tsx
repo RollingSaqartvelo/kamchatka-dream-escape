@@ -22,7 +22,7 @@ const occLabel = (typeId: string, occ: number) => (isHostelType(typeId) ? "за 
 const pad = (n: number) => String(n).padStart(2, "0");
 
 function AdminTariffsPage() {
-  const { isAdmin, loading: authLoading } = useAuth();
+  const { isStaff, loading: authLoading } = useAuth();
   const year = 2026;
   const [month, setMonth] = useState(new Date().getMonth());
   const [baseMap, setBaseMap] = useState<Record<string, number>>({}); // type|occ -> price
@@ -90,11 +90,11 @@ function AdminTariffsPage() {
   }
 
   if (authLoading) return null;
-  if (!isAdmin) {
+  if (!isStaff) {
     return (
       <div className="mx-auto max-w-2xl px-6 py-20 text-center">
-        <h1 className="font-serif text-3xl text-navy">Только для владельца</h1>
-        <p className="mt-4 text-sm text-muted-foreground">Тарифы доступны только Шефу (роль admin).</p>
+        <h1 className="font-serif text-3xl text-navy">Доступ только для сотрудников</h1>
+        <p className="mt-4 text-sm text-muted-foreground">Войдите в кабинет, чтобы редактировать тарифы.</p>
       </div>
     );
   }
