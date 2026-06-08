@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { ROOMS } from "@/data/rooms";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/useAuth";
-import { isHostelType, TARIFF_VYGODNY, type RateBaseRow, type RateDayRow } from "@/lib/tariff";
+import { isHostelType, TARIFF_VYGODNY, TARIFFS, type RateBaseRow, type RateDayRow } from "@/lib/tariff";
 
 export const Route = createFileRoute("/admin/tariffs")({
   component: AdminTariffsPage,
@@ -24,6 +24,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
 function AdminTariffsPage() {
   const { isStaff, loading: authLoading } = useAuth();
   const year = 2026;
+  const [tariff, setTariff] = useState(TARIFF_VYGODNY);
   const [month, setMonth] = useState(new Date().getMonth());
   const [baseMap, setBaseMap] = useState<Record<string, number>>({}); // type|occ -> price
   const [dayMap, setDayMap] = useState<Record<string, number>>({}); // type|occ|YYYY-MM-DD -> price
@@ -42,8 +43,8 @@ function AdminTariffsPage() {
       const monthStart = `${year}-${pad(month + 1)}-01`;
       const monthEnd = `${year}-${pad(month + 1)}-${pad(daysInMonth)}`;
       const [{ data: base }, { data: day }] = await Promise.all([
-        (supabase as any).from("rate_base").select("*").eq("tariff", TARIFF_VYGODNY),
-        (supabase as any).from("rate_day").select("*").eq("tariff", TARIFF_VYGODNY).gte("date", monthStart).lte("date", monthEnd),
+        (supabase as any).from("rate_base").select("*").eq("tariff", tariff),
+        (supabase as any).from("rate_day").select("*").eq("tariff", tariff).gte("date", monthStart).lte("date", monthEnd),
       ]);
       const bm: Record<string, number> = {};
       const occ: Record<string, Set<number>> = {};
@@ -60,7 +61,7 @@ function AdminTariffsPage() {
       setOccByType(occSorted);
       setLoading(false);
     })();
-  }, [month, daysInMonth]);
+  }, [month, daysInMonth, tariff]);
 
   // строки: тип номера × уровни занятости (в порядке ROOMS)
   const rows = useMemo(
@@ -75,17 +76,17 @@ function AdminTariffsPage() {
     if (value === baseVal) {
       // равно базе — убираем переопределение
       setDayMap((m) => { const n = { ...m }; delete n[key]; return n; });
-      await (supabase as any).from("rate_day").delete().eq("tariff", TARIFF_VYGODNY).eq("room_type_id", typeId).eq("occupancy", occ).eq("date", date);
+      await (supabase as any).from("rate_day").delete().eq("tariff", tariff).eq("room_type_id", typeId).eq("occupancy", occ).eq("date", date);
     } else {
       setDayMap((m) => ({ ...m, [key]: value }));
-      const { error } = await (supabase as any).from("rate_day").upsert({ tariff: TARIFF_VYGODNY, room_type_id: typeId, occupancy: occ, date, price: value });
+      const { error } = await (supabase as any).from("rate_day").upsert({ tariff, room_type_id: typeId, occupancy: occ, date, price: value });
       if (error) toast.error("Не удалось сохранить цену");
     }
   }
 
   async function saveBase(typeId: string, occ: number, value: number) {
     setBaseMap((m) => ({ ...m, [`${typeId}|${occ}`]: value }));
-    const { error } = await (supabase as any).from("rate_base").upsert({ tariff: TARIFF_VYGODNY, room_type_id: typeId, occupancy: occ, price: value });
+    const { error } = await (supabase as any).from("rate_base").upsert({ tariff, room_type_id: typeId, occupancy: occ, price: value });
     if (error) toast.error("Не удалось сохранить базовую цену");
   }
 
@@ -103,9 +104,30 @@ function AdminTariffsPage() {
     <div className="min-h-screen">
       <div className="px-6 py-10">
         <p className="text-[11px] uppercase tracking-widest text-[#C9A96E]">Управление ценами</p>
-        <h1 className="mt-2 font-serif text-4xl text-navy">Тарифы · Выгодный</h1>
-        <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-          Цена за ночь без питания. «1 осн.» — если в номере один гость, «2 осн.» — если двое, и т.д.
+        <h1 className="mt-2 font-serif text-4xl text-navy">
+          Тарифы · {TARIFFS.find((x) => x.id === tariff)?.name}
+        </h1>
+
+        {/* Переключатель тарифов */}
+        <div className="mt-4 flex flex-wrap gap-2">
+          {TARIFFS.map((tdef) => (
+            <button
+              key={tdef.id}
+              onClick={() => setTariff(tdef.id)}
+              className={`border px-4 py-2 text-left text-sm transition-colors ${
+                tariff === tdef.id ? "border-navy bg-navy text-cream" : "border-border text-navy hover:border-navy"
+              }`}
+            >
+              <div className="font-medium">{tdef.name}</div>
+              <div className={`text-[10px] uppercase tracking-wide ${tariff === tdef.id ? "text-cream/70" : "text-muted-foreground"}`}>
+                {tdef.note}
+              </div>
+            </button>
+          ))}
+        </div>
+
+        <p className="mt-3 max-w-3xl text-sm text-muted-foreground">
+          {TARIFFS.find((x) => x.id === tariff)?.note}. «1 осн.» — если в номере один гость, «2 осн.» — если двое, и т.д.
           Колонка <b>База</b> — цена по умолчанию на все дни; ячейки дней — цена на конкретную дату
           (можно поднять/опустить). Очистите ячейку дня = вернуть к базовой.
         </p>
@@ -127,7 +149,7 @@ function AdminTariffsPage() {
           <p className="mt-6 text-sm text-muted-foreground">Загрузка…</p>
         ) : (
           <div className="mt-4 overflow-x-auto border border-border">
-            <table className="border-collapse text-xs" key={month}>
+            <table className="border-collapse text-xs" key={`${tariff}-${month}`}>
               <thead>
                 <tr className="bg-cream">
                   <th className="sticky left-0 z-10 min-w-[230px] border-b border-r border-border bg-cream px-3 py-2 text-left text-navy">

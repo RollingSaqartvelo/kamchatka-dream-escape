@@ -7,6 +7,13 @@ export type RateDayRow = { tariff: string; room_type_id: string; occupancy: numb
 
 export const TARIFF_VYGODNY = "vygodny";
 
+// Реестр тарифов. board: none — без питания; full — полный пансион (завтрак+обед+ужин).
+export type TariffDef = { id: string; name: string; board: "none" | "full"; note: string };
+export const TARIFFS: TariffDef[] = [
+  { id: "vygodny", name: "Выгодный", board: "none", note: "Без питания" },
+  { id: "vygodnoe_predlozhenie", name: "Выгодное предложение", board: "full", note: "Полный пансион (завтрак, обед, ужин)" },
+];
+
 // Койко-места (хостел) тарифицируются за место × число гостей; остальные — за номер.
 export function isHostelType(typeId: string): boolean {
   return typeId.startsWith("hostel");
