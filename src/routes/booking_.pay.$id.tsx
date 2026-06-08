@@ -100,8 +100,11 @@ function PayPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const paymentsOff = !!booking && (booking as { payments_enabled?: boolean }).payments_enabled === false;
+
   async function pay() {
     if (!booking) return;
+    if (paymentsOff) return;
     setError(null);
     // СБП — временно через статический QR (без API). Просто показываем QR.
     if (method === "sbp") {
@@ -194,8 +197,28 @@ function PayPage() {
           </div>
         )}
 
+        {/* Оплата временно отключена — технические работы */}
+        {booking && booking.payment_status !== "paid" && paymentsOff && (
+          <div className="mt-10 border border-amber-300 bg-amber-50 p-8 text-center">
+            <p className="text-[10px] uppercase tracking-[3px] text-amber-700">
+              {t("booking.pay.bookingNo", { n: booking.booking_number })}
+            </p>
+            <h1 className="mt-2 font-serif text-3xl text-navy">Оплата временно недоступна</h1>
+            <p className="mx-auto mt-4 max-w-md text-sm text-muted-foreground">
+              На сайте ведутся технические работы — онлайн-оплата временно отключена.
+              Ваша бронь сохранена. Для оплаты и подтверждения свяжитесь с нами:
+            </p>
+            <p className="mt-4 font-serif text-xl text-navy">
+              <a href="tel:+79149945757" className="hover:text-[#C9A96E]">+7 (914) 994-57-57</a>
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              <a href="mailto:poluostrovkam@mail.ru" className="hover:text-[#C9A96E]">poluostrovkam@mail.ru</a>
+            </p>
+          </div>
+        )}
+
         {/* Payment form */}
-        {booking && booking.payment_status !== "paid" && (
+        {booking && booking.payment_status !== "paid" && !paymentsOff && (
           <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_320px]">
             <div className="border border-border bg-background p-8">
               <p className="text-[10px] uppercase tracking-[3px] text-[#C9A96E]">

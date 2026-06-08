@@ -34,7 +34,8 @@ export const getPublicBooking = createServerFn({ method: "POST" })
 
     if (error) throw new Error(error.message);
     if (!row) throw new Error("Бронь не найдена");
-    return row;
+    // Флаг временного отключения онлайн-оплаты (технические работы).
+    return { ...row, payments_enabled: process.env.PAYMENTS_DISABLED !== "1" };
   });
 
 /**
@@ -52,6 +53,10 @@ export const createAlfaPayment = createServerFn({ method: "POST" })
     }).parse(input),
   )
   .handler(async ({ data }) => {
+    // Онлайн-оплата временно отключена (технические работы).
+    if (process.env.PAYMENTS_DISABLED === "1") {
+      throw new Error("payments_disabled");
+    }
     const supabase = adminClient();
 
     const { data: booking, error: bErr } = await supabase
